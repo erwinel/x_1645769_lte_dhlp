@@ -1171,6 +1171,20 @@ var LTEDevHelper = (function() {
         return text;
     }
 
+	function ensureReferenceMap(referenceMap) {
+		if (typeof referenceMap === 'object' && referenceMap !== null)
+			return referenceMap;
+		var markdown_reference_map = gs.getProperty('x_1645769_lte_dhlp.markdown_reference_map');
+		if (markdown_reference_map) {
+			try {
+				referenceMap = JSON.parse(markdown_reference_map);
+				if (typeof referenceMap === 'object' && referenceMap !== null)
+					return referenceMap;
+			} catch { }
+		}
+		return {};
+	}
+
     /**
      * @param {(GlideRecord<"sc_cat_item"> & sc_cat_item)} glideRecord
      * @param {MarkdownLinkMap} referenceMap
@@ -1406,7 +1420,7 @@ var LTEDevHelper = (function() {
                 }
             } else
                 referenceMap = undefined;
-            return getCatalogItemMarkdown(gr, (typeof referenceMap === 'object' && referenceMap !== null) ? referenceMap : {});
+            return getCatalogItemMarkdown(gr, ensureReferenceMap(referenceMap));
         },
 
         getVariableSetMarkdown: function() {
@@ -1431,7 +1445,7 @@ var LTEDevHelper = (function() {
                 }
             } else
                 referenceMap = undefined;
-            return getVariableSetMarkdown(gr, (typeof referenceMap === 'object' && referenceMap !== null) ? referenceMap : {});
+            return getVariableSetMarkdown(gr, ensureReferenceMap(referenceMap));
         },
 
         type: 'LTEDevHelper'
@@ -1449,9 +1463,9 @@ var LTEDevHelper = (function() {
         if (typeof target === 'string') {
             var gr = new GlideRecord('sc_cat_item');
             if (gr.get(target))
-                return getCatalogItemMarkdown(gr, referenceMap ? referenceMap : {});
+                return getCatalogItemMarkdown(gr, ensureReferenceMap(referenceMap));
         } else if (target.isValidRecord && target.isValidRecord())
-            return getCatalogItemMarkdown(target, referenceMap ? referenceMap : {});
+            return getCatalogItemMarkdown(target, ensureReferenceMap(referenceMap));
         throw new Error("Invalid catalog item record or catalog item not found");
     };
 
@@ -1464,9 +1478,9 @@ var LTEDevHelper = (function() {
         if (typeof target === 'string') {
             var gr = new GlideRecord('item_option_new_set');
             if (gr.get(target))
-                return getVariableSetMarkdown(gr, referenceMap ? referenceMap : {});
+                return getVariableSetMarkdown(gr, ensureReferenceMap(referenceMap));
         } else if (target.isValidRecord && target.isValidRecord())
-            return getVariableSetMarkdown(target, referenceMap ? referenceMap : {});
+            return getVariableSetMarkdown(target, ensureReferenceMap(referenceMap));
         throw new Error("Invalid variable set record or variable set not found");
     };
     return LTEDevHelperConstructor;
@@ -1475,13 +1489,13 @@ var LTEDevHelper = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-04-15 17:39:37</sys_created_on>
         <sys_id>4b109b0d839483107092ac80ceaad3e3</sys_id>
-        <sys_mod_count>6</sys_mod_count>
+        <sys_mod_count>10</sys_mod_count>
         <sys_name>LTEDevHelper</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_4b109b0d839483107092ac80ceaad3e3</sys_update_name>
         <sys_updated_by>lerwinesa</sys_updated_by>
-        <sys_updated_on>2026-04-23 19:57:39</sys_updated_on>
+        <sys_updated_on>2026-04-23 20:56:08</sys_updated_on>
     </sys_script_include>
 </record_update>

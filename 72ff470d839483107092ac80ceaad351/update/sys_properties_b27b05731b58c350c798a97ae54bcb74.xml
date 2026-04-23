@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_properties">
+    <sys_properties action="INSERT_OR_UPDATE">
+        <choices/>
+        <description>Default reference map for markdown generation</description>
+        <ignore_cache>true</ignore_cache>
+        <is_private>false</is_private>
+        <name>x_1645769_lte_dhlp.markdown_reference_map</name>
+        <read_roles/>
+        <suffix>markdown_reference_map</suffix>
+        <sys_class_name>sys_properties</sys_class_name>
+        <sys_created_by>lerwinesa</sys_created_by>
+        <sys_created_on>2026-04-23 20:36:02</sys_created_on>
+        <sys_id>b27b05731b58c350c798a97ae54bcb74</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>x_1645769_lte_dhlp.markdown_reference_map</sys_name>
+        <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
+        <sys_update_name>sys_properties_b27b05731b58c350c798a97ae54bcb74</sys_update_name>
+        <sys_updated_by>lerwinesa</sys_updated_by>
+        <sys_updated_on>2026-04-23 20:36:02</sys_updated_on>
+        <type>string</type>
+        <value>{&#13;
+    "x_g_doj_access_mgt_person": { "display_text": "Person", "url": "Person-Table.md" },&#13;
+    "x_g_doj_usmsprogop_metro_office": { "display_text": "Metro Office", "url": "../usmsprogop/Metro-Office-Table.md" },&#13;
+    "x_g_doj_access_mgt_poms_role": { "display_text": "POMS Role", "url": "POMS-Role-Table.md" },&#13;
+    "x_g_doj_access_mgt_privileged_access_type": { "display_text": "Privileged Access Type", "url": "Privileged-Access-Type-Table.md" },&#13;
+    "sys_user": { "display_text": "User", "url": "../servicenow_tables/User-Table.md" },&#13;
+    "uar_fte_signatory": { "display_text": "FTE Signatory", "url": "FTE-Signatory-Variable-Set.md" },&#13;
+    "uar_security_signatory": { "display_text": "Security Signatory", "url": "Security-Signatory-Variable-Set.md" },&#13;
+    "uar_data_steward_signatory": { "display_text": "Data Steward Signatory", "url": "Data-Steward-Signatory-Variable-Set.md" },&#13;
+    "uar_system_owner_approval": { "display_text": "System Owner Approval", "url": "System-Owner-Approval-Variable-Set.md" }&#13;
+}</value>
+        <write_roles>x_1645769_lte_dhlp.admin,admin</write_roles>
+    </sys_properties>
+    <sys_translated_text action="delete_multiple" query="documentkey=b27b05731b58c350c798a97ae54bcb74"/>
+</record_update>
