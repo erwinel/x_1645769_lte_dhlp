@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_ui_page">
+    <sys_ui_page action="INSERT_OR_UPDATE">
+        <category>general</category>
+        <client_script><![CDATA[function actionOK() {
+	var ga = new GlideAjax('x_1645769_lte_dhlp.LTEDevHelper');
+	ga.addParam('sysparm_name', 'getVariableSetMarkdown');
+	ga.addParam('sysparm_sys_id', $('item_option_new_set').value);
+	ga.addParam('sysparm_ref_map', $('ref_map').value);	
+	ga.getXMLAnswer(function(answer){
+		$('markdown_text').textContent = answer;
+    });
+}]]></client_script>
+        <description>Generate markdown for a variable set</description>
+        <direct>false</direct>
+        <endpoint>x_1645769_lte_dhlp_get_var_set_md.do</endpoint>
+        <html><![CDATA[<?xml version="1.0" encoding="utf-8" ?>
+<j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide" xmlns:j2="null" xmlns:g2="null">
+	<div class="row">
+		<div class="col-lg-4 control-label">Variable Set:</div>
+		<div class="col-lg-8">
+			<g:ui_reference name="item_option_new_set" table="item_option_new_set" query="active=true" />
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-lg-12">Reference Map JSON:</div>
+		<div class="col-lg-12">
+			<textarea name="ref_map" id="ref_map" style="width:100%">{
+    "x_g_doj_access_mgt_person": { "display_text": "Person", "url": "Person-Table.md" },
+    "x_g_doj_usmsprogop_metro_office": { "display_text": "Metro Office", "url": "../usmsprogop/Metro-Office-Table.md" },
+    "x_g_doj_access_mgt_poms_role": { "display_text": "POMS Role", "url": "POMS-Role-Table.md" },
+    "x_g_doj_access_mgt_privileged_access_type": { "display_text": "Privileged Access Type", "url": "Privileged-Access-Type-Table.md" },
+    "sys_user": { "display_text": "User", "url": "../servicenow_tables/User-Table.md" },
+    "uar_fte_signatory": { "display_text": "FTE Signatory", "url": "FTE-Signatory-Variable-Set.md" },
+    "uar_security_signatory": { "display_text": "Security Signatory", "url": "Security-Signatory-Variable-Set.md" },
+    "uar_data_steward_signatory": { "display_text": "Data Steward Signatory", "url": "Data-Steward-Signatory-Variable-Set.md" },
+    "uar_system_owner_approval": { "display_text": "System Owner Approval", "url": "System-Owner-Approval-Variable-Set.md" }
+}</textarea>
+		</div>
+	</div>
+	<div class="row top-buffer">
+		<div id="ok-cancel-btns" class="col-sm-offset-4 pull-left">
+			<g:dialog_buttons_ok_cancel class="form-control"/>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-lg-12">Markdown:</div>
+		<div class="col-lg-12">
+			<textarea name="markdown_text" id="markdown_text" readonly="true" style="width:100%"></textarea>
+		</div>
+	</div>
+</j:jelly>]]></html>
+        <name>get_var_set_md</name>
+        <processing_script/>
+        <sys_class_name>sys_ui_page</sys_class_name>
+        <sys_created_by>lerwinesa</sys_created_by>
+        <sys_created_on>2026-04-23 20:21:45</sys_created_on>
+        <sys_id>5fd74d7b1b18c350c798a97ae54bcbef</sys_id>
+        <sys_mod_count>2</sys_mod_count>
+        <sys_name>get_var_set_md</sys_name>
+        <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
+        <sys_update_name>sys_ui_page_5fd74d7b1b18c350c798a97ae54bcbef</sys_update_name>
+        <sys_updated_by>lerwinesa</sys_updated_by>
+        <sys_updated_on>2026-04-23 20:30:17</sys_updated_on>
+    </sys_ui_page>
+</record_update>

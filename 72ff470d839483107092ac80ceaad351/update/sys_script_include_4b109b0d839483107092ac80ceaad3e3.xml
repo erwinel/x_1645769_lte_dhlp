@@ -47,7 +47,7 @@
 
 /** @type {LTEDevHelperStatic} */
 var LTEDevHelper = (function() {
-	var instanceUri = gs.getProperty('glide.servlet.uri'); // Gets the base URL of your instance
+    var instanceUri = gs.getProperty('glide.servlet.uri'); // Gets the base URL of your instance
 
     /**
      * @param {string} text
@@ -388,18 +388,40 @@ var LTEDevHelper = (function() {
         });
     }
 
+    var iixExtensionRe = /^(.+?)\.iix$/;
+
     /**
      * @param {LabelValuePair[]} target
      * @param {GlideElement} element
      */
     function addImageElement(target, element) {
-        if (!gs.nil(element) && element.getLink) {
+        if (!gs.nil(element)) {
             var attachmentGr = new GlideRecord('sys_attachment');
-            if (attachmentGr.get(element.getValue()))
+            if (attachmentGr.get(element.getValue())) {
+                var remoteFileName = element.getDisplayValue();
+                var fileName = remoteFileName;
+                var content_type = attachmentGr.getValue('content_type');
+                var m;
+                switch (content_type) {
+                    case 'image/png':
+                        m = fileName.match(iixExtensionRe);
+                        if (m)
+                            fileName = m[1] + '.jpg';
+                        break;
+                    case 'image/jpeg':
+                        m = fileName.match(iixExtensionRe);
+                        if (m)
+                            fileName = m[1] + '.png';
+                        break;
+                    default:
+                        fileName = fileName + '; ' + content_type;
+                        break;
+                }
                 target.push({
                     label: element.getLabel(),
-                    value: '![' + attachmentGr.file_name + '; ' + attachmentGr.content_type + '](' + instanceUri + element.getLink() + ')'
+                    value: '![' + fileName + '](' + instanceUri + remoteFileName + ')'
                 });
+            }
         }
     }
 
@@ -750,7 +772,7 @@ var LTEDevHelper = (function() {
                         addLabelAndLinkPair(item.properties, glideRecord.choice_table.getLabel(), refLink.display_text, refLink.url, '[' + refText + ']');
                         if (!gs.nil(glideRecord.choice_field)) {
                             refText = glideRecord.getDisplayValue('choice_field');
-                            addLabelAndLinkPair(item.properties, glideRecord.choice_field.getLabel(), refText, refLink.url + 'column-#' + refText);
+                            addLabelAndLinkPair(item.properties, glideRecord.choice_field.getLabel(), refText, refLink.url + '#column-' + refText);
                         }
                     } else {
                         addLabelAndCode(item.properties, glideRecord.choice_table.getLabel(), refText);
@@ -1362,8 +1384,59 @@ var LTEDevHelper = (function() {
 
     var LTEDevHelperConstructor = Class.create();
     LTEDevHelperConstructor.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
+        getCatalogItemMarkdown: function() {
+            var target = this.getParameter('sysparm_sys_id');
+            if (!target)
+                return "Value for sys_id parameter not provided.";
+            var gr;
+            try {
+                gr = new GlideRecord('sc_cat_item');
+                if (!gr.get(target))
+                    return "Catalog item with sys_id " + JSON.stringify(target) + " not found.";
+            } catch (e) {
+                return "Error loading catalog item with sys_id " + JSON.stringify(target) + ": " + e;
+            }
+            var ref_map = this.getParameter('sysparm_ref_map');
+            var referenceMap;
+            if (ref_map) {
+                try {
+                    referenceMap = JSON.parse(ref_map);
+                } catch (e) {
+                    return "Error parsing sysparm_ref_map: " + e;
+                }
+            } else
+                referenceMap = undefined;
+            return getCatalogItemMarkdown(gr, (typeof referenceMap === 'object' && referenceMap !== null) ? referenceMap : {});
+        },
+
+        getVariableSetMarkdown: function() {
+            var target = this.getParameter('sysparm_sys_id');
+            if (!target)
+                return "Value for sys_id parameter not provided.";
+            var gr;
+            try {
+                gr = new GlideRecord('item_option_new_set');
+                if (!gr.get(target))
+                    return "Variable set with sys_id " + JSON.stringify(target) + " not found.";
+            } catch (e) {
+                return "Error loading variable set with sys_id " + JSON.stringify(target) + ": " + e;
+            }
+            var ref_map = this.getParameter('sysparm_ref_map');
+            var referenceMap;
+            if (ref_map) {
+                try {
+                    referenceMap = JSON.parse(ref_map);
+                } catch (e) {
+                    return "Error parsing sysparm_ref_map: " + e;
+                }
+            } else
+                referenceMap = undefined;
+            return getVariableSetMarkdown(gr, (typeof referenceMap === 'object' && referenceMap !== null) ? referenceMap : {});
+        },
+
         type: 'LTEDevHelper'
     });
+
     LTEDevHelperConstructor.escapeForMarkdown = escapeForMarkdown;
     LTEDevHelperConstructor.tokenizeQueryString = tokenizeQueryString;
 
@@ -1376,9 +1449,9 @@ var LTEDevHelper = (function() {
         if (typeof target === 'string') {
             var gr = new GlideRecord('sc_cat_item');
             if (gr.get(target))
-                return getCatalogItemMarkdown(gr, referenceMap ? {} : referenceMap);
+                return getCatalogItemMarkdown(gr, referenceMap ? referenceMap : {});
         } else if (target.isValidRecord && target.isValidRecord())
-            return getCatalogItemMarkdown(target, referenceMap ? {} : referenceMap);
+            return getCatalogItemMarkdown(target, referenceMap ? referenceMap : {});
         throw new Error("Invalid catalog item record or catalog item not found");
     };
 
@@ -1391,9 +1464,9 @@ var LTEDevHelper = (function() {
         if (typeof target === 'string') {
             var gr = new GlideRecord('item_option_new_set');
             if (gr.get(target))
-                return getVariableSetMarkdown(gr, referenceMap ? {} : referenceMap);
+                return getVariableSetMarkdown(gr, referenceMap ? referenceMap : {});
         } else if (target.isValidRecord && target.isValidRecord())
-            return getVariableSetMarkdown(target, referenceMap ? {} : referenceMap);
+            return getVariableSetMarkdown(target, referenceMap ? referenceMap : {});
         throw new Error("Invalid variable set record or variable set not found");
     };
     return LTEDevHelperConstructor;
@@ -1402,13 +1475,13 @@ var LTEDevHelper = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-04-15 17:39:37</sys_created_on>
         <sys_id>4b109b0d839483107092ac80ceaad3e3</sys_id>
-        <sys_mod_count>1</sys_mod_count>
+        <sys_mod_count>6</sys_mod_count>
         <sys_name>LTEDevHelper</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_4b109b0d839483107092ac80ceaad3e3</sys_update_name>
         <sys_updated_by>lerwinesa</sys_updated_by>
-        <sys_updated_on>2026-04-15 18:04:49</sys_updated_on>
+        <sys_updated_on>2026-04-23 19:57:39</sys_updated_on>
     </sys_script_include>
 </record_update>
