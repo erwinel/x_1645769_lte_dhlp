@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_ui_page">
+    <sys_ui_page action="INSERT_OR_UPDATE">
+        <category>general</category>
+        <client_script><![CDATA[function actionOK() {
+	var ga = new GlideAjax('x_1645769_lte_dhlp.LTEDevHelper');
+	ga.addParam('sysparm_name', 'getCatalogItemMarkdown');
+	ga.addParam('sysparm_sys_id', $('sc_cat_item').value);
+	ga.addParam('sysparm_ref_map', $('ref_map').value);	
+	ga.getXMLAnswer(function(answer){
+		$('markdown_text').textContent = answer;
+    });
+}]]></client_script>
+        <description>Generate markdown for a catalog item</description>
+        <direct>false</direct>
+        <endpoint>x_1645769_lte_dhlp_get_cat_item_md.do</endpoint>
+        <html><![CDATA[<?xml version="1.0" encoding="utf-8" ?>
+<j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide" xmlns:j2="null" xmlns:g2="null">
+	<div class="row">
+		<div class="col-lg-4 control-label">Catalog Item:</div>
+		<div class="col-lg-8">
+			<g:ui_reference name="sc_cat_item" table="sc_cat_item" query="active=true" />
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-lg-12">Custom Reference Map JSON:</div>
+		<div class="col-lg-12">
+			<textarea name="ref_map" id="ref_map" style="width:100%"></textarea>
+		</div>
+	</div>
+	<div class="row top-buffer">
+		<div id="ok-cancel-btns" class="col-sm-offset-4 pull-left">
+			<g:dialog_buttons_ok_cancel class="form-control"/>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-lg-12">Markdown:</div>
+		<div class="col-lg-12">
+			<textarea name="markdown_text" id="markdown_text" readonly="true" style="width:100%"></textarea>
+		</div>
+	</div>
+</j:jelly>]]></html>
+        <name>get_cat_item_md</name>
+        <processing_script/>
+        <sys_class_name>sys_ui_page</sys_class_name>
+        <sys_created_by>lerwinesa</sys_created_by>
+        <sys_created_on>2026-04-23 20:10:21</sys_created_on>
+        <sys_id>fc7760f31b54c350c798a97ae54bcb51</sys_id>
+        <sys_mod_count>6</sys_mod_count>
+        <sys_name>get_cat_item_md</sys_name>
+        <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
+        <sys_update_name>sys_ui_page_fc7760f31b54c350c798a97ae54bcb51</sys_update_name>
+        <sys_updated_by>lerwinesa</sys_updated_by>
+        <sys_updated_on>2026-04-23 20:42:15</sys_updated_on>
+    </sys_ui_page>
+</record_update>
