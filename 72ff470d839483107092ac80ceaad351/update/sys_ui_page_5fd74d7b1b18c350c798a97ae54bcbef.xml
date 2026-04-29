@@ -10,34 +10,39 @@
 		$('markdown_text').textContent = answer;
     });
 }]]></client_script>
-        <description>Generate markdown for a variable set</description>
+        <description>Generate boilerplate documentation Markdown from a Variable Set record</description>
         <direct>false</direct>
         <endpoint>x_1645769_lte_dhlp_get_var_set_md.do</endpoint>
         <html><![CDATA[<?xml version="1.0" encoding="utf-8" ?>
 <j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide" xmlns:j2="null" xmlns:g2="null">
-	<div class="row">
-		<div class="col-lg-4 control-label">Variable Set:</div>
-		<div class="col-lg-8">
-			<g:ui_reference name="item_option_new_set" table="item_option_new_set" query="active=true" />
-		</div>
-	</div>
-	<div class="row">
-		<div class="col-lg-12">Custom Reference Map JSON:</div>
-		<div class="col-lg-12">
-			<textarea name="ref_map" id="ref_map" style="width:100%"></textarea>
-		</div>
-	</div>
-	<div class="row top-buffer">
-		<div id="ok-cancel-btns" class="col-sm-offset-4 pull-left">
-			<g:dialog_buttons_ok_cancel class="form-control"/>
-		</div>
-	</div>
-	<div class="row">
-		<div class="col-lg-12">Markdown:</div>
-		<div class="col-lg-12">
-			<textarea name="markdown_text" id="markdown_text" readonly="true" style="width:100%"></textarea>
-		</div>
-	</div>
+	<h1>Generate Boilerplate Documentation Markdown from Variable Set</h1>
+    <table style="border-width: 0px; border-collapse: collapse;">
+        <tbody>
+            <tr>
+                <th scope="row" style="text-align: right;">Variable Set:</th>
+                <td><g:ui_reference name="item_option_new_set" table="item_option_new_set" query="active=true" /></td>
+            </tr>
+        </tbody>
+    </table>
+    <table style="border-width: 0px; border-collapse: collapse;">
+        <thead>
+            <tr>
+                <th scope="col" style="text-align: left;">Custom Reference Map JSON:</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><textarea name="ref_map" id="ref_map" style="width:100%"></textarea></td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr>
+                <td style="text-align: right;"><g:dialog_buttons_ok_cancel class="form-control"/></td>
+            </tr>
+        </tfoot>
+    </table>
+	<h2>Markdown</h2>
+    <textarea name="markdown_text" id="markdown_text" readonly="true" style="width:100%"></textarea>
 </j:jelly>]]></html>
         <name>get_var_set_md</name>
         <processing_script/>
@@ -45,13 +50,13 @@
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-04-23 20:21:45</sys_created_on>
         <sys_id>5fd74d7b1b18c350c798a97ae54bcbef</sys_id>
-        <sys_mod_count>3</sys_mod_count>
+        <sys_mod_count>4</sys_mod_count>
         <sys_name>get_var_set_md</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy/>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_ui_page_5fd74d7b1b18c350c798a97ae54bcbef</sys_update_name>
-        <sys_updated_by>lerwinesa</sys_updated_by>
-        <sys_updated_on>2026-04-23 20:42:19</sys_updated_on>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-04-29 13:48:43</sys_updated_on>
     </sys_ui_page>
 </record_update>
