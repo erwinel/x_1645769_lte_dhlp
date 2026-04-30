@@ -1043,6 +1043,53 @@ var LTEDevHelper = (function() {
         }
         return text;
     }
+	
+    /**
+     * @param {string} cat_item_sys_id
+     * @param {MarkdownLinkMap} referenceMap
+	 * @returns {string}
+     */
+    function getAvailabilityMarkdown(cat_item_sys_id, referenceMap) {
+        var availableForGr = new GlideRecord('sc_cat_item_user_criteria_mtom');
+		availableForGr.addQuery('sc_cat_item', cat_item_sys_id);
+		availableForGr.query();
+		var result = '';
+
+		/** @type {(GlideRecord<"user_criteria"> & user_criteria)} */
+		var ucGr;
+		var sys_id;
+		/** @type {MarkdownLink|undefined} */
+		var link;
+		if (availableForGr.next()) {
+			result = "\n\n## Availability\n\n**Available for:**\n";
+			do {
+				sys_id = availableForGr.getValue('user_criteria');
+				link = referenceMap[sys_id];
+				if (typeof link === 'object' && link !== null)
+					result = result + "\n- [" + escapeForMarkdown(link.display_text) + "](" + link.url + ")";
+				else
+					result = result + "\n- [" + escapeForMarkdown(availableForGr.getDisplayValue('user_criteria')) + "](" + instanceUri + "user_criteria.do?sys_id=" + link.url + ")";
+			} while (availableForGr.next());
+		}
+		var notAvailableGr = new GlideRecord('sc_cat_item_user_criteria_no_mtom');
+		notAvailableGr.addQuery('sc_cat_item', cat_item_sys_id);
+		notAvailableGr.query();
+		if (notAvailableGr.next()) {
+			if (result == '')
+				result = "\n\n## Availability";
+			result = result + "\n\n**Not available for:**\n";
+			do {
+				sys_id = notAvailableGr.getValue('user_criteria');
+				link = referenceMap[sys_id];
+				if (typeof link === 'object' && link !== null)
+					result = result + "\n- [" + escapeForMarkdown(link.display_text) + "](" + link.url + ")";
+				else
+					result = result + "\n- [" + escapeForMarkdown(notAvailableGr.getDisplayValue('user_criteria')) + "](" + instanceUri + "user_criteria.do?sys_id=" + link.url + ")";
+			} while (notAvailableGr.next());
+		}
+
+		return result;
+	}
 
     /**
      * @param {string} cat_item_sys_id
@@ -1171,26 +1218,28 @@ var LTEDevHelper = (function() {
         return text;
     }
 
-	function ensureReferenceMap(referenceMap) {
-		var markdown_reference_map = gs.getProperty('x_1645769_lte_dhlp.markdown_reference_map');
-		if (markdown_reference_map) {
-			var defaultMap;
-			try {
-				defaultMap = JSON.parse(markdown_reference_map);
-				if (typeof referenceMap === 'object' && referenceMap !== null)
-					return referenceMap;
-			} catch { defaultMap = undefined; }
-			if (typeof defaultMap === 'object' && defaultMap !== null) {
-				if (typeof referenceMap === 'object' && referenceMap !== null) {
-					for (var n in referenceMap)
-						defaultMap[n] = referenceMap[n];
-				}
-				return defaultMap;
-			}
-		}
+    /**
+     * @param {MarkdownLinkMap|undefined} referenceMap
+     * @return {MarkdownLinkMap} 
+     */
+    function ensureReferenceMap(referenceMap) {
+        var markdown_reference_map = gs.getProperty('x_1645769_lte_dhlp.markdown_reference_map');
+        if (markdown_reference_map) {
+            var defaultMap;
+            try {
+                defaultMap = JSON.parse(markdown_reference_map);
+            } catch { defaultMap = undefined; }
+            if (typeof defaultMap === 'object' && defaultMap !== null) {
+                if (typeof referenceMap === 'object' && referenceMap !== null) {
+                    for (var n in referenceMap)
+                        defaultMap[n] = referenceMap[n];
+                }
+                return defaultMap;
+            }
+        }
 
-		return (typeof referenceMap === 'object' && referenceMap !== null) ? referenceMap : {};
-	}
+        return (typeof referenceMap === 'object' && referenceMap !== null) ? referenceMap : {};
+    }
 
     /**
      * @param {(GlideRecord<"sc_cat_item"> & sc_cat_item)} glideRecord
@@ -1263,7 +1312,7 @@ var LTEDevHelper = (function() {
             }
         }
 
-        return text + getCatalogUiPoliciesMarkdown(cat_item_sys_id, varsByName, varsBySysId) + getCatalogClientScriptsMarkdown(cat_item_sys_id, varsBySysId);
+        return text + getAvailabilityMarkdown(cat_item_sys_id, referenceMap) + getCatalogUiPoliciesMarkdown(cat_item_sys_id, varsByName, varsBySysId) + getCatalogClientScriptsMarkdown(cat_item_sys_id, varsBySysId);
     }
 
     /**
@@ -1496,13 +1545,13 @@ var LTEDevHelper = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-04-15 17:39:37</sys_created_on>
         <sys_id>4b109b0d839483107092ac80ceaad3e3</sys_id>
-        <sys_mod_count>11</sys_mod_count>
+        <sys_mod_count>13</sys_mod_count>
         <sys_name>LTEDevHelper</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_4b109b0d839483107092ac80ceaad3e3</sys_update_name>
         <sys_updated_by>lerwinesa</sys_updated_by>
-        <sys_updated_on>2026-04-23 22:43:35</sys_updated_on>
+        <sys_updated_on>2026-04-30 16:39:13</sys_updated_on>
     </sys_script_include>
 </record_update>
