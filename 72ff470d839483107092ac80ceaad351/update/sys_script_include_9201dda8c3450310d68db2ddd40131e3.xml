@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>x_1645769_lte_dhlp.TableMarkdownGenerator</api_name>
+        <caller_access/>
+        <client_callable>true</client_callable>
+        <description/>
+        <mobile_callable>false</mobile_callable>
+        <name>TableMarkdownGenerator</name>
+        <sandbox_callable>false</sandbox_callable>
+        <script><![CDATA[var TableMarkdownGenerator = (function() {
+    const instanceUri = gs.getProperty('glide.servlet.uri');
+
+    var TableMarkdownGeneratorConstructor = Class.create();
+
+    /**
+     * @param {(GlideRecordSecure & sys_db_object)} tableGlideRecord 
+     * @param {MarkdownGenerationContext} context 
+     */
+    function getTableMarkdown(tableGlideRecord, context) {
+        var markdown = '# ' + MarkdownGenerationContext.escapeForMarkdown(tableGlideRecord.getValue('label')) + "\n\n" +
+            '- **Name:** ' + MarkdownGenerationContext.escapeForMarkdown(tableGlideRecord.getValue('name'));
+        if (!gs.nil(tableGlideRecord.super_class))
+            markdown += "\n- **Extends table:** " + context.getTableMdLink(tableGlideRecord.getValue('super_class'));
+        if (tableGlideRecord.getDisplayValue('scriptable_table') == 'true')
+            markdown += "\n- **Remote table:** True";
+        if (tableGlideRecord.getDisplayValue('is_extendable') == 'true')
+            markdown += "\n- **Extensible:** True";
+        if (!gs.nil(tableGlideRecord.number_ref))
+            markdown += "\n- **Prefix:** " + MarkdownGenerationContext.escapeForMarkdown(tableGlideRecord.getDisplayValue('number_ref.prefix')) +
+            "\n- **Number:** " + MarkdownGenerationContext.escapeForMarkdown(tableGlideRecord.getDisplayValue('number_ref.number')) +
+            "\n- **Number of digits:** " + MarkdownGenerationContext.escapeForMarkdown(tableGlideRecord.getDisplayValue('number_ref.maximum_digits'));
+        if (!gs.nil(tableGlideRecord.access))
+            markdown += "\n- **Accessible from:** " + MarkdownGenerationContext.escapeForMarkdown(tableGlideRecord.getDisplayValue('access'));
+        if (tableGlideRecord.getDisplayValue('read_access') == 'false')
+            markdown += "\n- **Can read:** False";
+        if (tableGlideRecord.getDisplayValue('create_access') == 'false')
+            markdown += "\n- **Can create:** False";
+        if (tableGlideRecord.getDisplayValue('update_access') == 'false')
+            markdown += "\n- **Can update:** False";
+        if (tableGlideRecord.getDisplayValue('delete_access') == 'false')
+            markdown += "\n- **Can delete:** False";
+        if (tableGlideRecord.getDisplayValue('ws_access') == 'false')
+            markdown += "\n- **Allow access to this table via web services:** False";
+        if (tableGlideRecord.getDisplayValue('configuration_access') == 'true')
+            markdown += "\n- **Allow configuration:** True";
+        return markdown;
+    }
+
+    TableMarkdownGeneratorConstructor.getTableMarkdown = getTableMarkdown;
+
+    TableMarkdownGeneratorConstructor.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
+        getTableMarkdown: function() {
+            var target = this.getParameter('sysparm_sys_id');
+            if (!target)
+                return "Value for sys_id parameter not provided.";
+            var gr;
+            try {
+                gr = new GlideRecord('sys_db_object');
+                if (!gr.get(target))
+                    return "Table with sys_id " + JSON.stringify(target) + " not found.";
+            } catch (e) {
+                return "Error loading table with sys_id " + JSON.stringify(target) + ": " + e;
+            }
+            // var ref_map = this.getParameter('sysparm_ref_map');
+            // var referenceMap;
+            // if (ref_map) {
+            //     try {
+            //         referenceMap = JSON.parse(ref_map);
+            //     } catch (e) {
+            //         return "Error parsing sysparm_ref_map: " + e;
+            //     }
+            // } else
+            //     referenceMap = undefined;
+            // return getTableMarkdown(gr, ensureReferenceMap(referenceMap));
+            return getTableMarkdown(gr, new MarkdownGenerationContext());
+        },
+
+        type: 'TableMarkdownGenerator'
+    });
+
+    return TableMarkdownGeneratorConstructor;
+})();]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-05-21 02:48:32</sys_created_on>
+        <sys_id>9201dda8c3450310d68db2ddd40131e3</sys_id>
+        <sys_mod_count>9</sys_mod_count>
+        <sys_name>TableMarkdownGenerator</sys_name>
+        <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
+        <sys_policy>read</sys_policy>
+        <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
+        <sys_update_name>sys_script_include_9201dda8c3450310d68db2ddd40131e3</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-05-21 03:18:21</sys_updated_on>
+    </sys_script_include>
+</record_update>

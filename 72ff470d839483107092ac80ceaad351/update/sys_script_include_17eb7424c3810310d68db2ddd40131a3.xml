@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>public</access>
+        <active>true</active>
+        <api_name>x_1645769_lte_dhlp.MarkdownGenerationContext</api_name>
+        <caller_access/>
+        <client_callable>false</client_callable>
+        <description/>
+        <mobile_callable>false</mobile_callable>
+        <name>MarkdownGenerationContext</name>
+        <sandbox_callable>false</sandbox_callable>
+        <script><![CDATA[var MarkdownGenerationContext = (function() {
+    const instanceUri = gs.getProperty('glide.servlet.uri');
+
+    var MarkdownGenerationContextConstructor = Class.create();
+
+    /**
+     * @param {string} id 
+     * @returns {GlideRecordSecure}
+     */
+    function getTableFromId(id) {
+        var gr = new GlideRecordSecure('sys_db_object');
+        if (!gr.get(id)) {
+            gr = new GlideRecordSecure('sys_db_object');
+            gr.addQuery('name', id);
+            gr.query();
+            if (!gr.next())
+                throw new Error("Cannot find Table with name or Sys ID of " + JSON.stringify(id));
+        }
+        return gr;
+    }
+
+    MarkdownGenerationContextConstructor.getTableFromId = getTableFromId;
+
+    /**
+     * @param {string} sysID 
+     * @returns {GlideRecordSecure}
+     */
+    function getCatalogItemFromSysId(sysID) {
+        var gr = new GlideRecordSecure('sc_catItem');
+        if (!gr.get(sysID))
+            throw new Error("Cannot find Catalog Item with Sys ID of " + JSON.stringify(sysID));
+        return gr;
+    }
+
+    MarkdownGenerationContextConstructor.getCatalogItemFromSysId = getCatalogItemFromSysId;
+
+    /**
+     * @param {string} id 
+     * @returns {GlideRecordSecure}
+     */
+    function getVariableSetFromId(id) {
+        var gr = new GlideRecordSecure('item_option_new_set');
+        if (!gr.get(id)) {
+            gr = new GlideRecordSecure('item_option_new_set');
+            gr.addQuery('internal_name', id);
+            gr.query();
+            if (!gr.next())
+                throw new Error("Cannot find Variable Set with internal name or Sys ID of " + JSON.stringify(id));
+        }
+        return gr;
+    }
+
+    MarkdownGenerationContextConstructor.getVariableSetFromId = getVariableSetFromId;
+
+    /**
+     * @param {string} id 
+     * @returns {GlideRecordSecure}
+     */
+    function getFlowFromId(id) {
+        var gr = new GlideRecordSecure('sys_hub_flow');
+        if (!gr.get(id)) {
+            gr = new GlideRecordSecure('sys_hub_flow');
+            gr.addQuery('internal_name', id);
+            gr.query();
+            if (!gr.next())
+                throw new Error("Cannot find Flow with internal name or Sys ID of " + JSON.stringify(id));
+        }
+        return gr;
+    }
+
+    MarkdownGenerationContextConstructor.getFlowFromId = getFlowFromId;
+
+    var markdownReservedRe = /[\\`*[\]()]/g;
+    var markdownLeadReservedRe = /^[#|]/;
+    var markdownTableReservedRe = /[\\`*[\]()|]/g;
+    var newLineRe = /\n/g;
+    var codeBlockReqRe = /[\n`]/g;
+
+    /**
+     * @param {string} text
+     * @param {boolean} [isTableCellContent]
+     * @returns {string}
+     */
+    function escapeForMarkdown(text, isTableCellContent) {
+        return isTableCellContent ? text.replace(markdownTableReservedRe, '\\$&') : text.replace(markdownReservedRe, '\\$&').replace(markdownLeadReservedRe, '\\$&');
+    }
+
+    MarkdownGenerationContextConstructor.escapeForMarkdown = escapeForMarkdown;
+
+    MarkdownGenerationContextConstructor.prototype = {
+        _tableUrls: {},
+
+        _catalogItemUrls: {},
+
+        _variableSetUrls: {},
+
+        _flowUrls: {},
+
+        initialize: function() {},
+
+        addTableUrl(id, url) {
+            var gr = getTableFromId(id);
+            if (!gs.nil(gr.name))
+                this._tableUrls[gr.getValue('name')] = url;
+            this._tableUrls[gr.getValue('sys_id')] = url;
+        },
+
+        getTableUrl: function(table) {
+            if (gs.nil(table))
+                return;
+            var link;
+            if (table instanceof GlideRecord || table instanceof GlideRecordSecure) {
+                link = this._tableUrls[table.getUniqueValue()];
+                if (typeof link !== 'undefined')
+                    return link;
+            } else {
+                var id = '' + table;
+                link = this._tableUrls[id];
+                if (typeof link !== 'undefined')
+                    return link;
+            }
+        },
+
+        getTableMdLink: function(table, isTableCellContent) {
+            if (gs.nil(table))
+                return '*null*';
+            var link;
+            if (table instanceof GlideRecord || table instanceof GlideRecordSecure) {
+                link = this._tableUrls[table.getUniqueValue()];
+                if (typeof link !== 'undefined')
+                    return "[" + escapeForMarkdown(table.getValue(gs.nil(table.label) ? 'name' : 'label'), isTableCellContent) + "](" + link + ")";
+                return "[" + escapeForMarkdown(table.getValue(gs.nil(table.label) ? 'name' : 'label'), isTableCellContent) + "](" + instanceUri + table.getLink(true) + ")";
+            }
+            var gr = getTableFromId(table);
+            link = this._tableUrls[gr.getUniqueValue()];
+            if (typeof link !== 'undefined')
+                return "[" + escapeForMarkdown(gr.getValue(gs.nil(gr.label) ? 'name' : 'label'), isTableCellContent) + "](" + link + ")";
+            return "[" + escapeForMarkdown(gr.getValue(gs.nil(gr.label) ? 'name' : 'label'), isTableCellContent) + "](" + instanceUri + gr.getLink(true) + ")";
+        },
+
+        addCatalogItemUrl(sysID, url) {
+            this._catalogItemUrls[getCatalogItemFromSysId(id).getUniqueValue()] = url;
+        },
+
+        getCatalogItemUrl: function(catalogItem) {
+            if (gs.nil(catalogItem))
+                return;
+            var link;
+            if (catalogItem instanceof GlideRecord || catalogItem instanceof GlideRecordSecure) {
+                link = this._catalogItemUrls[catalogItem.getUniqueValue()];
+                if (typeof link !== 'undefined')
+                    return link;
+            } else {
+                var id = '' + catalogItem;
+                link = this._catalogItemUrls[id];
+                if (typeof link !== 'undefined')
+                    return link;
+            }
+        },
+
+        getCatalogItemMdLink: function(catalogItem, isTableCellContent) {
+            if (gs.nil(catalogItem))
+                return '*null*';
+            var link;
+            if (catalogItem instanceof GlideRecord || catalogItem instanceof GlideRecordSecure) {
+                link = this._catalogItemUrls[catalogItem.getUniqueValue()];
+                if (typeof link !== 'undefined')
+                    return "[" + escapeForMarkdown(catalogItem.getValue('name'), isTableCellContent) + "](" + link + ")";
+                return "[" + escapeForMarkdown(catalogItem.getValue('name'), isTableCellContent) + "](" + instanceUri + catalogItem.getLink(true) + ")";
+            }
+            var gr = getCatalogItemFromSysId(catalogItem);
+            link = this._catalogItemUrls[gr.getUniqueValue()];
+            if (typeof link !== 'undefined')
+                return "[" + escapeForMarkdown(gr.getValue('name'), isTableCellContent) + "](" + link + ")";
+            return "[" + escapeForMarkdown(gr.getValue('name'), isTableCellContent) + "](" + instanceUri + gr.getLink(true) + ")";
+        },
+
+        addVariableSetUrl(id, url) {
+            var gr = getVariableSetFromId(id);
+            if (!gs.nil(gr.internal_name))
+                this._variableSetUrls[gr.getValue('internal_name')] = url;
+            this._variableSetUrls[gr.getValue('sys_id')] = url;
+        },
+
+        getVariableSetUrl: function(variableSet) {
+            if (gs.nil(variableSet))
+                return;
+            var link;
+            if (variableSet instanceof GlideRecord || variableSet instanceof GlideRecordSecure) {
+                link = this._variableSetUrls[variableSet.getUniqueValue()];
+                if (typeof link !== 'undefined')
+                    return link;
+            } else {
+                var id = '' + variableSet;
+                link = this._variableSetUrls[id];
+                if (typeof link !== 'undefined')
+                    return link;
+            }
+        },
+
+        getVariableSetMdLink: function(variableSet, isTableCellContent) {
+            if (gs.nil(variableSet))
+                return '*null*';
+            var link;
+            if (variableSet instanceof GlideRecord || variableSet instanceof GlideRecordSecure) {
+                link = this._variableSetUrls[variableSet.getUniqueValue()];
+                if (typeof link !== 'undefined')
+                    return "[" + escapeForMarkdown(variableSet.getValue(gs.nil(variableSet.title) ? 'internal_name' : 'title'), isTableCellContent) + "](" + link + ")";
+                return "[" + escapeForMarkdown(variableSet.getValue(gs.nil(variableSet.title) ? 'internal_name' : 'title'), isTableCellContent) + "](" + instanceUri + variableSet.getLink(true) + ")";
+            }
+            var gr = getVariableSetFromId(variableSet);
+            link = this._variableSetUrls[gr.getUniqueValue()];
+            if (typeof link !== 'undefined')
+                return "[" + escapeForMarkdown(gr.getValue(gs.nil(gr.title) ? 'internal_name' : 'title'), isTableCellContent) + "](" + link + ")";
+            return "[" + escapeForMarkdown(gr.getValue(gs.nil(gr.title) ? 'internal_name' : 'title'), isTableCellContent) + "](" + instanceUri + gr.getLink(true) + ")";
+        },
+
+        addFlowUrl(id, url) {
+            var gr = getFlowFromId(id);
+            if (!gs.nil(gr.internal_name))
+                this._flowUrls[gr.getValue('internal_name')] = url;
+            this._flowUrls[gr.getValue('sys_id')] = url;
+        },
+
+        getFlowUrl: function(flow) {
+            if (gs.nil(flow))
+                return;
+            var link;
+            if (flow instanceof GlideRecord || flow instanceof GlideRecordSecure) {
+                link = this._flowUrls[flow.getUniqueValue()];
+                if (typeof link !== 'undefined')
+                    return link;
+            } else {
+                var id = '' + flow;
+                link = this._flowUrls[id];
+                if (typeof link !== 'undefined')
+                    return link;
+            }
+        },
+
+        getFlowMdLink: function(flow, isTableCellContent) {
+            if (gs.nil(variableSet))
+                return '*null*';
+            var link;
+            if (variableSet instanceof GlideRecord || variableSet instanceof GlideRecordSecure) {
+                link = this._flowUrls[variableSet.getUniqueValue()];
+                if (typeof link !== 'undefined')
+                    return "[" + escapeForMarkdown(variableSet.getValue(gs.nil(variableSet.title) ? 'internal_name' : 'name'), isTableCellContent) + "](" + link + ")";
+                return "[" + escapeForMarkdown(variableSet.getValue(gs.nil(variableSet.title) ? 'internal_name' : 'name'), isTableCellContent) + "](" + instanceUri + variableSet.getLink(true) + ")";
+            }
+            var gr = getFlowFromId(variableSet);
+            link = this._flowUrls[gr.getUniqueValue()];
+            if (typeof link !== 'undefined')
+                return "[" + escapeForMarkdown(gr.getValue(gs.nil(gr.title) ? 'internal_name' : 'name'), isTableCellContent) + "](" + link + ")";
+            return "[" + escapeForMarkdown(gr.getValue(gs.nil(gr.title) ? 'internal_name' : 'name'), isTableCellContent) + "](" + instanceUri + gr.getLink(true) + ")";
+        },
+
+        type: 'MarkdownGenerationContext'
+    };
+
+    return MarkdownGenerationContextConstructor;
+})();]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>admin</sys_created_by>
+        <sys_created_on>2026-05-21 01:24:48</sys_created_on>
+        <sys_id>17eb7424c3810310d68db2ddd40131a3</sys_id>
+        <sys_mod_count>4</sys_mod_count>
+        <sys_name>MarkdownGenerationContext</sys_name>
+        <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
+        <sys_policy>read</sys_policy>
+        <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
+        <sys_update_name>sys_script_include_17eb7424c3810310d68db2ddd40131a3</sys_update_name>
+        <sys_updated_by>admin</sys_updated_by>
+        <sys_updated_on>2026-05-21 03:01:21</sys_updated_on>
+    </sys_script_include>
+</record_update>
