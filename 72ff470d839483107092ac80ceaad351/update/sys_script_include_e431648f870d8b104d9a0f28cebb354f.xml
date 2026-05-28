@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>x_1645769_lte_dhlp.TableMarkdownGenerator</api_name>
+        <caller_access/>
+        <client_callable>true</client_callable>
+        <description/>
+        <mobile_callable>false</mobile_callable>
+        <name>TableMarkdownGenerator</name>
+        <sandbox_callable>false</sandbox_callable>
+        <script><![CDATA[/** @type {TableMarkdownGeneratorConstructor} */
+var TableMarkdownGenerator = (function() {
+    /** @type {TableMarkdownGeneratorConstructor} */
+    var TableMarkdownGeneratorConstructor = Class.create();
+
+    var whiteSpaceRe = / \s*|(?! )\s+/g;
+    var newLineRe = /\r?\n/g;
+
+    /**
+     * @param {GlideRecordSecure} tableGlideRecord - sys_db_object
+     * @param {MarkdownGenerationContext} context 
+     * @returns {string}
+     */
+    function getTableMarkdown(tableGlideRecord, context) {
+        var markdown = '# ' + MarkdownGenerationContext.escapeForMarkdown(tableGlideRecord.getValue('label')) + "\n\n" +
+            '- **Name:** ' + MarkdownGenerationContext.escapeForMarkdown(tableGlideRecord.getValue('name'));
+        if (!gs.nil(tableGlideRecord.super_class))
+            markdown += "\n- **Extends table:** " + context.getTableMdLink(tableGlideRecord.getValue('super_class'));
+        if (tableGlideRecord.getDisplayValue('scriptable_table') == 'true')
+            markdown += "\n- **Remote table:** True";
+        if (tableGlideRecord.getDisplayValue('is_extendable') == 'true')
+            markdown += "\n- **Extensible:** True";
+        if (!gs.nil(tableGlideRecord.number_ref))
+            markdown += "\n- **Prefix:** " + MarkdownGenerationContext.escapeForMarkdown(tableGlideRecord.getDisplayValue('number_ref.prefix')) +
+            "\n- **Number:** " + MarkdownGenerationContext.escapeForMarkdown(tableGlideRecord.getDisplayValue('number_ref.number')) +
+            "\n- **Number of digits:** " + MarkdownGenerationContext.escapeForMarkdown(tableGlideRecord.getDisplayValue('number_ref.maximum_digits'));
+        if (!gs.nil(tableGlideRecord.access))
+            markdown += "\n- **Accessible from:** " + MarkdownGenerationContext.escapeForMarkdown(tableGlideRecord.getDisplayValue('access'));
+        if (tableGlideRecord.getDisplayValue('read_access') == 'false')
+            markdown += "\n- **Can read:** False";
+        if (tableGlideRecord.getDisplayValue('create_access') == 'false')
+            markdown += "\n- **Can create:** False";
+        if (tableGlideRecord.getDisplayValue('update_access') == 'false')
+            markdown += "\n- **Can update:** False";
+        if (tableGlideRecord.getDisplayValue('delete_access') == 'false')
+            markdown += "\n- **Can delete:** False";
+        if (tableGlideRecord.getDisplayValue('ws_access') == 'false')
+            markdown += "\n- **Allow access to this table via web services:** False";
+        if (tableGlideRecord.getDisplayValue('configuration_access') == 'true')
+            markdown += "\n- **Allow configuration:** True";
+        var name = tableGlideRecord.getValue('name');
+        var gr = new GlideRecord('sys_dictionary');
+        gr.addQuery('name', name);
+        gr.query();
+        if (gr.next()) {
+            markdown += "\n\n## Columns:\n\n| Column label | Type | Reference | Display |\n| ------------ | ---- | --------- | ------- |";
+            var element;
+            do {
+                element = gr.getValue('element');
+                markdown += "\n| [" + MarkdownGenerationContext.escapeForMarkdown(gs.nil(gr.column_label) ? element : gr.getValue('column_label'), true) + "](#column-" + element + ") | " +
+                    gr.getDislayValue('internal_type');
+                if (gs.nil(gr.reference))
+                    markdown += " |           | ";
+                else
+                    markdown += " | " + MarkdownGenerationContext.getTableMdLink(gr.reference.getRefRecord()) + " | ";
+                markdown += gr.display ? "True |" : "False |";
+            } while (gr.next());
+            gr = new GlideRecord('sys_dictionary');
+            gr.addQuery('name', name);
+            gr.query();
+            while (gr.next()) {
+                element = gr.getValue('element');
+                markdown += "\n\n### Column: " + element + "\n\n- **Type:** " + MarkdownGenerationContext.escapeForMarkdown(gr.getDisplayValue('internal_type'));
+                if (!gs.nil(gr.column_label))
+                    markdown += "\n- **Column label:** " + MarkdownGenerationContext.escapeForMarkdown(gr.getValue('column_label'));
+                if (!gs.nil(gr.column_label))
+                    markdown += "\n- **Max length:** " + gr.getDisplayValue('max_length');
+                if (!gs.active)
+                    markdown += "\n- **Active:** False";
+                if (gs.function_field)
+                    markdown += "\n- **Function field:** True";
+                if (gs.read_only)
+                    markdown += "\n- **Read only:** True";
+                if (gs.mandatory)
+                    markdown += "\n- **Mandatory:** True";
+                if (gs.display)
+                    markdown += "\n- **Display:** True";
+                /** @type {({ label: string; value: string }[])} */
+                var multiLineFields = [];
+                var value;
+                if (!gs.nil(gr.attributes)) {
+                    value = gr.getValue('attributes').trim();
+                    if (newLineRe.test(value))
+                        multiLineFields.push({
+                            label: "Attributes",
+                            value: value
+                        });
+                    else
+                        markdown += "\n- **Attributes:** `" + MarkdownGenerationContext.escapeForMarkdown(value);
+                }
+                if (!gs.nil(gr.reference)) {
+                    markdown += "\n- **Reference:** " + context.getTableMdLink(gr.reference.getRefRecord()) + "\n- **Use reference qualifier:** " + MarkdownGenerationContext.escapeForMarkdown(gr.getDisplayValue('use_reference_qualifier'));
+                    if (!gs.nil(gr.dynamic_ref_qual))
+                        markdown += "\n- **Dynamic ref qual:** " + MarkdownGenerationContext.escapeForMarkdown(gr.getDisplayValue('dynamic_ref_qual'));
+                    if (!gs.nil(gr.reference_key))
+                        markdown += "\n- **Reference key:** " + MarkdownGenerationContext.escapeForMarkdown(gr.getDisplayValue('reference_key'));
+                    if (!gs.nil(gr.reference_cascade_rule))
+                        markdown += "\n- **Reference cascade rule:** " + MarkdownGenerationContext.escapeForMarkdown(gr.getDisplayValue('reference_cascade_rule'));
+                    if (gr.reference_floats)
+                        markdown += "\n- **Reference floats:** True";
+                    if (gr.dynamic_creation)
+                        markdown += "\n- **Dynamic creation:** True";
+                }
+                if (!gs.nil(gr.choice))
+                    markdown += "\n- **Choice:** " + MarkdownGenerationContext.escapeForMarkdown(gr.getDisplayValue('choice'));
+                if (!gs.nil(gr.choice_table))
+                    markdown += "\n- **Choice table:** " + context.getTableMdLink(gr.getValue('choice_table'));
+                if (!gs.nil(gr.dependent))
+                    markdown += "\n- **Dependent:** " + MarkdownGenerationContext.escapeForMarkdown(gr.getDisplayValue('dependent'));
+                if (gr.use_dependent_field) {
+                    markdown += "\n- **Use depenent field:** True";
+                    if (!gs.nil(gr.dependent_on_field))
+                        markdown += "\n- **Dependent on field:** " + MarkdownGenerationContext.escapeForMarkdown(gr.getDisplayValue('dependent_on_field'));
+                }
+                if (!gs.nil(gr.virtual)) {
+                    value = gr.getValue('virtual').trim();
+                    if (newLineRe.test(value))
+                        multiLineFields.push({
+                            label: "Calculated",
+                            value: value
+                        });
+                    else
+                        markdown += "\n- **Calculated:** `" + MarkdownGenerationContext.escapeForMarkdown(value);
+                }
+                if (!gs.nil(gr.default_value)) {
+                    value = gr.getValue('default_value').trim();
+                    if (newLineRe.test(value))
+                        multiLineFields.push({
+                            label: "Default value",
+                            value: value
+                        });
+                    else
+                        markdown += "\n- **Default value:** `" + MarkdownGenerationContext.escapeForMarkdown(value);
+                }
+                var aclGr = new GlideRecord('sys_security_acl');
+                aclGr.addQuery(name + '.' + element);
+                aclGr.query();
+                if (aclGr.next()) {
+                    markdown += "\n\n**Access Controls:**\n\n| Name | Decision Type | Question | Type | Active |\n| ---- | ------------- | -------- | ---- | ------ |";
+                    do {
+                        markdown += "\n| Name | Decision Type | Question | Type | Active |";
+                    } while (aclGr.next);
+                }
+                var cGr = new GlideRecord('sys_choice');
+                cGr.addQuery('name', name);
+                cGr.addQuery('element', element);
+                cGr.query();
+                if (cGr.next()) {
+                    markdown += "\n\n**Choices:**\n\n| Label | Value | Language | Sequence | Inactive |\n| ----- | ----- | -------- | -------- | -------- |";
+                    do {
+                        if (gs.nil(cGr.label))
+                            markdown += "\n| *(empty)* | ";
+                        else
+                            markdown += "\n| " + cGr.getDisplayValue('label') + " | ";
+                        if (gs.nil(cGr.value))
+                            markdown += "*(empty)* | ";
+                        else
+                            markdown += cGr.getDisplayValue('value') + " | ";
+                        if (gs.nil(cGr.language))
+                            markdown += "*(empty)* | ";
+                        else
+                            markdown += cGr.getDisplayValue('language') + " | ";
+                        markdown += cGr.getDisplayValue('sequence') + (cGr.inactive ? " | True     |" : " | False    |");
+                    } while (cGr.next());
+                }
+            }
+        }
+        return markdown;
+    }
+
+    TableMarkdownGeneratorConstructor.getTableMarkdown = getTableMarkdown;
+
+    TableMarkdownGeneratorConstructor.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
+        getTableMarkdown: function() {
+            var target = this.getParameter('sysparm_sys_id');
+            if (!target)
+                return "Value for sys_id parameter not provided.";
+            var gr;
+            try {
+                gr = new GlideRecord('sys_db_object');
+                if (!gr.get(target))
+                    return "Table with sys_id " + JSON.stringify(target) + " not found.";
+            } catch (e) {
+                return "Error loading table with sys_id " + JSON.stringify(target) + ": " + e;
+            }
+            var ref_map = this.getParameter('sysparm_ref_map');
+            var referenceMap;
+            if (ref_map) {
+                try {
+                    referenceMap = JSON.parse(ref_map);
+                } catch (e) {
+                    return "Error parsing sysparm_ref_map: " + e;
+                }
+            } else
+                referenceMap = undefined;
+            var context = new MarkdownGenerationContext();
+            if (referenceMap)
+                context.importFromJson(referenceMap);
+            return getTableMarkdown(gr, context);
+        },
+
+        type: 'TableMarkdownGenerator'
+    });
+
+    return TableMarkdownGeneratorConstructor;
+})();]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>lerwinesa</sys_created_by>
+        <sys_created_on>2026-05-28 16:22:21</sys_created_on>
+        <sys_id>e431648f870d8b104d9a0f28cebb354f</sys_id>
+        <sys_mod_count>2</sys_mod_count>
+        <sys_name>TableMarkdownGenerator</sys_name>
+        <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
+        <sys_policy>read</sys_policy>
+        <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
+        <sys_update_name>sys_script_include_e431648f870d8b104d9a0f28cebb354f</sys_update_name>
+        <sys_updated_by>lerwinesa</sys_updated_by>
+        <sys_updated_on>2026-05-28 20:43:54</sys_updated_on>
+    </sys_script_include>
+</record_update>

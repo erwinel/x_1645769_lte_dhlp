@@ -43,4 +43,43 @@
         <vendor_prefix/>
         <version>1.0.0</version>
     </sys_app>
+    <sys_attachment action="INSERT_OR_UPDATE">
+        <average_image_color/>
+        <chunk_size_bytes>700000</chunk_size_bytes>
+        <compressed>true</compressed>
+        <content_type>application/zip</content_type>
+        <file_name>DevResources.zip</file_name>
+        <hash>509e7f21020bb9af14176636c421825e48b77849c455b6cea8c676389dbb7843</hash>
+        <image_height/>
+        <image_width/>
+        <size_bytes>1187</size_bytes>
+        <size_compressed>1168</size_compressed>
+        <state>available</state>
+        <sys_created_by>lerwinesa</sys_created_by>
+        <sys_created_on>2026-05-28 16:29:06</sys_created_on>
+        <sys_id>dad22403874d8b104d9a0f28cebb3506</sys_id>
+        <sys_mod_count>1</sys_mod_count>
+        <sys_updated_by>system</sys_updated_by>
+        <sys_updated_on>2026-05-28 16:29:07</sys_updated_on>
+        <table_name>sys_app</table_name>
+        <table_sys_id>72ff470d839483107092ac80ceaad351</table_sys_id>
+    </sys_attachment>
+    <sys_attachment_doc action="INSERT_OR_UPDATE">
+        <data>H4sIAAAAAAAA/w==</data>
+        <length>16</length>
+        <position>0</position>
+        <sys_attachment display_value="DevResources.zip" sys_id="dad22403874d8b104d9a0f28cebb3506">dad22403874d8b104d9a0f28cebb3506</sys_attachment>
+        <sys_created_by>lerwinesa</sys_created_by>
+        <sys_created_on>2026-05-28 16:29:06</sys_created_on>
+        <sys_id>1ed22403874d8b104d9a0f28cebb3506</sys_id>
+    </sys_attachment_doc>
+    <sys_attachment_doc action="INSERT_OR_UPDATE">
+        <data>C/BmZhFh4ADC0zu2xjAgAXEGBYaKeEMzE1NzM8v4nJLU+JSMnAK9FL2S4tIKbgZGFpAiMBEawsvArneCP6sXiHWB+GnE7aDbBgK1z7Wv2FjyyN5z1lx6sGH5EZE32w6nBPUn5a7oTt65Kchj5f+9k2SOfz8SoGHwlDE2Z+25eXeV1zsd+GrIfOS5ooK2xcLp87r/bpbc8DOTg6f41AW9VzWm561ebM/wPz952+bNGx27sn+XSCU9czVZoXM/tDtO9az01/+5l/yX3VM72/nRMVz28xW3042p7+ffviZ+2C7M+a7NCbY2zXmzav9+CeC9//qbeKz55NTfzLX3vc48/dW2lN/ulnj3vhsa0u9mi3/bmCinevtE5mk7/+NtO13Uds38HHeg0XeDtmRAXbrJjS9cTCW7G4/M/y/52/jFwg5j/R13AotLDl6IWz9z7xPfZWHvl55mnbDEWCb3yFSLFV9/+Z5Q6NojcjRPeM993sD7K4sLG26KLrx+sFM8RldGOU7kV8W7gh0PXb+nnTmvdsrg8zQ2CxemB7pScQdtYo1eiZZ3ZzPOvfGL8Y8NW/yCd5cddObuNHoulHN79uxVrrNfzC2Q8r+Ym2TjJpT38+aMIPkCgcULxW9WvHGWr4mPeCrw4eKnVLaaY01Llx79sy1LsaiQo33K0gtbbXSjV2SFHynZmGuunC37Q94oYJpUSMLV4/UWWkxPiy79Zk2fqaqbbtp66a3pk8sFV3qCrD/ZMj1/EOSmU5CulJC5r4z144xYJvf1gU+s9J71HU+M2hbg1SdhOIOh+QCrYZYox0ZX+eI3l72db5xftNDs/cK0lujWvVVPbXIFl0x7571fVqro4ArhA1uFHVXl5Vvazju9MXqu86DfyXnPqzkWTQ7z1A65T31n/sdPSrZtRn22us3DPkWd5Mbvwp9NdxboTz+S2/p04qk80b6kmbs/n1BMbu/b33z6tMOUI/ySc6VcPnvwuR4NKfJbx6xqZswX9WhVxio/PqHZqj1CvjP/VbfkZmaf+7mrpNaB673Q9fzNG40/viyVvLlwRjbny4P7WZt01t7Onnb10dYJgX5Pn5c+XV0enOO67Gia6NWl6ovkIuxmHSrh6fGb9V33Qj9nYIpnbvqT/KfePI7n/V9N7Dom/eCZf2bhq6tzW7L8vidqOQXbHGKd1OascFo/N3LVWSYmYX2GS73vX9dXrfL4f/Vb65bdwv9ieHeyfHuyxNaBsSzfj92l7sq/Sdd+TyvzV1l25/iDSs9Vy9RqdBynWlQ83JSlt+z/1hWfSr/Xa6yNYfy8ZsnWV/s+RghpF37cpHrt0aFv65dO23/7b3vQZNGfmy9FnP368OORqVX/N4WGet8UPulp9IvFyksvZ67bjLlt2tFBe8XCL5btb1rHHSO14E92dtZ3tx+GRdwl6/8qLn8wPezYRjON6Jd12noHf95f/48hwJudw5JfJew0MwMDkyQDkM/IJMKMKDGQ5cQZJOClx7ZGEEls+cHKwAgqPwK8WdlAAoxAGAukDcDSALKJ1qWjBAAA</data>
+        <length>1544</length>
+        <position>1</position>
+        <sys_attachment display_value="DevResources.zip" sys_id="dad22403874d8b104d9a0f28cebb3506">dad22403874d8b104d9a0f28cebb3506</sys_attachment>
+        <sys_created_by>lerwinesa</sys_created_by>
+        <sys_created_on>2026-05-28 16:29:06</sys_created_on>
+        <sys_id>1ad2a883874d8b104d9a0f28cebb35d8</sys_id>
+    </sys_attachment_doc>
 </record_update>
