@@ -110,7 +110,7 @@ var MarkdownGenerationContext = (function() {
      * @returns {string}
      */
     function escapeForMarkdown(text, isTableCellContent) {
-        return isTableCellContent ? text.replace(markdownTableReservedRe, '\\$&') : text.replace(markdownReservedRe, '\\$&').replace(markdownLeadReservedRe, '\\$&');
+        return gs.nil(text) ? '' : isTableCellContent ? text.replace(markdownTableReservedRe, '\\$&') : text.replace(markdownReservedRe, '\\$&').replace(markdownLeadReservedRe, '\\$&');
     }
 
     MarkdownGenerationContextConstructor.escapeForMarkdown = escapeForMarkdown;
@@ -125,6 +125,41 @@ var MarkdownGenerationContext = (function() {
         _flowUrls: {},
 
         initialize: function() {},
+
+        importFromJson: function(refMap) {
+            if (gs.nil(refMap))
+                return;
+            if (typeof refMap === 'string') {
+                refMap = JSON.parse(refMap);
+                if (gs.nil(refMap))
+                    return;
+            }
+            var id, url;
+            if (refMap.tables)
+                for (id in refMap.tables) {
+                    url = refMap.tables[id];
+                    if (typeof url == 'string')
+                        this.addTableUrl(id, url);
+                }
+            if (refMap.catalogItems)
+                for (id in refMap.catalogItems) {
+                    url = refMap.catalogItems[id];
+                    if (typeof url == 'string')
+                        this.addCatalogItemUrl(id, url);
+                }
+            if (refMap.variableSets)
+                for (id in refMap.variableSets) {
+                    url = refMap.variableSets[id];
+                    if (typeof url == 'string')
+                        this.addVariableSetUrl(id, url);
+                }
+            if (refMap.flows)
+                for (id in refMap.flows) {
+                    url = refMap.flows[id];
+                    if (typeof url == 'string')
+                        this.addFlowUrl(id, url);
+                }
+        },
 
         addTableUrl: function(id, url) {
             var gr = getTableFromId(id);
@@ -167,7 +202,7 @@ var MarkdownGenerationContext = (function() {
         },
 
         addCatalogItemUrl: function(sysID, url) {
-            this._catalogItemUrls[getCatalogItemFromSysId(id).getUniqueValue()] = url;
+            this._catalogItemUrls[getCatalogItemFromSysId(sysID).getUniqueValue()] = url;
         },
 
         getCatalogItemUrl: function(catalogItem) {
@@ -292,13 +327,13 @@ var MarkdownGenerationContext = (function() {
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-05-28 16:21:34</sys_created_on>
         <sys_id>84c0e44f870d8b104d9a0f28cebb3537</sys_id>
-        <sys_mod_count>0</sys_mod_count>
+        <sys_mod_count>4</sys_mod_count>
         <sys_name>MarkdownGenerationContext</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_84c0e44f870d8b104d9a0f28cebb3537</sys_update_name>
         <sys_updated_by>lerwinesa</sys_updated_by>
-        <sys_updated_on>2026-05-28 16:21:34</sys_updated_on>
+        <sys_updated_on>2026-05-28 22:39:30</sys_updated_on>
     </sys_script_include>
 </record_update>
