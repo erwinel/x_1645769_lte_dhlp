@@ -219,31 +219,31 @@ var TableMarkdownGenerator = (function() {
     TableMarkdownGeneratorConstructor.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         getTableMarkdown: function() {
 			try {
-            var target = this.getParameter('sysparm_sys_id');
-            if (!target)
-                return "Value for sys_id parameter not provided.";
-            var gr;
-            try {
-                gr = new GlideRecord('sys_db_object');
-                if (!gr.get(target))
-                    return "Table with sys_id " + JSON.stringify(target) + " not found.";
-            } catch (e) {
-                return "Error loading table with sys_id " + JSON.stringify(target) + ": " + e;
-            }
-            var ref_map = this.getParameter('sysparm_ref_map');
-            var referenceMap;
-            if (ref_map) {
+                var sys_id = this.getParameter('sysparm_sys_id');
+                if (!sys_id)
+                    return "Value for sys_id parameter not provided.";
+                var tableGlideRecord;
                 try {
-                    referenceMap = JSON.parse(ref_map);
+                    tableGlideRecord = new GlideRecord('sys_db_object');
+                    if (!tableGlideRecord.get(sys_id))
+                        return "Table with sys_id " + JSON.stringify(sys_id) + " not found.";
                 } catch (e) {
-                    return "Error parsing sysparm_ref_map: " + e;
+                    return "Error loading table with sys_id " + JSON.stringify(sys_id) + ": " + e;
                 }
-            } else
-                referenceMap = undefined;
-            var context = new MarkdownGenerationContext();
-            if (referenceMap)
-                context.importFromJson(referenceMap);
-            return getTableMarkdown(gr, context);
+                var ref_map = this.getParameter('sysparm_ref_map');
+                var referenceMap;
+                if (ref_map) {
+                    try {
+                        referenceMap = JSON.parse(ref_map);
+                    } catch (e) {
+                        return "Error parsing sysparm_ref_map: " + e;
+                    }
+                } else
+                    referenceMap = undefined;
+                var context = new MarkdownGenerationContext();
+                if (referenceMap)
+                    context.importFromJson(referenceMap);
+                return getTableMarkdown(tableGlideRecord, context);
 			} catch (e) {
 				return "Unexpected error: " + (e.stack ? e + "\nStack: " + e.stack : e);
 			}
@@ -258,13 +258,13 @@ var TableMarkdownGenerator = (function() {
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-05-28 16:22:21</sys_created_on>
         <sys_id>e431648f870d8b104d9a0f28cebb354f</sys_id>
-        <sys_mod_count>14</sys_mod_count>
+        <sys_mod_count>15</sys_mod_count>
         <sys_name>TableMarkdownGenerator</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_e431648f870d8b104d9a0f28cebb354f</sys_update_name>
         <sys_updated_by>lerwinesa</sys_updated_by>
-        <sys_updated_on>2026-05-28 22:05:37</sys_updated_on>
+        <sys_updated_on>2026-06-04 22:14:51</sys_updated_on>
     </sys_script_include>
 </record_update>

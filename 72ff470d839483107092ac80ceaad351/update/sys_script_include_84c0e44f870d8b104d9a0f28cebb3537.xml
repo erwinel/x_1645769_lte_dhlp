@@ -201,6 +201,42 @@ var MarkdownGenerationContext = (function() {
             return "[" + escapeForMarkdown(gr.getValue(gs.nil(gr.label) ? 'name' : 'label'), isTableCellContent) + "](" + instanceUri + gr.getLink(true) + ")";
         },
 
+        getTableElementMdLink: function(table, element, isTableCellContent) {
+            if (gs.nil(element))
+                return this.getTableMdLink(table, isTableCellContent);
+            var name = '' + element;
+            if (gs.nil(table))
+                return name;
+            var elGr = new GlideRecord('sys_dictionary');
+            if (table instanceof GlideRecord || table instanceof GlideRecordSecure) {
+                link = this._tableUrls[table.getUniqueValue()];
+                elGr.addQuery('name', '' + table.name);
+                elGr.addQuery('element', name);
+                elGr.Query();
+                if (elGr.next()) {
+                    if (typeof link !== 'undefined')
+                        return "[" + (gs.nil(elGr.column_label) ? name : escapeForMarkdown(elGr.getValue('column_label'), isTableCellContent)) + "](" + link + "#column-"  + name + ")";
+                    return "[" + escapeForMarkdown(table.getValue(gs.nil(table.label) ? 'name' : 'label'), isTableCellContent) + "](" + instanceUri + elGr.getLink(true) + ")";
+                }
+                if (typeof link !== 'undefined')
+                    return "[" + name + "](" + link + "#column-"  + name + ")";
+                return "[" + name + "](" + instanceUri + table.getLink(true) + ")";
+            }
+            var tGr = getTableFromId(table);
+            link = this._tableUrls[tGr.getUniqueValue()];
+            elGr.addQuery('name', tGr.getValue('name'));
+            elGr.addQuery('element', name);
+            elGr.Query();
+            if (elGr.next()) {
+                if (typeof link !== 'undefined')
+                    return "[" + (gs.nil(elGr.column_label) ? name : escapeForMarkdown(elGr.getValue('column_label'), isTableCellContent)) + "](" + link + "#column-"  + name + ")";
+                return "[" + escapeForMarkdown(tGr.getValue(gs.nil(tGr.label) ? 'name' : 'label'), isTableCellContent) + "](" + instanceUri + elGr.getLink(true) + ")";
+            }
+            if (typeof link !== 'undefined')
+                return "[" + name + "](" + link + "#column-"  + name + ")";
+            return "[" + name + "](" + instanceUri + tGr.getLink(true) + ")";
+        },
+
         addCatalogItemUrl: function(sysID, url) {
             this._catalogItemUrls[getCatalogItemFromSysId(sysID).getUniqueValue()] = url;
         },
@@ -318,6 +354,136 @@ var MarkdownGenerationContext = (function() {
             return "[" + escapeForMarkdown(gr.getValue(gs.nil(gr.title) ? 'internal_name' : 'name'), isTableCellContent) + "](" + instanceUri + gr.getLink(true) + ")";
         },
 
+        pushTableReferenceListItem: function(glideElement, markdownLines, showEmpty) {
+            if (gs.nil(glideElement)) {
+                if (showEmpty)
+                    markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** *Empty*');
+            } else
+                markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** ' + context.getTableMdLink(glideElement.getValue()));
+        },
+        
+        pushDisplayValueListItem: function(glideElement, markdownLines, multiLineStack, showEmpty) {
+            if (gs.nil(glideElement)) {
+                if (showEmpty)
+                    markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** *Empty*');
+            } else {
+                var value = glideElement.getDisplayValue();
+                if (newLineRe.test(value))
+                    multiLineStack.push({
+                        label: glideElement.getLabel(),
+                        language: 'text',
+                        value: value
+                    });
+                else
+                    markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** ' + MarkdownGenerationContext.escapeForMarkdown(value));
+            }
+        },
+    
+        pushValueListItem: function(glideElement, markdownLines, multiLineStack, showEmpty) {
+            if (gs.nil(glideElement)) {
+                if (showEmpty)
+                    markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** *Empty*');
+            } else {
+                var value = glideElement.getValue();
+                if (newLineRe.test(value))
+                    multiLineStack.push({
+                        label: glideElement.getLabel(),
+                        language: 'text',
+                        value: value
+                    });
+                else
+                    markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** ' + MarkdownGenerationContext.escapeForMarkdown(value));
+            }
+        },
+        
+        pushCodeListItem: function(glideElement, language, markdownLines, multiLineStack, showEmpty) {
+            if (gs.nil(glideElement)) {
+                if (showEmpty)
+                    markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** *Empty*');
+            } else {
+                var value = glideElement.getValue();
+                if (newLineRe.test(value))
+                    multiLineStack.push({
+                        label: glideElement.getLabel(),
+                        language: language,
+                        value: value
+                    });
+                else
+                    markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** `' + value + '`');
+            }
+        },
+    
+        pushBoolean: function(glideElement, markdownLines, showEmpty) {
+            if (gs.nil(glideElement)) {
+                if (showEmpty)
+                    markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** *Empty*');
+            } else {
+                var value = glideElement.getDisplayValue();
+                switch (value) {
+                    case 'true':
+                        value = 'True';
+                        break;
+                    case 'false':
+                        value = 'False';
+                        break;
+                    default:
+                        value = MarkdownGenerationContext.escapeForMarkdown(value);
+                        berak;
+                }
+                markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** ' + value);
+            }
+        },
+        
+        pushListItemIfTrue: function(glideElement, markdownLines) {
+            if (!gs.nil(glideElement) && glideElement.getDisplayValue() == 'true')
+                markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** False');
+        },
+        
+        pushListItemIfFalse: function(glideElement, markdownLines, nilIsFalse) {
+            if (gs.nil(glideElement) ? nilIsFalse : glideElement.getDisplayValue() == 'false')
+                markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** False');
+        },
+    
+        pushImageListItem: function(glideElement, markdownLines, showEmpty) {
+            if (gs.nil(glideElement)) {
+                if (showEmpty)
+                    markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** *Empty*');
+            } else {
+                var attachmentGr = new GlideRecord('sys_attachment');
+                if (attachmentGr.get(glideElement.getValue())) {
+                    var remoteFileName = glideElement.getDisplayValue();
+                    var fileName = remoteFileName;
+                    var content_type = attachmentGr.getValue('content_type');
+                    var m;
+                    switch (content_type) {
+                        case 'image/png':
+                            m = fileName.match(iixExtensionRe);
+                            if (m)
+                                fileName = m[1] + '.jpg';
+                            break;
+                        case 'image/jpeg':
+                            m = fileName.match(iixExtensionRe);
+                            if (m)
+                                fileName = m[1] + '.png';
+                            break;
+                        default:
+                            fileName = fileName + '; ' + content_type;
+                            break;
+                    }
+                    markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** ![' + MarkdownGenerationContext.escapeForMarkdown(fileName) + '](' + instanceUri + remoteFileName + ')');
+                } else
+                    markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** ' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getDisplayValue()));
+            }
+        },
+
+        pushMultiLineItems: function(multiLineStack, markdownLines) {
+            for (var i = 0; i < multiLineStack.length; i++) {
+                /** @type {MultiLineItem} */
+                var mi = multiLineStack[i];
+                markdownLines.push('', '**' + mi.label + ':**', '', '```' + mi.language, mi.value, '```');
+            }
+        },
+
         type: 'MarkdownGenerationContext'
     };
 
@@ -327,13 +493,13 @@ var MarkdownGenerationContext = (function() {
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-05-28 16:21:34</sys_created_on>
         <sys_id>84c0e44f870d8b104d9a0f28cebb3537</sys_id>
-        <sys_mod_count>4</sys_mod_count>
+        <sys_mod_count>6</sys_mod_count>
         <sys_name>MarkdownGenerationContext</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_84c0e44f870d8b104d9a0f28cebb3537</sys_update_name>
         <sys_updated_by>lerwinesa</sys_updated_by>
-        <sys_updated_on>2026-05-28 22:39:30</sys_updated_on>
+        <sys_updated_on>2026-06-05 00:03:45</sys_updated_on>
     </sys_script_include>
 </record_update>

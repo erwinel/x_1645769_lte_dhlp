@@ -11,14 +11,14 @@
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-04-23 20:36:02</sys_created_on>
         <sys_id>b27b05731b58c350c798a97ae54bcb74</sys_id>
-        <sys_mod_count>3</sys_mod_count>
+        <sys_mod_count>4</sys_mod_count>
         <sys_name>x_1645769_lte_dhlp.markdown_reference_map</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy/>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_properties_b27b05731b58c350c798a97ae54bcb74</sys_update_name>
         <sys_updated_by>lerwinesa</sys_updated_by>
-        <sys_updated_on>2026-05-28 20:45:40</sys_updated_on>
+        <sys_updated_on>2026-06-09 17:34:43</sys_updated_on>
         <type>string</type>
         <value>{&#13;
     "x_g_doj_access_mgt_person": { "display_text": "Person", "url": "Person-Table.md" },&#13;
@@ -37,7 +37,30 @@
     "uar_fte_signatory": { "display_text": "FTE Signatory", "url": "FTE-Signatory-Variable-Set.md" },&#13;
     "uar_security_signatory": { "display_text": "Security Signatory", "url": "Security-Signatory-Variable-Set.md" },&#13;
     "uar_data_steward_signatory": { "display_text": "Data Steward Signatory", "url": "Data-Steward-Signatory-Variable-Set.md" },&#13;
-    "uar_system_owner_approval": { "display_text": "System Owner Approval", "url": "System-Owner-Approval-Variable-Set.md" }&#13;
+    "uar_system_owner_approval": { "display_text": "System Owner Approval", "url": "System-Owner-Approval-Variable-Set.md" },&#13;
+    "5a7ea16d1b6fb610c798a97ae54bcb81": { "display_text": "Access for New User", "url": "Access-for-New-User-Catalog-Item.md" },&#13;
+    "316b2afc1b9ffe50c798a97ae54bcbc4": { "display_text": "Create Baseline Access Information", "url": "Create-Baseline-Access-Information-Catalog-Item.md" },&#13;
+    "eb11c6561b273e10c798a97ae54bcb8c": { "display_text": "Deactivate User", "url": "Deactivate-User-Catalog-Item.md" },&#13;
+    "a300844a87a8c3904d9a0f28cebb3595": { "display_text": "Fulfill New User Access Request", "url": "Fulfill-New-User-Access-Request-Catalog-Item.md" },&#13;
+    "2771895487fc07d04d9a0f28cebb358a": { "display_text": "Fulfill User Access Expiration", "url": "Fulfill-User-Access-Expiration-Catalog-Item.md" },&#13;
+    "0220084a87a8c3904d9a0f28cebb35a0": { "display_text": "Fulfill User Access Modification", "url": "Fulfill-User-Access-Modification-Catalog-Item.md" },&#13;
+    "1b30c84a87a8c3904d9a0f28cebb3504": { "display_text": "Fulfill User Deactivation", "url": "Fulfill-User-Deactivation-Catalog-Item.md" },&#13;
+    "7550cc4a87a8c3904d9a0f28cebb35cd": { "display_text": "Fulfill User Reactivation", "url": "Fulfill-User-Reactivation-Catalog-Item.md" },&#13;
+    "507556811b1f7290c798a97ae54bcb09": { "display_text": "Import Manually Approved Access Change", "url": "Import-Manually-Approved-Access-Change-Catalog-Item.md" },&#13;
+    "95910a1a1b273e10c798a97ae54bcb42": { "display_text": "Modify User Access", "url": "Modify-User-Access-Catalog-Item.md" },&#13;
+    "9f0ef1ad1befb610c798a97ae54bcbc0": { "display_text": "Reactivate User", "url": "Reactivate-User-Catalog-Item.md" },&#13;
+    "access_for_new_user": { "display_text": "Access for New User", "url": "Access-for-New-User-Flow.md" },&#13;
+    "check_access_modification_schedule": { "display_text": "Check Access Modification Schedule", "url": "Check-Access-Modification-Schedule-Flow.md" },&#13;
+    "add_new_person": { "display_text": "Create Baseline Access Information", "url": "Create-Baseline-Access-Information-Flow.md" },&#13;
+    "deactivate_user": { "display_text": "Deactivate User", "url": "Deactivate-User-Flow.md" },&#13;
+    "fulfill_new_user_access": { "display_text": "Fulfill New User Access Request", "url": "Fulfill-New-User-Access-Request-Flow.md" },&#13;
+    "fulfill_user_access_expiration": { "display_text": "Fulfill User Access Expiration", "url": "Fulfill-User-Access-Expiration-Flow.md" },&#13;
+    "fulfill_user_access_modification": { "display_text": "Fulfill User Access Modification", "url": "Fulfill-User-Access-Modification-Flow.md" },&#13;
+    "fulfill_user_deactivation": { "display_text": "Fulfill User Deactivation", "url": "Fulfill-User-Deactivation-Flow.md" },&#13;
+    "fulfill_user_reactivation": { "display_text": "Fulfill User Reactivation", "url": "Fulfill-User-Reactivation-Flow.md" },&#13;
+    "import_manuallyapproved_access_change": { "display_text": "Import Manually Approved Access Change", "url": "Import-Manually-Approved-Access-Change-Flow.md" },&#13;
+    "modify_user_access": { "display_text": "Modify User Access", "url": "Modify-User-Access-Flow.md" },&#13;
+    "reactivate_user": { "display_text": "Reactivate User", "url": "Reactivate-User-Flow.md" }&#13;
 }</value>
         <write_roles>x_1645769_lte_dhlp.admin,admin</write_roles>
     </sys_properties>
