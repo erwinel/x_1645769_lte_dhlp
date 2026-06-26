@@ -9,43 +9,7 @@
         <mobile_callable>false</mobile_callable>
         <name>LTEDevHelper</name>
         <sandbox_callable>false</sandbox_callable>
-        <script><![CDATA[/** @typedef {("^NQ"|"^OR"|"^")} SnLogicalQueryOperator */
-/** @typedef {("="|"!="|"<"|">"|"<="|">="|"LIKE"|"NOT LIKE"|"STARTSWITH"|"ENDSWITH"|"INSTANCEOF"|"BETWEEN"|"SAMEAS"|"NSAMEAS"|"ISEMPTY"|"ISNOTEMPTY"|"ANYTHING"|"EMPTYSTRING"|"IN"|"NOT IN")} SnComparisonQueryOperator */
-
-/**
- * @typedef SnQueryComparisonToken
- * @property {string} lValue
- * @property {SnComparisonQueryOperator} [operator]
- * @property {(string|string[])} [rValue]
- */
-
-/** @typedef {(SnQueryComparisonToken|SnLogicalQueryOperator)} SnQueryExpressionToken */
-
-/**
- * @typedef MarkdownLink
- * @property {string} display_text
- * @property {string} url
- */
-
-/** @typedef {({ [key: string]: MarkdownLink })} MarkdownLinkMap */
-
-/**
- * @typedef LTEDevHelperStatic
- * @property {{(text: string, isTableCellContent?: boolean): string}} escapeForMarkdown
- * @property {{(queryString: string): SnQueryExpressionToken[]}} tokenizeQueryString
- * @property {{(target: (GlideRecord<"sc_cat_item"> & sc_cat_item) | string, referenceMap: MarkdownLinkMap): string}} getCatalogItemMarkdown
- * @property {{(target: (GlideRecord<"item_option_new_set"> & item_option_new_set) | string, referenceMap: MarkdownLinkMap): string}} getVariableSetMarkdown
- */
-/**
- * Escapes text for use in Markdown
- * @func escapeForMarkdown2
- * @static
- * @memberof LTEDevHelperStatic
- * @param {string} text - The text to escape
- * @param {boolean} [isTableCellContent] - true if 
- */
-
-/** @type {LTEDevHelperStatic} */
+        <script><![CDATA[/** @type {LTEDevHelperConstructor} */
 var LTEDevHelper = (function() {
     var instanceUri = gs.getProperty('glide.servlet.uri'); // Gets the base URL of your instance
 
@@ -974,7 +938,7 @@ var LTEDevHelper = (function() {
             do {
                 var vn = gr.getValue('variable');
                 item = varsByName[vn];
-                text = text + "\n| [" + ((typeof item === 'undefined') ? vn : item.name.display_text) + (item.is_variable_set ? "](#variable-set-" : "](#variable-") + vn + ") | ";
+                text = text + "\n| [" + ((typeof item === 'undefined') ? vn : item.name.display_text) + ((typeof item !== 'undefined' && item.is_variable_set) ? "](#variable-set-" : "](#variable-") + vn + ") | ";
                 switch (gr.getValue('mandatory')) {
                     case 'true':
                         text = text + "True        | ";
@@ -1100,7 +1064,7 @@ var LTEDevHelper = (function() {
     function getClientScriptMarkdown(glideRecord, varsBySysId) {
         var typeName = glideRecord.getValue('type');
         var text = "\n\n### Client Script: " + glideRecord.getValue('name') + "\n\n- **Type:** " + typeName;
-        if (typeName == 'onChange') {
+        if (typeName == 'onChange' && !gs.nil(glideRecord.cat_variable)) {
             var cat_variable = glideRecord.getValue('cat_variable');
             if (cat_variable.startsWith('IO:')) {
                 cat_variable = cat_variable.substring(3);
@@ -1171,26 +1135,28 @@ var LTEDevHelper = (function() {
         return text;
     }
 
-	function ensureReferenceMap(referenceMap) {
-		var markdown_reference_map = gs.getProperty('x_1645769_lte_dhlp.markdown_reference_map');
-		if (markdown_reference_map) {
-			var defaultMap;
-			try {
-				defaultMap = JSON.parse(markdown_reference_map);
-				if (typeof referenceMap === 'object' && referenceMap !== null)
-					return referenceMap;
-			} catch { defaultMap = undefined; }
-			if (typeof defaultMap === 'object' && defaultMap !== null) {
-				if (typeof referenceMap === 'object' && referenceMap !== null) {
-					for (var n in referenceMap)
-						defaultMap[n] = referenceMap[n];
-				}
-				return defaultMap;
-			}
-		}
+    function ensureReferenceMap(referenceMap) {
+        var markdown_reference_map = gs.getProperty('x_1645769_lte_dhlp.markdown_reference_map');
+        if (markdown_reference_map) {
+            var defaultMap;
+            try {
+                defaultMap = JSON.parse(markdown_reference_map);
+                if (typeof referenceMap === 'object' && referenceMap !== null)
+                    return referenceMap;
+            } catch (e) {
+                defaultMap = undefined;
+            }
+            if (typeof defaultMap === 'object' && defaultMap !== null) {
+                if (typeof referenceMap === 'object' && referenceMap !== null) {
+                    for (var n in referenceMap)
+                        defaultMap[n] = referenceMap[n];
+                }
+                return defaultMap;
+            }
+        }
 
-		return (typeof referenceMap === 'object' && referenceMap !== null) ? referenceMap : {};
-	}
+        return (typeof referenceMap === 'object' && referenceMap !== null) ? referenceMap : {};
+    }
 
     /**
      * @param {(GlideRecord<"sc_cat_item"> & sc_cat_item)} glideRecord
@@ -1403,6 +1369,7 @@ var LTEDevHelper = (function() {
         return text + getVarSetUiPoliciesMarkdown(var_set_sys_id, varsByName, varsBySysId) + getVarSetClientScriptsMarkdown(var_set_sys_id, varsBySysId);
     }
 
+    /** @type {LTEDevHelperConstructor} */
     var LTEDevHelperConstructor = Class.create();
     LTEDevHelperConstructor.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         getCatalogItemMarkdown: function() {
@@ -1415,7 +1382,7 @@ var LTEDevHelper = (function() {
                 if (!gr.get(target))
                     return "Catalog item with sys_id " + JSON.stringify(target) + " not found.";
             } catch (e) {
-                return "Error loading catalog item with sys_id " + JSON.stringify(target) + ": " + e;
+                return "Error loading catalog item with sys_id " + JSON.stringify(target) + ": " + (e.stack ? e + "\nStack:\n" + e.stack : e);
             }
             var ref_map = this.getParameter('sysparm_ref_map');
             var referenceMap;
@@ -1423,11 +1390,15 @@ var LTEDevHelper = (function() {
                 try {
                     referenceMap = JSON.parse(ref_map);
                 } catch (e) {
-                    return "Error parsing sysparm_ref_map: " + e;
+                    return "Error parsing sysparm_ref_map: " + (e.stack ? e + "\nStack:\n" + e.stack : e);
                 }
             } else
                 referenceMap = undefined;
-            return getCatalogItemMarkdown(gr, ensureReferenceMap(referenceMap));
+            try {
+                return getCatalogItemMarkdown(gr, ensureReferenceMap(referenceMap));
+            } catch (e) {
+                return "Error generating markdown: " + (e.stack ? e + "\nStack:\n" + e.stack : e);
+            }
         },
 
         getVariableSetMarkdown: function() {
@@ -1496,13 +1467,13 @@ var LTEDevHelper = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-04-15 17:39:37</sys_created_on>
         <sys_id>4b109b0d839483107092ac80ceaad3e3</sys_id>
-        <sys_mod_count>11</sys_mod_count>
+        <sys_mod_count>27</sys_mod_count>
         <sys_name>LTEDevHelper</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_4b109b0d839483107092ac80ceaad3e3</sys_update_name>
         <sys_updated_by>lerwinesa</sys_updated_by>
-        <sys_updated_on>2026-04-23 22:43:35</sys_updated_on>
+        <sys_updated_on>2026-06-11 23:49:06</sys_updated_on>
     </sys_script_include>
 </record_update>
