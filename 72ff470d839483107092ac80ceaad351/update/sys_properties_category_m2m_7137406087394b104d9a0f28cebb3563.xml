@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_properties_category_m2m">
+    <sys_properties_category_m2m action="INSERT_OR_UPDATE">
+        <category display_value="Lenny's SN Dev Helper">d36b81731b58c350c798a97ae54bcbb6</category>
+        <order>200</order>
+        <property display_value="x_1645769_lte_dhlp.cat_item_md_mappings" name="x_1645769_lte_dhlp.cat_item_md_mappings">743acf1487314b104d9a0f28cebb35ef</property>
+        <sys_class_name>sys_properties_category_m2m</sys_class_name>
+        <sys_created_by>lerwinesa</sys_created_by>
+        <sys_created_on>2026-06-27 02:50:40</sys_created_on>
+        <sys_id>7137406087394b104d9a0f28cebb3563</sys_id>
+        <sys_mod_count>0</sys_mod_count>
+        <sys_name>x_1645769_lte_dhlp.cat_item_md_mappings.Lenny's SN Dev Helper</sys_name>
+        <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
+        <sys_update_name>sys_properties_category_m2m_7137406087394b104d9a0f28cebb3563</sys_update_name>
+        <sys_updated_by>lerwinesa</sys_updated_by>
+        <sys_updated_on>2026-06-27 02:50:40</sys_updated_on>
+    </sys_properties_category_m2m>
+</record_update>
