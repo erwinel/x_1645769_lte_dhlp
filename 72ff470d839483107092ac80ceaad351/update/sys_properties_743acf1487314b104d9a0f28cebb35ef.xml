@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_properties">
+    <sys_properties action="INSERT_OR_UPDATE">
+        <choices/>
+        <description/>
+        <ignore_cache>true</ignore_cache>
+        <is_private>false</is_private>
+        <name>x_1645769_lte_dhlp.cat_item_md_mappings</name>
+        <read_roles/>
+        <suffix>cat_item_md_mappings</suffix>
+        <sys_class_name>sys_properties</sys_class_name>
+        <sys_created_by>lerwinesa</sys_created_by>
+        <sys_created_on>2026-06-26 22:24:40</sys_created_on>
+        <sys_id>743acf1487314b104d9a0f28cebb35ef</sys_id>
+        <sys_mod_count>2</sys_mod_count>
+        <sys_name>x_1645769_lte_dhlp.cat_item_md_mappings</sys_name>
+        <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
+        <sys_update_name>sys_properties_743acf1487314b104d9a0f28cebb35ef</sys_update_name>
+        <sys_updated_by>lerwinesa</sys_updated_by>
+        <sys_updated_on>2026-06-26 23:41:07</sys_updated_on>
+        <type>string</type>
+        <value>[&#13;
+    {&#13;
+        "display_name": "Access for New User",&#13;
+        "sys_id": "5a7ea16d1b6fb610c798a97ae54bcb81",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Access-for-New-User-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Create Baseline Access Information",&#13;
+        "sys_id": "316b2afc1b9ffe50c798a97ae54bcbc4",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Create-Baseline-Access-Information-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Create Baseline Service Account Information",&#13;
+        "sys_id": "82da47fa1bd50b10c798a97ae54bcbc3",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Create-Baseline-Service-Account-Information-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Create Baseline Test Account Information",&#13;
+        "sys_id": "964b47721b190b10c798a97ae54bcba1",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Create-Baseline-Test-Account-Information-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Deactivate Service Account",&#13;
+        "sys_id": "dc2b584d1b9d0f50c798a97ae54bcbe5",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Deactivate-Service-Account-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Deactivate Test Account",&#13;
+        "sys_id": "b16b148d1b9d0f50c798a97ae54bcb19",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Deactivate-Test-Account-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Deactivate User",&#13;
+        "sys_id": "eb11c6561b273e10c798a97ae54bcb8c",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Deactivate-User-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Fulfill New User Access Request",&#13;
+        "sys_id": "a300844a87a8c3904d9a0f28cebb3595",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Fulfill-New-User-Access-Request-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Fulfill User Access Expiration",&#13;
+        "sys_id": "2771895487fc07d04d9a0f28cebb358a",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Fulfill-User-Access-Expiration-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Fulfill User Access Modification",&#13;
+        "sys_id": "0220084a87a8c3904d9a0f28cebb35a0",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Fulfill-User-Access-Modification-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Fulfill User Deactivation",&#13;
+        "sys_id": "1b30c84a87a8c3904d9a0f28cebb3504",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Fulfill-User-Deactivation-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Fulfill User Reactivation",&#13;
+        "sys_id": "7550cc4a87a8c3904d9a0f28cebb35cd",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Fulfill-User-Reactivation-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Import Manually-Approved Access Change",&#13;
+        "sys_id": "507556811b1f7290c798a97ae54bcb09",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Import-Manually-Approved-Access-Change-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Modify Service Account Access",&#13;
+        "sys_id": "9d9a540d1b9d0f50c798a97ae54bcbd0",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Modify-Service-Account-Access-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Modify Test Account Access",&#13;
+        "sys_id": "f2da104d1b9d0f50c798a97ae54bcb1e",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Modify-Test-Account-Access-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Modify User Access",&#13;
+        "sys_id": "95910a1a1b273e10c798a97ae54bcb42",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Modify-User-Access-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "New Service Account",&#13;
+        "sys_id": "512958091b9d0f50c798a97ae54bcb22",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "New-Service-Account-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "New Test Account",&#13;
+        "sys_id": "f44a18c91b9d0f50c798a97ae54bcb5f",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "New-Test-Account-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Reactivate Service Account",&#13;
+        "sys_id": "8b9bd88d1b9d0f50c798a97ae54bcbba",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Reactivate-Service-Account-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Reactivate Test Account",&#13;
+        "sys_id": "49eb54cd1b9d0f50c798a97ae54bcb69",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Reactivate-Test-Account-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Reactivate User",&#13;
+        "sys_id": "9f0ef1ad1befb610c798a97ae54bcbc0",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Reactivate-User-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Scheduled Service Account Deactivation",&#13;
+        "sys_id": "82c743c18721c3504d9a0f28cebb354a",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Scheduled-Service-Account-Deactivation-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Scheduled Service Account Expiration",&#13;
+        "sys_id": "7d370f418721c3504d9a0f28cebb3540",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Scheduled-Service-Account-Expiration-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Scheduled Test Account Deactivation",&#13;
+        "sys_id": "a4f7cbc987ad83504d9a0f28cebb35f4",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Scheduled-Test-Account-Deactivation-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Scheduled Test Account Expiration",&#13;
+        "sys_id": "5597030987ad83504d9a0f28cebb35c6",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Scheduled-Test-Account-Expiration-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Add New Metro Office",&#13;
+        "sys_id": "d78e05be1b21f250c798a97ae54bcb53",&#13;
+        "folder": "usmsprogop",&#13;
+        "file_link": "Add-New-Metro-Office-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Add New POMS Branch",&#13;
+        "sys_id": "35d105761bedb250c798a97ae54bcb24",&#13;
+        "folder": "usmsprogop",&#13;
+        "file_link": "Add-New-POMS-Branch-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Add New POMS Region",&#13;
+        "sys_id": "4b1914ce87548e10246131d70cbb3574",&#13;
+        "folder": "usmsprogop",&#13;
+        "file_link": "Add-New-POMS-Region-Catalog-Item.md"&#13;
+    }&#13;
+]</value>
+        <write_roles>x_1645769_lte_dhlp.admin</write_roles>
+    </sys_properties>
+    <sys_translated_text action="delete_multiple" query="documentkey=743acf1487314b104d9a0f28cebb35ef"/>
+</record_update>

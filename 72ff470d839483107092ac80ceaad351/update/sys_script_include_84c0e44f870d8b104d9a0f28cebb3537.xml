@@ -31,77 +31,11 @@ var MarkdownGenerationContext = (function() {
 
     MarkdownGenerationContextConstructor.getInstanceUrl = getInstanceUrl;
 
-    /**
-     * @param {string} id 
-     * @returns {GlideRecordSecure}
-     */
-    function getTableFromId(id) {
-        var gr = new GlideRecordSecure('sys_db_object');
-        if (!gr.get(id)) {
-            gr = new GlideRecordSecure('sys_db_object');
-            gr.addQuery('name', id);
-            gr.query();
-            if (!gr.next())
-                throw new Error("Cannot find Table with name or Sys ID of " + JSON.stringify(id));
-        }
-        return gr;
-    }
-
-    MarkdownGenerationContextConstructor.getTableFromId = getTableFromId;
-
-    /**
-     * @param {string} sysID 
-     * @returns {GlideRecordSecure}
-     */
-    function getCatalogItemFromSysId(sysID) {
-        var gr = new GlideRecordSecure('sc_cat_item');
-        if (!gr.get(sysID))
-            throw new Error("Cannot find Catalog Item with Sys ID of " + JSON.stringify(sysID));
-        return gr;
-    }
-
-    MarkdownGenerationContextConstructor.getCatalogItemFromSysId = getCatalogItemFromSysId;
-
-    /**
-     * @param {string} id 
-     * @returns {GlideRecordSecure}
-     */
-    function getVariableSetFromId(id) {
-        var gr = new GlideRecordSecure('item_option_new_set');
-        if (!gr.get(id)) {
-            gr = new GlideRecordSecure('item_option_new_set');
-            gr.addQuery('internal_name', id);
-            gr.query();
-            if (!gr.next())
-                throw new Error("Cannot find Variable Set with internal name or Sys ID of " + JSON.stringify(id));
-        }
-        return gr;
-    }
-
-    MarkdownGenerationContextConstructor.getVariableSetFromId = getVariableSetFromId;
-
-    /**
-     * @param {string} id 
-     * @returns {GlideRecordSecure}
-     */
-    function getFlowFromId(id) {
-        var gr = new GlideRecordSecure('sys_hub_flow');
-        if (!gr.get(id)) {
-            gr = new GlideRecordSecure('sys_hub_flow');
-            gr.addQuery('internal_name', id);
-            gr.query();
-            if (!gr.next())
-                throw new Error("Cannot find Flow with internal name or Sys ID of " + JSON.stringify(id));
-        }
-        return gr;
-    }
-
-    MarkdownGenerationContextConstructor.getFlowFromId = getFlowFromId;
-
     var markdownReservedRe = /[\\`*[\]()]/g;
     var markdownLeadReservedRe = /^[#|]/;
     var markdownTableReservedRe = /[\\`*[\]()|]/g;
     var newLineRe = /\n/g;
+    var abnormalWsRe = / \s+|(?! )\s+/g;
     var codeBlockReqRe = /[\n`]/g;
 
     /**
@@ -115,243 +49,51 @@ var MarkdownGenerationContext = (function() {
 
     MarkdownGenerationContextConstructor.escapeForMarkdown = escapeForMarkdown;
 
+    /**
+     * @param {string} text
+     * @param {boolean} [isTableCellContent]
+     * @returns {string}
+     */
+    function normalizeWhiteSpace(text) {
+        return gs.nil(text) ? '' : ('' + text).replace(abnormalWsRe, ' ').trim();
+    }
+
+    MarkdownGenerationContextConstructor.normalizeWhiteSpace = normalizeWhiteSpace;
+
     MarkdownGenerationContextConstructor.prototype = {
-        _tableUrls: {},
+        mapper: null,
+        _current_folder: '',
 
-        _catalogItemUrls: {},
-
-        _variableSetUrls: {},
-
-        _flowUrls: {},
-
-        initialize: function() {},
-
-        importFromJson: function(refMap) {
-            if (gs.nil(refMap))
-                return;
-            if (typeof refMap === 'string') {
-                refMap = JSON.parse(refMap);
-                if (gs.nil(refMap))
-                    return;
-            }
-            var id, url;
-            if (refMap.tables)
-                for (id in refMap.tables) {
-                    url = refMap.tables[id];
-                    if (typeof url == 'string')
-                        this.addTableUrl(id, url);
-                }
-            if (refMap.catalogItems)
-                for (id in refMap.catalogItems) {
-                    url = refMap.catalogItems[id];
-                    if (typeof url == 'string')
-                        this.addCatalogItemUrl(id, url);
-                }
-            if (refMap.variableSets)
-                for (id in refMap.variableSets) {
-                    url = refMap.variableSets[id];
-                    if (typeof url == 'string')
-                        this.addVariableSetUrl(id, url);
-                }
-            if (refMap.flows)
-                for (id in refMap.flows) {
-                    url = refMap.flows[id];
-                    if (typeof url == 'string')
-                        this.addFlowUrl(id, url);
-                }
+        initialize: function() {
+            this.mapper = new ReferenceLinkMapper();
         },
 
-        addTableUrl: function(id, url) {
-            var gr = getTableFromId(id);
-            if (!gs.nil(gr.name))
-                this._tableUrls[gr.getValue('name')] = url;
-            this._tableUrls[gr.getValue('sys_id')] = url;
+        getCurrentFolder: function() {
+            return this._current_folder;
         },
 
-        getTableUrl: function(table) {
-            if (gs.nil(table))
-                return;
-            var link;
-            if (table instanceof GlideRecord || table instanceof GlideRecordSecure) {
-                link = this._tableUrls[table.getUniqueValue()];
-                if (typeof link !== 'undefined')
-                    return link;
-            } else {
-                var id = '' + table;
-                link = this._tableUrls[id];
-                if (typeof link !== 'undefined')
-                    return link;
-            }
+        setCurrentFolder: function(folder) {
+            this._current_folder = ('' + folder);
         },
 
-        getTableMdLink: function(table, isTableCellContent) {
-            if (gs.nil(table))
-                return '*null*';
-            var link;
-            if (table instanceof GlideRecord || table instanceof GlideRecordSecure) {
-                link = this._tableUrls[table.getUniqueValue()];
-                if (typeof link !== 'undefined')
-                    return "[" + escapeForMarkdown(table.getValue(gs.nil(table.label) ? 'name' : 'label'), isTableCellContent) + "](" + link + ")";
-                return "[" + escapeForMarkdown(table.getValue(gs.nil(table.label) ? 'name' : 'label'), isTableCellContent) + "](" + instanceUri + table.getLink(true) + ")";
-            }
-            var gr = getTableFromId(table);
-            link = this._tableUrls[gr.getUniqueValue()];
-            if (typeof link !== 'undefined')
-                return "[" + escapeForMarkdown(gr.getValue(gs.nil(gr.label) ? 'name' : 'label'), isTableCellContent) + "](" + link + ")";
-            return "[" + escapeForMarkdown(gr.getValue(gs.nil(gr.label) ? 'name' : 'label'), isTableCellContent) + "](" + instanceUri + gr.getLink(true) + ")";
+        getTableReferenceMdLink: function(glideElement, isForTableCell) {
+            return this.mapper.getTableMdLink(glideElement, this._current_folder, isForTableCell);
         },
 
-        getTableElementMdLink: function(table, element, isTableCellContent) {
-            if (gs.nil(element))
-                return this.getTableMdLink(table, isTableCellContent);
-            var name = '' + element;
-            if (gs.nil(table))
-                return name;
-            var elGr = new GlideRecord('sys_dictionary');
-            if (table instanceof GlideRecord || table instanceof GlideRecordSecure) {
-                link = this._tableUrls[table.getUniqueValue()];
-                elGr.addQuery('name', '' + table.name);
-                elGr.addQuery('element', name);
-                elGr.Query();
-                if (elGr.next()) {
-                    if (typeof link !== 'undefined')
-                        return "[" + (gs.nil(elGr.column_label) ? name : escapeForMarkdown(elGr.getValue('column_label'), isTableCellContent)) + "](" + link + "#column-"  + name + ")";
-                    return "[" + escapeForMarkdown(table.getValue(gs.nil(table.label) ? 'name' : 'label'), isTableCellContent) + "](" + instanceUri + elGr.getLink(true) + ")";
-                }
-                if (typeof link !== 'undefined')
-                    return "[" + name + "](" + link + "#column-"  + name + ")";
-                return "[" + name + "](" + instanceUri + table.getLink(true) + ")";
-            }
-            var tGr = getTableFromId(table);
-            link = this._tableUrls[tGr.getUniqueValue()];
-            elGr.addQuery('name', tGr.getValue('name'));
-            elGr.addQuery('element', name);
-            elGr.Query();
-            if (elGr.next()) {
-                if (typeof link !== 'undefined')
-                    return "[" + (gs.nil(elGr.column_label) ? name : escapeForMarkdown(elGr.getValue('column_label'), isTableCellContent)) + "](" + link + "#column-"  + name + ")";
-                return "[" + escapeForMarkdown(tGr.getValue(gs.nil(tGr.label) ? 'name' : 'label'), isTableCellContent) + "](" + instanceUri + elGr.getLink(true) + ")";
-            }
-            if (typeof link !== 'undefined')
-                return "[" + name + "](" + link + "#column-"  + name + ")";
-            return "[" + name + "](" + instanceUri + tGr.getLink(true) + ")";
+        getColumnReferenceMdLink: function(tableElement, columnElement, isForTableCell) {
+            return this.mapper.getColumnMarkdownLink(tableElement, columnElement, this._current_folder, isForTableCell);
         },
 
-        addCatalogItemUrl: function(sysID, url) {
-            this._catalogItemUrls[getCatalogItemFromSysId(sysID).getUniqueValue()] = url;
+        getCatItemReferenceMdLink: function(glideElement, isForTableCell) {
+            return this.mapper.getCatItemMdLink(glideElement, this._current_folder, isForTableCell);
         },
 
-        getCatalogItemUrl: function(catalogItem) {
-            if (gs.nil(catalogItem))
-                return;
-            var link;
-            if (catalogItem instanceof GlideRecord || catalogItem instanceof GlideRecordSecure) {
-                link = this._catalogItemUrls[catalogItem.getUniqueValue()];
-                if (typeof link !== 'undefined')
-                    return link;
-            } else {
-                var id = '' + catalogItem;
-                link = this._catalogItemUrls[id];
-                if (typeof link !== 'undefined')
-                    return link;
-            }
+        getFlowReferenceMdLink: function(glideElement, isForTableCell) {
+            return this.mapper.getFlowMdLink(glideElement, this._current_folder, isForTableCell);
         },
 
-        getCatalogItemMdLink: function(catalogItem, isTableCellContent) {
-            if (gs.nil(catalogItem))
-                return '*null*';
-            var link;
-            if (catalogItem instanceof GlideRecord || catalogItem instanceof GlideRecordSecure) {
-                link = this._catalogItemUrls[catalogItem.getUniqueValue()];
-                if (typeof link !== 'undefined')
-                    return "[" + escapeForMarkdown(catalogItem.getValue('name'), isTableCellContent) + "](" + link + ")";
-                return "[" + escapeForMarkdown(catalogItem.getValue('name'), isTableCellContent) + "](" + instanceUri + catalogItem.getLink(true) + ")";
-            }
-            var gr = getCatalogItemFromSysId(catalogItem);
-            link = this._catalogItemUrls[gr.getUniqueValue()];
-            if (typeof link !== 'undefined')
-                return "[" + escapeForMarkdown(gr.getValue('name'), isTableCellContent) + "](" + link + ")";
-            return "[" + escapeForMarkdown(gr.getValue('name'), isTableCellContent) + "](" + instanceUri + gr.getLink(true) + ")";
-        },
-
-        addVariableSetUrl: function(id, url) {
-            var gr = getVariableSetFromId(id);
-            if (!gs.nil(gr.internal_name))
-                this._variableSetUrls[gr.getValue('internal_name')] = url;
-            this._variableSetUrls[gr.getValue('sys_id')] = url;
-        },
-
-        getVariableSetUrl: function(variableSet) {
-            if (gs.nil(variableSet))
-                return;
-            var link;
-            if (variableSet instanceof GlideRecord || variableSet instanceof GlideRecordSecure) {
-                link = this._variableSetUrls[variableSet.getUniqueValue()];
-                if (typeof link !== 'undefined')
-                    return link;
-            } else {
-                var id = '' + variableSet;
-                link = this._variableSetUrls[id];
-                if (typeof link !== 'undefined')
-                    return link;
-            }
-        },
-
-        getVariableSetMdLink: function(variableSet, isTableCellContent) {
-            if (gs.nil(variableSet))
-                return '*null*';
-            var link;
-            if (variableSet instanceof GlideRecord || variableSet instanceof GlideRecordSecure) {
-                link = this._variableSetUrls[variableSet.getUniqueValue()];
-                if (typeof link !== 'undefined')
-                    return "[" + escapeForMarkdown(variableSet.getValue(gs.nil(variableSet.title) ? 'internal_name' : 'title'), isTableCellContent) + "](" + link + ")";
-                return "[" + escapeForMarkdown(variableSet.getValue(gs.nil(variableSet.title) ? 'internal_name' : 'title'), isTableCellContent) + "](" + instanceUri + variableSet.getLink(true) + ")";
-            }
-            var gr = getVariableSetFromId(variableSet);
-            link = this._variableSetUrls[gr.getUniqueValue()];
-            if (typeof link !== 'undefined')
-                return "[" + escapeForMarkdown(gr.getValue(gs.nil(gr.title) ? 'internal_name' : 'title'), isTableCellContent) + "](" + link + ")";
-            return "[" + escapeForMarkdown(gr.getValue(gs.nil(gr.title) ? 'internal_name' : 'title'), isTableCellContent) + "](" + instanceUri + gr.getLink(true) + ")";
-        },
-
-        addFlowUrl: function(id, url) {
-            var gr = getFlowFromId(id);
-            if (!gs.nil(gr.internal_name))
-                this._flowUrls[gr.getValue('internal_name')] = url;
-            this._flowUrls[gr.getValue('sys_id')] = url;
-        },
-
-        getFlowUrl: function(flow) {
-            if (gs.nil(flow))
-                return;
-            var link;
-            if (flow instanceof GlideRecord || flow instanceof GlideRecordSecure) {
-                link = this._flowUrls[flow.getUniqueValue()];
-                if (typeof link !== 'undefined')
-                    return link;
-            } else {
-                var id = '' + flow;
-                link = this._flowUrls[id];
-                if (typeof link !== 'undefined')
-                    return link;
-            }
-        },
-
-        getFlowMdLink: function(flow, isTableCellContent) {
-            if (gs.nil(flow))
-                return '*null*';
-            var link;
-            if (flow instanceof GlideRecord || flow instanceof GlideRecordSecure) {
-                link = this._flowUrls[flow.getUniqueValue()];
-                if (typeof link !== 'undefined')
-                    return "[" + escapeForMarkdown(flow.getValue(gs.nil(flow.title) ? 'internal_name' : 'name'), isTableCellContent) + "](" + link + ")";
-                return "[" + escapeForMarkdown(flow.getValue(gs.nil(flow.title) ? 'internal_name' : 'name'), isTableCellContent) + "](" + instanceUri + flow.getLink(true) + ")";
-            }
-            var gr = getFlowFromId(flow);
-            link = this._flowUrls[gr.getUniqueValue()];
-            if (typeof link !== 'undefined')
-                return "[" + escapeForMarkdown(gr.getValue(gs.nil(gr.title) ? 'internal_name' : 'name'), isTableCellContent) + "](" + link + ")";
-            return "[" + escapeForMarkdown(gr.getValue(gs.nil(gr.title) ? 'internal_name' : 'name'), isTableCellContent) + "](" + instanceUri + gr.getLink(true) + ")";
+        getVarSetReferenceMdLink: function(glideElement, isForTableCell) {
+            return this.mapper.getVarSetMdLink(glideElement, this._current_folder, isForTableCell);
         },
 
         pushTableReferenceListItem: function(glideElement, markdownLines, showEmpty) {
@@ -359,9 +101,41 @@ var MarkdownGenerationContext = (function() {
                 if (showEmpty)
                     markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** *Empty*');
             } else
-                markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** ' + context.getTableMdLink(glideElement.getValue()));
+                markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** ' + this.mapper.getTableMdLink(glideElement.getValue(), this._current_folder));
         },
-        
+
+        pushFieldReferenceListItem: function(tableElement, fieldElement, markdownLines, showEmpty) {
+            if (gs.nil(fieldElement)) {
+                if (showEmpty)
+                    markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(fieldElement.getLabel()) + ':** *Empty*');
+            } else
+                markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(fieldElement.getLabel()) + ':** ' + this.mapper.getColumnMdLink(tableElement, fieldElement, this._current_folder));
+        },
+
+        pushCatItemReferenceListItem: function(glideElement, markdownLines, showEmpty) {
+            if (gs.nil(glideElement)) {
+                if (showEmpty)
+                    markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** *Empty*');
+            } else
+                markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** ' + this.mapper.getCatItemMdLink(glideElement.getValue(), this._current_folder));
+        },
+
+        pushFlowReferenceListItem: function(glideElement, markdownLines, showEmpty) {
+            if (gs.nil(glideElement)) {
+                if (showEmpty)
+                    markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** *Empty*');
+            } else
+                markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** ' + this.mapper.getFlowMdLink(glideElement.getValue(), this._current_folder));
+        },
+
+        pushVarSetReferenceListItem: function(glideElement, markdownLines, showEmpty) {
+            if (gs.nil(glideElement)) {
+                if (showEmpty)
+                    markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** *Empty*');
+            } else
+                markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** ' + this.mapper.getVarSetMdLink(glideElement.getValue(), this._current_folder));
+        },
+
         pushDisplayValueListItem: function(glideElement, markdownLines, multiLineStack, showEmpty) {
             if (gs.nil(glideElement)) {
                 if (showEmpty)
@@ -378,7 +152,7 @@ var MarkdownGenerationContext = (function() {
                     markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** ' + MarkdownGenerationContext.escapeForMarkdown(value));
             }
         },
-    
+
         pushValueListItem: function(glideElement, markdownLines, multiLineStack, showEmpty) {
             if (gs.nil(glideElement)) {
                 if (showEmpty)
@@ -395,7 +169,7 @@ var MarkdownGenerationContext = (function() {
                     markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** ' + MarkdownGenerationContext.escapeForMarkdown(value));
             }
         },
-        
+
         pushCodeListItem: function(glideElement, language, markdownLines, multiLineStack, showEmpty) {
             if (gs.nil(glideElement)) {
                 if (showEmpty)
@@ -412,7 +186,7 @@ var MarkdownGenerationContext = (function() {
                     markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** `' + value + '`');
             }
         },
-    
+
         pushBoolean: function(glideElement, markdownLines, showEmpty) {
             if (gs.nil(glideElement)) {
                 if (showEmpty)
@@ -433,17 +207,17 @@ var MarkdownGenerationContext = (function() {
                 markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** ' + value);
             }
         },
-        
+
         pushListItemIfTrue: function(glideElement, markdownLines) {
             if (!gs.nil(glideElement) && glideElement.getDisplayValue() == 'true')
                 markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** False');
         },
-        
+
         pushListItemIfFalse: function(glideElement, markdownLines, nilIsFalse) {
             if (gs.nil(glideElement) ? nilIsFalse : glideElement.getDisplayValue() == 'false')
                 markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(glideElement.getLabel()) + ':** False');
         },
-    
+
         pushImageListItem: function(glideElement, markdownLines, showEmpty) {
             if (gs.nil(glideElement)) {
                 if (showEmpty)
@@ -493,13 +267,13 @@ var MarkdownGenerationContext = (function() {
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-05-28 16:21:34</sys_created_on>
         <sys_id>84c0e44f870d8b104d9a0f28cebb3537</sys_id>
-        <sys_mod_count>6</sys_mod_count>
+        <sys_mod_count>10</sys_mod_count>
         <sys_name>MarkdownGenerationContext</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_84c0e44f870d8b104d9a0f28cebb3537</sys_update_name>
         <sys_updated_by>lerwinesa</sys_updated_by>
-        <sys_updated_on>2026-06-05 00:03:45</sys_updated_on>
+        <sys_updated_on>2026-06-27 02:07:35</sys_updated_on>
     </sys_script_include>
 </record_update>

@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_properties">
+    <sys_properties action="INSERT_OR_UPDATE">
+        <choices/>
+        <description/>
+        <ignore_cache>true</ignore_cache>
+        <is_private>false</is_private>
+        <name>x_1645769_lte_dhlp.action_md_mappings</name>
+        <read_roles/>
+        <suffix>action_md_mappings</suffix>
+        <sys_class_name>sys_properties</sys_class_name>
+        <sys_created_by>lerwinesa</sys_created_by>
+        <sys_created_on>2026-06-26 22:35:56</sys_created_on>
+        <sys_id>c5dccf1887314b104d9a0f28cebb35da</sys_id>
+        <sys_mod_count>2</sys_mod_count>
+        <sys_name>x_1645769_lte_dhlp.action_md_mappings</sys_name>
+        <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
+        <sys_update_name>sys_properties_c5dccf1887314b104d9a0f28cebb35da</sys_update_name>
+        <sys_updated_by>lerwinesa</sys_updated_by>
+        <sys_updated_on>2026-06-26 23:40:47</sys_updated_on>
+        <type>string</type>
+        <value>[&#13;
+    {&#13;
+        "display_name": "Future Date Test",&#13;
+        "internal_name": "future_date_test",&#13;
+        "sys_id": "b8da2bf1871c87104d9a0f28cebb357a",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Future-Date-Test-Action.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Get Max Approval Level",&#13;
+        "internal_name": "get_max_approval_level",&#13;
+        "sys_id": "d653df511bad0750c798a97ae54bcbf1",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Get-Max-Approval-Level-Action.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Get UAR-Related Group",&#13;
+        "internal_name": "get_approval_group_for_uar",&#13;
+        "sys_id": "7060f2ad1b67f610c798a97ae54bcb3a",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Get-UAR-Related-Group-Action.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Modify Person Org Info",&#13;
+        "internal_name": "modify_person_org_info",&#13;
+        "sys_id": "41b6d663872003d04d9a0f28cebb3520",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Modify-Person-Org-Info-Action.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Schedule Access Change",&#13;
+        "internal_name": "schedule_access_change",&#13;
+        "sys_id": "786df925877407104d9a0f28cebb3518",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Schedule-Access-Change-Action.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Schedule Access Expiration",&#13;
+        "internal_name": "schedule_access_expiration",&#13;
+        "sys_id": "6feffd29877407104d9a0f28cebb3525",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Schedule-Access-Expiration-Action.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Submit \"Fulfill New User Access Request\" Catalog Item",&#13;
+        "internal_name": "submit_fulfill_new_user_access_request_catalog_item",&#13;
+        "sys_id": "6003499f87a44f904d9a0f28cebb3576",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Submit-Fulfill-New-User-Access-Request-Catalog-Item-Action.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Submit \"Fulfill User Access Modification\" Catalog Item",&#13;
+        "internal_name": "submit_fulfill_user_access_modification_catalog_item",&#13;
+        "sys_id": "a0642ddb87e84f904d9a0f28cebb352b",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Submit-Fulfill-User-Access-Modification-Catalog-Item-Action.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Submit \"Fulfill User Deactivation\" Catalog Item",&#13;
+        "internal_name": "submit_fulfill_user_deactivation_catalog_item",&#13;
+        "sys_id": "c93cb06587bcc3104d9a0f28cebb351b",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Submit-Fulfill-User-Deactivation-Catalog-Item-Action.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Submit \"Fulfill User Reactivation\" Catalog Item",&#13;
+        "internal_name": "submit_fulfill_user_reactivation_catalog_item",&#13;
+        "sys_id": "e476cedf87ec4f904d9a0f28cebb3521",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Submit-Fulfill-User-Reactivation-Catalog-Item-Action.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Submit Scheduled Access Change",&#13;
+        "internal_name": "submit_scheduled_access_change",&#13;
+        "sys_id": "06c1cee9877407104d9a0f28cebb3558",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Submit-Scheduled-Access-Change-Action.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Update Privileged Access RoB",&#13;
+        "internal_name": "update_privileged_access_rob",&#13;
+        "sys_id": "2cb29c1e1be7fa10c798a97ae54bcb9e",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Update-Privileged-Access-RoB-Action.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Update Requested Item Person Variable",&#13;
+        "internal_name": "update_requested_item_person_variable",&#13;
+        "sys_id": "6f4604561ba7fa10c798a97ae54bcbde",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Update-Requested-Item-Person-Variable-Action.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Compare Date-Only Values",&#13;
+        "internal_name": "compare_dates",&#13;
+        "sys_id": "895f1ff9879887104d9a0f28cebb3597",&#13;
+        "folder": "usmsprogop",&#13;
+        "file_link": "Compare-Date-Only-Values-Action.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Get Default SC Assignment Group Record",&#13;
+        "internal_name": "get_default_sc_assignment_group_record",&#13;
+        "sys_id": "91ba0c5e1ba7fa10c798a97ae54bcbe8",&#13;
+        "folder": "usmsprogop",&#13;
+        "file_link": "Get-Default-SC-Assignment-Group-Record-Action.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Get Default SC Assignment Group Sys ID",&#13;
+        "internal_name": "get_default_sc_assignment_group",&#13;
+        "sys_id": "dc94230087c8c610246131d70cbb3571",&#13;
+        "folder": "usmsprogop",&#13;
+        "file_link": "Get-Default-SC-Assignment-Group-Sys-ID-Action.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Get Most Recent Approval",&#13;
+        "internal_name": "most_recent_approval",&#13;
+        "sys_id": "2e2e81401bc00f50c798a97ae54bcbd2",&#13;
+        "folder": "usmsprogop",&#13;
+        "file_link": "Get-Most-Recent-Approval-Action.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Get Relative Date Only",&#13;
+        "internal_name": "get_relative_date_only",&#13;
+        "sys_id": "d50b7675879487104d9a0f28cebb3595",&#13;
+        "folder": "usmsprogop",&#13;
+        "file_link": "Get-Relative-Date-Only-Action.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Get Relative Date/Time",&#13;
+        "internal_name": "get_relative_datetime",&#13;
+        "sys_id": "587b49d21baffa10c798a97ae54bcb93",&#13;
+        "folder": "usmsprogop",&#13;
+        "file_link": "Get-Relative-Date-Time-Action.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Update Requested Item Date/Time Variable",&#13;
+        "internal_name": "update_requested_item_datetime_variable",&#13;
+        "sys_id": "c58d24b21bffb250c798a97ae54bcbf4",&#13;
+        "folder": "usmsprogop",&#13;
+        "file_link": "Update-Requested-Item-Date-Time-Variable-Action.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Update Requested Item String Variable",&#13;
+        "internal_name": "update_catalog_item_string_variable",&#13;
+        "sys_id": "850d2fec1b68f610c798a97ae54bcb7d",&#13;
+        "folder": "usmsprogop",&#13;
+        "file_link": "Update-Requested-Item-String-Variable-Action.md"&#13;
+    }&#13;
+]</value>
+        <write_roles>x_1645769_lte_dhlp.admin</write_roles>
+    </sys_properties>
+    <sys_translated_text action="delete_multiple" query="documentkey=c5dccf1887314b104d9a0f28cebb35da"/>
+</record_update>

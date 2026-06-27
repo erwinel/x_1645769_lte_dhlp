@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_properties">
+    <sys_properties action="INSERT_OR_UPDATE">
+        <choices/>
+        <description/>
+        <ignore_cache>true</ignore_cache>
+        <is_private>false</is_private>
+        <name>x_1645769_lte_dhlp.table_md_mappings</name>
+        <read_roles/>
+        <suffix>table_md_mappings</suffix>
+        <sys_class_name>sys_properties</sys_class_name>
+        <sys_created_by>lerwinesa</sys_created_by>
+        <sys_created_on>2026-06-26 22:25:52</sys_created_on>
+        <sys_id>ad8a4b5487314b104d9a0f28cebb354e</sys_id>
+        <sys_mod_count>2</sys_mod_count>
+        <sys_name>x_1645769_lte_dhlp.table_md_mappings</sys_name>
+        <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
+        <sys_update_name>sys_properties_ad8a4b5487314b104d9a0f28cebb354e</sys_update_name>
+        <sys_updated_by>lerwinesa</sys_updated_by>
+        <sys_updated_on>2026-06-26 23:42:51</sys_updated_on>
+        <type>string</type>
+        <value>[&#13;
+    {&#13;
+        "name": "x_g_doj_access_mgt_ci_lifecycle_stage",&#13;
+        "display_name": "CI Lifecycle Stage",&#13;
+        "sys_id": "5c1a02a61b1d4710c798a97ae54bcb98",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "CI-Lifecycle-Stage-Table.md"&#13;
+    },&#13;
+    {&#13;
+        "name": "x_g_doj_access_mgt_cmdb_ci_service_account",&#13;
+        "display_name": "Local Service Account",&#13;
+        "sys_id": "7d4800c91bd90f50c798a97ae54bcb7c",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Local-Service-Account-Table.md"&#13;
+    },&#13;
+    {&#13;
+        "name": "x_g_doj_access_mgt_cmdb_ci_network_account",&#13;
+        "display_name": "Network Account",&#13;
+        "sys_id": "4263ca141b91c750c798a97ae54bcb1f",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Network-Account-Table.md"&#13;
+    },&#13;
+    {&#13;
+        "name": "x_g_doj_access_mgt_m2m_network_account_sc_req_item",&#13;
+        "display_name": "Network Account Requested Item",&#13;
+        "sys_id": "a1e460391b6dc750c798a97ae54bcb19",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Network-Account-Requested-Item-Table.md"&#13;
+    },&#13;
+    {&#13;
+        "name": "x_g_doj_access_mgt_person",&#13;
+        "display_name": "Person",&#13;
+        "sys_id": "e71c0afc1b86fe50c798a97ae54bcb58",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Person-Table.md"&#13;
+    },&#13;
+    {&#13;
+        "name": "x_g_doj_access_mgt_m2m_person_sc_req_item",&#13;
+        "display_name": "Person Requested Item",&#13;
+        "sys_id": "ec0e54b51b2dc750c798a97ae54bcbab",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Person-Requested-Item-Relationship.md"&#13;
+    },&#13;
+    {&#13;
+        "name": "x_g_doj_access_mgt_poms_role",&#13;
+        "display_name": "POMS Role",&#13;
+        "sys_id": "ed790e781b86fe50c798a97ae54bcbe9",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "POMS-Role-Table.md"&#13;
+    },&#13;
+    {&#13;
+        "name": "x_g_doj_access_mgt_m2m_privileged_access_rob",&#13;
+        "display_name": "Privileged Access RoB",&#13;
+        "sys_id": "b3f0207d1b2dc750c798a97ae54bcba6",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Privileged-Access-RoB-Relationship.md"&#13;
+    },&#13;
+    {&#13;
+        "name": "x_g_doj_access_mgt_privileged_access_type",&#13;
+        "display_name": "Privileged Access Type",&#13;
+        "sys_id": "7c616ef81b4afe50c798a97ae54bcbb0",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Privileged-Access-Type-Table.md"&#13;
+    },&#13;
+    {&#13;
+        "name": "x_g_doj_access_mgt_scheduled_access_change",&#13;
+        "display_name": "Scheduled Access Change",&#13;
+        "sys_id": "2831d2b81bc6fe50c798a97ae54bcb5d",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Scheduled-Access-Change-Table.md"&#13;
+    },&#13;
+    {&#13;
+        "name": "x_g_doj_access_mgt_cmdb_ci_test_account",&#13;
+        "display_name": "Test Account",&#13;
+        "sys_id": "c679c88d1bd90f50c798a97ae54bcbc8",&#13;
+        "folder": "access_mgt",&#13;
+        "file_link": "Test-Account-Table.md"&#13;
+    },&#13;
+    {&#13;
+        "name": "x_g_doj_usmsprogop_metro_office",&#13;
+        "display_name": "Metro Office",&#13;
+        "sys_id": "43ac89ba1b21f250c798a97ae54bcb7f",&#13;
+        "folder": "usmsprogop",&#13;
+        "file_link": "Metro-Office-Table.md"&#13;
+    },&#13;
+    {&#13;
+        "name": "x_g_doj_usmsprogop_u_cmdb_ci_physical_network",&#13;
+        "display_name": "Physical Network",&#13;
+        "sys_id": "87e7b0c51b50f1509a872f41f54bcbaf",&#13;
+        "folder": "usmsprogop",&#13;
+        "file_link": "Physical-Network-Table.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "User",&#13;
+        "name": "sys_user",&#13;
+        "sys_id": "db3bb900db300010df0bf81d0f9619d8",&#13;
+        "folder": "servicenow_tables",&#13;
+        "file_link": "User-Table.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Application File",&#13;
+        "name": "sys_metadata",&#13;
+        "sys_id": "2a0b3100db300010df0bf81d0f96195f",&#13;
+        "folder": "servicenow_tables",&#13;
+        "file_link": "Application-File-Table.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Catalog Item",&#13;
+        "name": "sc_cat_item",&#13;
+        "sys_id": "d9f54a88dbf00010df0bf81d0f961926",&#13;
+        "folder": "servicenow_tables",&#13;
+        "file_link": "Catalog-Item-Table.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Base Configuration Item",&#13;
+        "name": "cmdb",&#13;
+        "sys_id": "396d3948db300010df0bf81d0f9619f4",&#13;
+        "folder": "servicenow_tables",&#13;
+        "file_link": "Base-Configuration-Item-Table.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Configuration Item",&#13;
+        "name": "cmdb_ci",&#13;
+        "sys_id": "8a6d7948db300010df0bf81d0f961944",&#13;
+        "folder": "servicenow_tables",&#13;
+        "file_link": "Configuration-Item-Table.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Group",&#13;
+        "name": "sys_user_group",&#13;
+        "sys_id": "8f3bb900db300010df0bf81d0f9619bc",&#13;
+        "folder": "servicenow_tables",&#13;
+        "file_link": "Group-Table.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Location",&#13;
+        "name": "cmn_location",&#13;
+        "sys_id": "0b3bb900db300010df0bf81d0f96199c",&#13;
+        "folder": "servicenow_tables",&#13;
+        "file_link": "Location-Table.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Requested Item",&#13;
+        "name": "sc_req_item",&#13;
+        "sys_id": "84168e88dbf00010df0bf81d0f9619b3",&#13;
+        "folder": "servicenow_tables",&#13;
+        "file_link": "Requested-Item-Table.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Task",&#13;
+        "name": "task",&#13;
+        "sys_id": "69acb584db300010df0bf81d0f9619d0",&#13;
+        "folder": "servicenow_tables",&#13;
+        "file_link": "Task-Table.md"&#13;
+    }&#13;
+]</value>
+        <write_roles>x_1645769_lte_dhlp.admin</write_roles>
+    </sys_properties>
+    <sys_translated_text action="delete_multiple" query="documentkey=ad8a4b5487314b104d9a0f28cebb354e"/>
+</record_update>

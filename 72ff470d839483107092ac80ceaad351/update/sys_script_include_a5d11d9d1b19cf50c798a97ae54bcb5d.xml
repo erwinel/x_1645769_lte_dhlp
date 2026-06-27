@@ -20,32 +20,185 @@
      * @param {string} [tableUrl]
      */
     function pushVariableDetailMarkdown(varGr, markdownLines, context) {
+        markdownLines.push('');
+        markdownLines.push("### Variable: " + varGr.getValue('name'));
+        markdownLines.push('');
+
         if (varGr.getDisplayValue('map_to_field') == 'true') {
             markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(varGr.map_to_field.getLabel()) + ':** True');
-            markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(varGr.field.getLabel()) + ':** ' + context.getTableElementMdLink(varGr.record_producer_table, varGr.field));
+            markdownLines.push(context.getColumnReferenceMdLink(varGr.record_producer_table, varGr.field));
         }
+
         /** @type {MultiLineItem[]} */
         var multiLineStack = [];
         context.pushDisplayValueListItem(varGr.type, markdownLines, multiLineStack);
-        context.pushDisplayValueListItem(varGr.order, markdownLines, multiLineStack);
-        context.pushListItemIfTrue(catItemGr.mandatory, markdownLines);
-        context.pushListItemIfTrue(catItemGr.read_only, markdownLines);
-        context.pushListItemIfTrue(catItemGr.hidden, markdownLines);
-        context.pushListItemIfTrue(catItemGr.disable_initial_slot_fill, markdownLines);
         context.pushDisplayValueListItem(varGr.question_text, markdownLines, multiLineStack);
+        context.pushDisplayValueListItem(varGr.conversational_label, markdownLines, multiLineStack);
         context.pushDisplayValueListItem(varGr.tooltip, markdownLines, multiLineStack);
-        context.pushDisplayValueListItem(varGr.example_text, markdownLines, multiLineStack);
-        context.pushListItemIfTrue(catItemGr.show_help, markdownLines);
+        context.pushDisplayValueListItem(varGr.order, markdownLines, multiLineStack);
+        context.pushListItemIfTrue(varGr.show_help, markdownLines);
         if (varGr.getDisplayValue('show_help') == 'true') {
             markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(varGr.show_help.getLabel()) + ':** True');
             context.pushDisplayValueListItem(varGr.help_tag, markdownLines, multiLineStack);
             context.pushDisplayValueListItem(varGr.help_text, markdownLines, multiLineStack);
+            context.pushCodeListItem(varGr.instructions, 'html', markdownLines, multiLineStack);
         }
+        var listChoices = false;
+        var type = parseInt(varGr.getValue('type'));
+        switch (type) {
+            case 1: // Yes / No
+                context.pushListItemIfTrue(varGr.include_none, markdownLines);
+                break;
+            case 2: // Multi Line Text
+                context.pushCodeListItem(varGr.attributes, 'text', markdownLines, multiLineStack);
+                break;
+            case 3: // Multiple Choice
+                context.pushDisplayValueListItem(varGr.choice_direction, markdownLines, multiLineStack);
+                context.pushListItemIfTrue(varGr.include_none, markdownLines);
+                context.pushListItemIfTrue(varGr.do_not_select_first, markdownLines);
+                context.pushCodeListItem(varGr.attributes, 'text', markdownLines, multiLineStack);
+                listChoices = true;
+                break;
+            case 5: // Select Box
+            case 18: // Lookup Select Box
+                if (!gs.nil(varGr.choice_table)) {
+                    context.pushTableReferenceListItem(varGr.choice_table, markdownLines);
+                    context.pushFieldReferenceListItem(varGr.choice_table, varGr.choice_field, markdownLines);
+                }
+                context.pushListItemIfTrue(varGr.include_none, markdownLines);
+                context.pushListItemIfTrue(varGr.lookup_unique, markdownLines);
+                context.pushCodeListItem(varGr.attributes, 'text', markdownLines, multiLineStack);
+                listChoices = true;
+                break;
+            case 8: // Reference
+                context.pushTableReferenceListItem(varGr.reference, markdownLines);
+                context.pushDisplayValueListItem(varGr.use_reference_qualifier, markdownLines, multiLineStack);
+                switch (varGr.getValue('use_reference_qualifier')) {
+                    case 'simple':
+                        context.pushCodeListItem(varGr.reference_qual_condition, 'text', markdownLines, multiLineStack);
+                        break;
+                    default:
+                        context.pushCodeListItem(varGr.reference_qual, 'text', markdownLines, multiLineStack);
+                        break;
+                }
+                context.pushCodeListItem(varGr.attributes, 'text', markdownLines, multiLineStack);
+                break;
+            case 19: // Container Start
+                context.pushListItemIfTrue(varGr.display_title, markdownLines);
+                context.pushDisplayValueListItem(varGr.layout, markdownLines, multiLineStack);
+                break;
+            case 22: // Lookup Multiple Choice
+                context.pushDisplayValueListItem(varGr.lookup_source, markdownLines, multiLineStack);
+                switch (varGr.getValue('lookup_source')) {
+                    case 'choice':
+                        if (!gs.nil(varGr.choice_table)) {
+                            context.pushTableReferenceListItem(varGr.choice_table, markdownLines);
+                            context.pushFieldReferenceListItem(varGr.choice_table, varGr.choice_field, markdownLines);
+                        }
+                        break;
+                }
+                context.pushListItemIfTrue(varGr.choice_direction, markdownLines);
+                context.pushListItemIfTrue(varGr.include_none, markdownLines);
+                context.pushListItemIfTrue(varGr.lookup_unique, markdownLines);
+                context.pushValueListItem(varGr.reference_qual, markdownLines, multiLineStack);
+                context.pushCodeListItem(varGr.attributes, 'text', markdownLines, multiLineStack);
+                break;
+            case 4: // Numeric Scale
+            case 6: // Single Line Text
+            case 7: // CheckBox
+            case 9: // Date
+            case 10: // Date/Time
+            case 11: // Label
+            case 12: // Break
+            case 14: // Custom
+            case 15: // UI Page
+            case 16: // Wide Single Line Text
+            case 17: // Custom with Label
+            case 20: // Container End
+            case 21: // List Collector
+            case 23: // HTML
+            case 24: // Container Split
+            case 25: // Masked
+            case 26: // Email
+            case 27: // URL
+            case 28: // IP Address
+            case 29: // Duration
+            case 31: // Requested For
+            case 32: // Rich Text Label
+            case 33: // Attachment
+            case 40: // Table Name
+                break;
+            default:
+                markdownLines.push("- **Unknown type:** *" + varGr.getValue('type') + '*');
+                break;
+        }
+
+        context.pushListItemIfTrue(varGr.global, markdownLines);
+        context.pushListItemIfTrue(varGr.disable_initial_slot_fill, markdownLines);
         context.pushDisplayValueListItem(varGr.variable_width, markdownLines, multiLineStack);
+        context.pushListItemIfFalse(varGr.visible_standalone, markdownLines);
+        context.pushListItemIfFalse(varGr.visible_bundle, markdownLines);
+        context.pushListItemIfTrue(varGr.not_available_conversation, markdownLines);
+        context.pushListItemIfFalse(varGr.visible_guide, markdownLines);
+        context.pushListItemIfFalse(varGr.visible_summary, markdownLines);
+        switch (type) {
+            case 20: // Container End
+            case 24: // Container Split
+            case 32: // Rich Text Label
+                break;
+            case 19: // Container Start
+                context.pushListItemIfTrue(varGr.hidden, markdownLines);
+                break;
+            default:
+                context.pushListItemIfTrue(varGr.mandatory, markdownLines);
+                if (!varGr.mandatory) {
+                    context.pushListItemIfTrue(varGr.hidden, markdownLines);
+                    context.pushListItemIfTrue(varGr.read_only, markdownLines);
+                }
+                break;
+        }
+        switch (type) {
+            case 23: // HTML
+                if (gs.nil(glideRecord.default_html_value))
+                    context.pushCodeListItem(varGr.default_value, 'text', markdownLines, multiLineStack, true);
+                else
+                    context.pushCodeListItem(varGr.default_html_value, 'html', markdownLines, multiLineStack, true);
+                break;
+            case 32: // Rich Text Label
+                context.pushCodeListItem(varGr.rich_text, 'html', markdownLines, multiLineStack, true);
+                break;
+            case 19: // Container Start
+            case 20: // Container End
+            case 24: // Container Split
+                break;
+            default:
+                context.pushDisplayValueListItem(varGr.default_value, markdownLines, multiLineStack);
+                break;
+        }
+
+        context.pushDisplayValueListItem(varGr.example_text, markdownLines, multiLineStack);
         context.pushDisplayValueListItem(varGr.validate_regex, markdownLines, multiLineStack);
         context.pushDisplayValueListItem(varGr.roles_to_use_also_request_for, markdownLines, multiLineStack);
-        context.pushDisplayValueListItem(varGr.attributes, markdownLines, multiLineStack);
-        context.pushDisplayValueListItem(varGr.default_value, markdownLines, multiLineStack);
+        context.pushMultiLineItems(multiLineStack, markdownLines);
+
+        if (listChoices) {
+            var choiceGr = new GlideRecord('question_choice');
+            choiceGr.addQuery('question', varGr.sys_id);
+            choiceGr.addQuery('inactive', false);
+            choiceGr.orderBy('order');
+            choiceGr.query();
+            if (choiceGr.next()) {
+                markdownLines.push('');
+                markdownLines.push('**Choices:**');
+                markdownLines.push('');
+                markdownLines.push('| Label | Value | Sequence |');
+                markdownLines.push('| ----- | ----- | -------- |');
+                text = text + "\n\n**Choices:**\n\n| Label | Value | Sequence |\n| ----- | ----- | -------- |";
+                do {
+                    markdownLines.push("\n| " + MarkdownGenerationContext.escapeForMarkdown(choiceGr.getValue('text'), true) + " | " + MarkdownGenerationContext.escapeForMarkdown(choiceGr.getValue('value'), true) + " | " + choiceGr.getDisplayValue('order') + " |");
+                } while (choiceGr.next());
+            }
+        }
     }
 
     /**
@@ -249,15 +402,15 @@
         context.pushDisplayValueListItem(catItemGr.category, markdownLines, multiLineStack);
         context.pushDisplayValueListItem(catItemGr.roles, markdownLines, multiLineStack);
         context.pushDisplayValueListItem(catItemGr.fulfillment_automation_level, markdownLines, multiLineStack);
-        context.pushTableReferenceListItem(catItemGr.group, markdownLines);
+        context.pushDisplayValueListItem(catItemGr.group, markdownLines);
         context.pushDisplayValueListItem(catItemGr.order, markdownLines, multiLineStack);
         context.pushValueListItem(catItemGr.short_description, markdownLines, multiLineStack);
         context.pushCodeListItem(catItemGr.description, 'html', markdownLines, multiLineStack);
         context.pushValueListItem(catItemGr.meta, markdownLines, multiLineStack);
         if (gs.nil(catItemGr.flow_designer_flow))
-            context.pushTableReferenceListItem(gs.nil(catItemGr.workflow) ? catItemGr.workflow : catItemGr.delivery_plan, markdownLines);
+            context.pushDisplayValueListItem(gs.nil(catItemGr.workflow) ? catItemGr.workflow : catItemGr.delivery_plan, markdownLines, multiLineStack);
         else
-            context.pushTableReferenceListItem(catItemGr.flow_designer_flow, markdownLines);
+            context.pushFlowReferenceListItem(catItemGr.flow_designer_flow, markdownLines);
         context.pushImageListItem(catItemGr.icon, markdownLines);
         context.pushImageListItem(catItemGr.picture, markdownLines);
         context.pushDisplayValueListItem(catItemGr.request_method, markdownLines, multiLineStack);
@@ -476,19 +629,8 @@
                 } catch (e) {
                     return "Error loading catalog item with sys_id " + JSON.stringify(sys_id) + ": " + e;
                 }
-                var ref_map = this.getParameter('sysparm_ref_map');
-                var referenceMap;
-                if (ref_map) {
-                    try {
-                        referenceMap = JSON.parse(ref_map);
-                    } catch (e) {
-                        return "Error parsing sysparm_ref_map: " + e;
-                    }
-                } else
-                    referenceMap = undefined;
                 var context = new MarkdownGenerationContext();
-                if (referenceMap)
-                    context.importFromJson(referenceMap);
+                context.setCurrentFolder(this.getParameter('sysparm_folder'));
                 return (sys_class_name == 'sc_cat_item_producer') ? getRecordProducerMarkdown(catItemGr, context) : getCatalogItemMarkdown(catItemGr, context);
             } catch (e) {
                 return "Unexpected error: " + (e.stack ? e + "\nStack: " + e.stack : e);
@@ -508,19 +650,8 @@
                 } catch (e) {
                     return "Error loading variable set with sys_id " + JSON.stringify(sys_id) + ": " + e;
                 }
-                var ref_map = this.getParameter('sysparm_ref_map');
-                var referenceMap;
-                if (ref_map) {
-                    try {
-                        referenceMap = JSON.parse(ref_map);
-                    } catch (e) {
-                        return "Error parsing sysparm_ref_map: " + e;
-                    }
-                } else
-                    referenceMap = undefined;
                 var context = new MarkdownGenerationContext();
-                if (referenceMap)
-                    context.importFromJson(referenceMap);
+                context.setCurrentFolder(this.getParameter('sysparm_folder'));
                 return getVariableSetMarkdown(varSetGr, context);
             } catch (e) {
                 return "Unexpected error: " + (e.stack ? e + "\nStack: " + e.stack : e);
@@ -535,13 +666,13 @@
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-06-04 22:14:00</sys_created_on>
         <sys_id>a5d11d9d1b19cf50c798a97ae54bcb5d</sys_id>
-        <sys_mod_count>3</sys_mod_count>
+        <sys_mod_count>4</sys_mod_count>
         <sys_name>ServiceCatalogMarkdownGenerator</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_a5d11d9d1b19cf50c798a97ae54bcb5d</sys_update_name>
         <sys_updated_by>lerwinesa</sys_updated_by>
-        <sys_updated_on>2026-06-05 00:03:45</sys_updated_on>
+        <sys_updated_on>2026-06-27 02:45:51</sys_updated_on>
     </sys_script_include>
 </record_update>

@@ -23,33 +23,27 @@ var TableMarkdownGenerator = (function() {
      * @returns {string}
      */
     function getTableMarkdown(tableGlideRecord, context) {
-        var markdown = '# "' + MarkdownGenerationContext.escapeForMarkdown(tableGlideRecord.getValue('label')) + "\" Table\n\n" +
-            '- **Name:** ' + MarkdownGenerationContext.escapeForMarkdown(tableGlideRecord.getValue('name'));
-        if (!gs.nil(tableGlideRecord.super_class))
-            markdown += "\n- **Extends table:** " + context.getTableMdLink(tableGlideRecord.getValue('super_class'));
-        if (tableGlideRecord.getDisplayValue('scriptable_table') == 'true')
-            markdown += "\n- **Remote table:** True";
-        if (tableGlideRecord.getDisplayValue('is_extendable') == 'true')
-            markdown += "\n- **Extensible:** True";
-        if (!gs.nil(tableGlideRecord.number_ref))
-            markdown += "\n- **Prefix:** " + MarkdownGenerationContext.escapeForMarkdown(tableGlideRecord.getDisplayValue('number_ref.prefix')) +
-            "\n- **Number:** " + MarkdownGenerationContext.escapeForMarkdown(tableGlideRecord.getDisplayValue('number_ref.number')) +
-            "\n- **Number of digits:** " + MarkdownGenerationContext.escapeForMarkdown(tableGlideRecord.getDisplayValue('number_ref.maximum_digits'));
-        if (!gs.nil(tableGlideRecord.access))
-            markdown += "\n- **Accessible from:** " + MarkdownGenerationContext.escapeForMarkdown(tableGlideRecord.getDisplayValue('access'));
-        if (tableGlideRecord.getDisplayValue('read_access') == 'false')
-            markdown += "\n- **Can read:** False";
-        if (tableGlideRecord.getDisplayValue('create_access') == 'false')
-            markdown += "\n- **Can create:** False";
-        if (tableGlideRecord.getDisplayValue('update_access') == 'false')
-            markdown += "\n- **Can update:** False";
-        if (tableGlideRecord.getDisplayValue('delete_access') == 'false')
-            markdown += "\n- **Can delete:** False";
-        if (tableGlideRecord.getDisplayValue('ws_access') == 'false')
-            markdown += "\n- **Allow access to this table via web services:** False";
-        if (tableGlideRecord.getDisplayValue('configuration_access') == 'true')
-            markdown += "\n- **Allow configuration:** True";
-		markdown += "\n\n_______________________________________________";
+        var markdown = '# "' + MarkdownGenerationContext.escapeForMarkdown(tableGlideRecord.getValue('label')) + "\" Table\n\n";
+        var markdownLines = [];
+        var multiLineStack = [];
+        context.pushDisplayValueListItem(tableGlideRecord.name, markdownLines, multiLineStack, true);
+        context.pushTableReferenceListItem(tableGlideRecord.super_class, markdownLines);
+        context.pushListItemIfTrue(tableGlideRecord.scriptable_table, markdownLines);
+        context.pushListItemIfTrue(tableGlideRecord.is_extendable, markdownLines);
+        if (!gs.nil(tableGlideRecord.number_ref)) {
+            markdownLines.push("- **Prefix:** " + MarkdownGenerationContext.escapeForMarkdown(tableGlideRecord.getDisplayValue('number_ref.prefix')));
+            markdownLines.push("- **Number:** " + MarkdownGenerationContext.escapeForMarkdown(tableGlideRecord.getDisplayValue('number_ref.number')));
+            markdownLines.push("- **Number of digits:** " + MarkdownGenerationContext.escapeForMarkdown(tableGlideRecord.getDisplayValue('number_ref.maximum_digits')));
+        }
+        context.pushDisplayValueListItem(tableGlideRecord.access, markdownLines, multiLineStack);
+        context.pushListItemIfFalse(tableGlideRecord.read_access, markdownLines);
+        context.pushListItemIfFalse(tableGlideRecord.create_access, markdownLines);
+        context.pushListItemIfFalse(tableGlideRecord.update_access, markdownLines);
+        context.pushListItemIfFalse(tableGlideRecord.delete_access, markdownLines);
+        context.pushListItemIfFalse(tableGlideRecord.ws_access, markdownLines);
+        context.pushListItemIfTrue(tableGlideRecord.configuration_access, markdownLines);
+        context.pushMultiLineItems(multiLineStack, markdownLines);
+        markdown += markdownLines.join('\n') + "\n\n_______________________________________________";
         var name = tableGlideRecord.getValue('name');
         var gr = new GlideRecord('sys_dictionary');
         gr.addQuery('name', name);
@@ -59,8 +53,8 @@ var TableMarkdownGenerator = (function() {
         gr.addQuery('element', '!=', 'sys_created_by');
         gr.addQuery('element', '!=', 'sys_mod_count');
         gr.addQuery('element', '!=', 'sys_created_on');
-		gr.addNotNullQuery('element');
-		gr.orderBy('column_label');
+        gr.addNotNullQuery('element');
+        gr.orderBy('column_label');
         gr.query();
         if (gr.next()) {
             markdown += "\n\n## Columns\n\n| Column label | Type | Reference | Display |\n| ------------ | ---- | --------- | ------- |";
@@ -72,112 +66,62 @@ var TableMarkdownGenerator = (function() {
                 if (gs.nil(gr.reference))
                     markdown += " |           | ";
                 else
-                    markdown += " | " + context.getTableMdLink(gr.reference.getRefRecord()) + " | ";
+                    markdown += " | " + context.getTableReferenceMdLink(gr.reference) + " | ";
                 markdown += gr.display ? "True |" : "False |";
             } while (gr.next());
             gr = new GlideRecord('sys_dictionary');
             gr.addQuery('name', name);
-			gr.addQuery('element', '!=', 'sys_id');
-			gr.addQuery('element', '!=', 'sys_updated_by');
-			gr.addQuery('element', '!=', 'sys_updated_on');
-			gr.addQuery('element', '!=', 'sys_created_by');
-			gr.addQuery('element', '!=', 'sys_mod_count');
-			gr.addQuery('element', '!=', 'sys_created_on');
-			gr.addNotNullQuery('element');
-			gr.orderBy('column_label');
+            gr.addQuery('element', '!=', 'sys_id');
+            gr.addQuery('element', '!=', 'sys_updated_by');
+            gr.addQuery('element', '!=', 'sys_updated_on');
+            gr.addQuery('element', '!=', 'sys_created_by');
+            gr.addQuery('element', '!=', 'sys_mod_count');
+            gr.addQuery('element', '!=', 'sys_created_on');
+            gr.addNotNullQuery('element');
+            gr.orderBy('column_label');
             gr.query();
             while (gr.next()) {
                 element = gr.getValue('element');
-                markdown += "\n\n### Column: " + element + "\n\n- **Type:** " + MarkdownGenerationContext.escapeForMarkdown(gr.getDisplayValue('internal_type'));
-                if (!gs.nil(gr.column_label))
-                    markdown += "\n- **Column label:** " + MarkdownGenerationContext.escapeForMarkdown(gr.getValue('column_label'));
-                if (!gs.nil(gr.column_label))
-                    markdown += "\n- **Max length:** " + gr.getDisplayValue('max_length');
-                if (gr.getDisplayValue('active') != 'true')
-                    markdown += "\n- **Active:** False";
-                if (gr.getDisplayValue('function_field') == 'true')
-                    markdown += "\n- **Function field:** True";
-                if (gr.getDisplayValue('read_only') == 'true')
-                    markdown += "\n- **Read only:** True";
-                if (gr.getDisplayValue('mandatory') == 'true')
-                    markdown += "\n- **Mandatory:** True";
-                if (gr.getDisplayValue('display') == 'true')
-                    markdown += "\n- **Display:** True";
-                /** @type {({ label: string; type: string; value: string; }[])} */
-                var multiLineFields = [];
-                var value;
-                if (!gs.nil(gr.attributes)) {
-                    value = gr.getValue('attributes').trim();
-                    if (newLineRe.test(value))
-                        multiLineFields.push({
-                            label: "Attributes",
-							type: 'text',
-                            value: value
-                        });
-                    else
-                        markdown += "\n- **Attributes:** `" + MarkdownGenerationContext.escapeForMarkdown(value);
-                }
+                markdown += "\n\n### Column: " + element + "\n\n";
+                markdownLines = [];
+                multiLineStack = [];
+                context.pushDisplayValueListItem(gr.internal_type, markdownLines, multiLineStack, true);
+                context.pushValueListItem(gr.column_label, markdownLines, multiLineStack);
+                context.pushDisplayValueListItem(gr.max_length, markdownLines, multiLineStack);
+                context.pushListItemIfFalse(gr.active, markdownLines);
+                context.pushListItemIfTrue(gr.function_field, markdownLines);
+                context.pushListItemIfTrue(gr.read_only, markdownLines);
+                context.pushListItemIfTrue(gr.mandatory, markdownLines);
+                context.pushListItemIfTrue(gr.display, markdownLines);
+                context.pushValueListItem(gr.attributes, markdownLines, multiLineStack);
                 if (!gs.nil(gr.reference)) {
-                    markdown += "\n- **Reference:** " + context.getTableMdLink(gr.reference.getRefRecord()) + "\n- **Use reference qualifier:** " + MarkdownGenerationContext.escapeForMarkdown(gr.getDisplayValue('use_reference_qualifier'));
-                    if (!gs.nil(gr.dynamic_ref_qual))
-                        markdown += "\n- **Dynamic ref qual:** " + MarkdownGenerationContext.escapeForMarkdown(gr.getDisplayValue('dynamic_ref_qual'));
-                    if (!gs.nil(gr.reference_key))
-                        markdown += "\n- **Reference key:** " + MarkdownGenerationContext.escapeForMarkdown(gr.getDisplayValue('reference_key'));
-                    if (!gs.nil(gr.reference_cascade_rule))
-                        markdown += "\n- **Reference cascade rule:** " + MarkdownGenerationContext.escapeForMarkdown(gr.getDisplayValue('reference_cascade_rule'));
-                    if (gr.getDisplayValue('reference_floats') == 'true')
-                        markdown += "\n- **Reference floats:** True";
-                    if (gr.getDisplayValue('dynamic_creation') == 'true')
-                        markdown += "\n- **Dynamic creation:** True";
+                    context.pushTableReferenceListItem(gr.reference, markdownLines);
+                    context.pushDisplayValueListItem(gr.use_reference_qualifier, markdownLines, multiLineStack);
+                    context.pushDisplayValueListItem(gr.dynamic_ref_qual, markdownLines, multiLineStack);
+                    context.pushDisplayValueListItem(gr.reference_key, markdownLines, multiLineStack);
+                    context.pushDisplayValueListItem(gr.reference_cascade_rule, markdownLines, multiLineStack);
+                    context.pushListItemIfTrue(gr.reference_floats, markdownLines);
+                    context.pushListItemIfTrue(gr.dynamic_creation, markdownLines);
                 }
                 if (!gs.nil(gr.choice) && gr.getValue('choice') != '0')
-                    markdown += "\n- **Choice:** " + MarkdownGenerationContext.escapeForMarkdown(gr.getDisplayValue('choice'));
+                    context.pushDisplayValueListItem(gr.choice, markdownLines, multiLineStack);
+                context.pushTableReferenceListItem(gr.choice_table, markdownLines);
+                context.pushDisplayValueListItem(gr.dependent, markdownLines, multiLineStack);
                 if (!gs.nil(gr.choice_table))
                     markdown += "\n- **Choice table:** " + context.getTableMdLink(gr.getValue('choice_table'));
                 if (!gs.nil(gr.dependent))
                     markdown += "\n- **Dependent:** " + MarkdownGenerationContext.escapeForMarkdown(gr.getDisplayValue('dependent'));
                 if (gr.getDisplayValue('use_dependent_field') == 'true') {
-                    markdown += "\n- **Use depenent field:** True";
-                    if (!gs.nil(gr.dependent_on_field))
-                        markdown += "\n- **Dependent on field:** " + MarkdownGenerationContext.escapeForMarkdown(gr.getDisplayValue('dependent_on_field'));
+                    context.pushListItemIfTrue(gr.use_dependent_field, markdownLines);
+                    context.pushDisplayValueListItem(gr.dependent_on_field, markdownLines, multiLineStack);
                 }
                 if (gr.getDisplayValue('virtual') == 'true') {
-					markdown += "\n- **Calculated:** True";
-                    value = gr.getValue('calculation').trim();
-                    if (newLineRe.test(value))
-						multiLineFields.push({
-							label: "Calculation",
-							type: (gr.getValue('virtual_type') == 'script') ? 'javascript' : 'text',
-							value: value
-						});
-                    else
-                        markdown += "\n- **Calculation:** `" + MarkdownGenerationContext.escapeForMarkdown(value) + "`";
+                    context.pushListItemIfTrue(gr.virtual, markdownLines);
+                    context.pushValueListItem(gr.calculation, markdownLines, multiLineStack);
                 }
-                if (!gs.nil(gr.default_value)) {
-                    value = gr.getValue('default_value').trim();
-                    if (newLineRe.test(value)) {
-						if (value.startsWith('javascript:')) {
-							value = value.substring(11).trim();
-							if (value.length > 0)
-								multiLineFields.push({
-									label: "Default value",
-									type: 'javascript',
-									value: value
-								});
-						} else
-							multiLineFields.push({
-								label: "Default value",
-								type: 'text',
-								value: value
-							});
-					}
-                    else
-                        markdown += "\n- **Default value:** `" + MarkdownGenerationContext.escapeForMarkdown(value) + "`";
-                }
-				for (var i = 0; i < multiLineFields.length; i++) {
-					var item = multiLineFields[i];
-					markdown += "\n\n**" + item.label + "\n\n```text\n" + item.value + "\n```";
-				}
+                context.pushValueListItem(gr.default_value, markdownLines, multiLineStack);
+                context.pushMultiLineItems(multiLineStack, markdownLines);
+                markdown += markdownLines.join("\n");
                 var aclGr = new GlideRecord('sys_security_acl');
                 aclGr.addQuery(name + '.' + element);
                 aclGr.query();
@@ -218,7 +162,7 @@ var TableMarkdownGenerator = (function() {
 
     TableMarkdownGeneratorConstructor.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
         getTableMarkdown: function() {
-			try {
+            try {
                 var sys_id = this.getParameter('sysparm_sys_id');
                 if (!sys_id)
                     return "Value for sys_id parameter not provided.";
@@ -230,23 +174,12 @@ var TableMarkdownGenerator = (function() {
                 } catch (e) {
                     return "Error loading table with sys_id " + JSON.stringify(sys_id) + ": " + e;
                 }
-                var ref_map = this.getParameter('sysparm_ref_map');
-                var referenceMap;
-                if (ref_map) {
-                    try {
-                        referenceMap = JSON.parse(ref_map);
-                    } catch (e) {
-                        return "Error parsing sysparm_ref_map: " + e;
-                    }
-                } else
-                    referenceMap = undefined;
                 var context = new MarkdownGenerationContext();
-                if (referenceMap)
-                    context.importFromJson(referenceMap);
+                context.setCurrentFolder(this.getParameter('sysparm_folder'));
                 return getTableMarkdown(tableGlideRecord, context);
-			} catch (e) {
-				return "Unexpected error: " + (e.stack ? e + "\nStack: " + e.stack : e);
-			}
+            } catch (e) {
+                return "Unexpected error: " + (e.stack ? e + "\nStack: " + e.stack : e);
+            }
         },
 
         type: 'TableMarkdownGenerator'
@@ -258,13 +191,13 @@ var TableMarkdownGenerator = (function() {
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-05-28 16:22:21</sys_created_on>
         <sys_id>e431648f870d8b104d9a0f28cebb354f</sys_id>
-        <sys_mod_count>15</sys_mod_count>
+        <sys_mod_count>17</sys_mod_count>
         <sys_name>TableMarkdownGenerator</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_e431648f870d8b104d9a0f28cebb354f</sys_update_name>
         <sys_updated_by>lerwinesa</sys_updated_by>
-        <sys_updated_on>2026-06-04 22:14:51</sys_updated_on>
+        <sys_updated_on>2026-06-27 01:16:08</sys_updated_on>
     </sys_script_include>
 </record_update>

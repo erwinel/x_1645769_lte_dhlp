@@ -2,12 +2,12 @@
     <sys_ui_page action="INSERT_OR_UPDATE">
         <category>general</category>
         <client_script><![CDATA[function actionOK() {
-	var ga = new GlideAjax('x_1645769_lte_dhlp.TableMarkdownGenerator');
-	ga.addParam('sysparm_name', 'getTableMarkdown');
-	ga.addParam('sysparm_sys_id', $('sys_db_object').value);
-	ga.addParam('sysparm_ref_map', $('ref_map').value);	
-	ga.getXMLAnswer(function(answer){
-		$('markdown_text').textContent = answer;
+    var ga = new GlideAjax('x_1645769_lte_dhlp.TableMarkdownGenerator');
+    ga.addParam('sysparm_name', 'getTableMarkdown');
+    ga.addParam('sysparm_sys_id', $('sys_db_object').value);
+    ga.addParam('sysparm_folder', $('folder').value);
+    ga.getXMLAnswer(function(answer) {
+        $('markdown_text').textContent = answer;
     });
 }]]></client_script>
         <description/>
@@ -15,33 +15,37 @@
         <endpoint>x_1645769_lte_dhlp_get_table_md.do</endpoint>
         <html><![CDATA[<?xml version="1.0" encoding="utf-8" ?>
 <j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide" xmlns:j2="null" xmlns:g2="null">
-	<h1>Generate Boilerplate Documentation Markdown from Table</h1>
+    <h1>Generate Boilerplate Documentation Markdown from Table</h1>
     <table style="border-width: 0px; border-collapse: collapse;">
         <tbody>
             <tr>
                 <th scope="row" style="text-align: right;">Table:</th>
-                <td><g:ui_reference name="sys_db_object" table="sys_db_object" query="active=true" /></td>
+                <td>
+                    <g:ui_reference name="sys_db_object" table="sys_db_object" query="active=true" />
+                </td>
             </tr>
         </tbody>
     </table>
     <table style="border-width: 0px; border-collapse: collapse;">
         <thead>
             <tr>
-                <th scope="col" style="text-align: left;">Custom Reference Map JSON:</th>
+                <th scope="col" style="text-align: left;">Target folder:</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td><textarea name="ref_map" id="ref_map" style="width:100%"></textarea></td>
+                <td><input name="folder" id="folder" type="text" style="width:100%" /></td>
             </tr>
         </tbody>
         <tfoot>
             <tr>
-                <td style="text-align: right;"><g:dialog_buttons_ok_cancel class="form-control"/></td>
+                <td style="text-align: right;">
+                    <g:dialog_buttons_ok_cancel class="form-control" />
+                </td>
             </tr>
         </tfoot>
     </table>
-	<h2>Markdown</h2>
+    <h2>Markdown</h2>
     <textarea name="markdown_text" id="markdown_text" readonly="true" style="width:100%"></textarea>
 </j:jelly>]]></html>
         <name>get_table_md</name>
@@ -50,13 +54,13 @@
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-05-06 16:00:44</sys_created_on>
         <sys_id>79e803731b2403d0c798a97ae54bcbb3</sys_id>
-        <sys_mod_count>1</sys_mod_count>
+        <sys_mod_count>4</sys_mod_count>
         <sys_name>get_table_md</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy/>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_ui_page_79e803731b2403d0c798a97ae54bcbb3</sys_update_name>
         <sys_updated_by>lerwinesa</sys_updated_by>
-        <sys_updated_on>2026-05-28 16:33:46</sys_updated_on>
+        <sys_updated_on>2026-06-27 01:33:49</sys_updated_on>
     </sys_ui_page>
 </record_update>
