@@ -42,7 +42,7 @@ var ReferenceLinkMapper = (function() {
     ReferenceLinkMapperConstructor = Class.create();
 
     function getInstanceUri(glideRecord) {
-        return instanceUri + 'nav_to.do?uri=' + encodeURIComponent(gr.getLink(true));
+        return instanceUri + 'nav_to.do?uri=' + encodeURIComponent(glideRecord.getLink(true));
     }
     /**
      * @template {MarkdownMapping} T
@@ -78,7 +78,7 @@ var ReferenceLinkMapper = (function() {
             this._var_set_md_mappings = value ? JSON.parse(value) : [];
         },
 
-        getActionMapping(action) {
+        getActionMapping: function(action) {
             if (gs.nil(action))
                 return;
 
@@ -124,7 +124,7 @@ var ReferenceLinkMapper = (function() {
             return item;
         },
 
-        getCatItemMapping(cat_item) {
+        getCatItemMapping: function(cat_item) {
             if (gs.nil(cat_item))
                 return;
 
@@ -158,7 +158,7 @@ var ReferenceLinkMapper = (function() {
             return item;
         },
 
-        getFlowMapping(flow) {
+        getFlowMapping: function(flow) {
             if (gs.nil(flow))
                 return;
 
@@ -204,7 +204,7 @@ var ReferenceLinkMapper = (function() {
             return item;
         },
 
-        getTableMapping(table) {
+        getTableMapping: function(table) {
             if (gs.nil(table))
                 return;
 
@@ -250,7 +250,7 @@ var ReferenceLinkMapper = (function() {
             return item;
         },
 
-        getVarSetMapping(variable_set) {
+        getVarSetMapping: function(variable_set) {
             if (gs.nil(variable_set))
                 return;
 
@@ -296,7 +296,7 @@ var ReferenceLinkMapper = (function() {
             return item;
         },
 
-        getActionUrl(action, current_folder) {
+        getActionUrl: function(action, current_folder) {
             /** @type {FlowMarkdownMapping} */
             var item = this.getActionMapping(action);
             if (item) {
@@ -306,7 +306,7 @@ var ReferenceLinkMapper = (function() {
             }
         },
 
-        getCatItemUrl(cat_item, current_folder) {
+        getCatItemUrl: function(cat_item, current_folder) {
             /** @type {MarkdownMapping} */
             var item = this.getCatItemMapping(cat_item);
             if (item) {
@@ -316,7 +316,7 @@ var ReferenceLinkMapper = (function() {
             }
         },
 
-        getFlowUrl(flow, current_folder) {
+        getFlowUrl: function(flow, current_folder) {
             /** @type {FlowMarkdownMapping} */
             var item = this.getFlowMapping(flow);
             if (item) {
@@ -326,9 +326,9 @@ var ReferenceLinkMapper = (function() {
             }
         },
 
-        getTableUrl(flow, current_folder) {
+        getTableUrl: function(table, current_folder) {
             /** @type {TableMarkdownMapping} */
-            var item = this.getTableMapping(flow);
+            var item = this.getTableMapping(table);
             if (item) {
                 if (!item.folder || current_folder == item.folder)
                     return item.file_link;
@@ -336,9 +336,9 @@ var ReferenceLinkMapper = (function() {
             }
         },
 
-        getVarSetUrl(flow, current_folder) {
+        getVarSetUrl: function(varSet, current_folder) {
             /** @type {VarSetMarkdownMapping} */
-            var item = this.getVarSetMapping(flow);
+            var item = this.getVarSetMapping(varSet);
             if (item) {
                 if (!item.folder || current_folder == item.folder)
                     return item.file_link;
@@ -346,71 +346,71 @@ var ReferenceLinkMapper = (function() {
             }
         },
 
-        getActionMdLink(action, current_folder, isForTableCell) {
+        getActionMdLink: function(action, current_folder, isForTableCell) {
             if (!gs.nil(action)) {
                 /** @type {FlowMarkdownMapping} */
                 var item = this.getActionMapping(action);
                 if (item) {
                     if (!item.folder || current_folder == item.folder)
-                        return '[' + MarkdownGenerationContextConstructor.escapeForMarkdown(item.display_name, isForTableCell) + '](' + item.file_link + ')';
-                    return '[' + MarkdownGenerationContextConstructor.escapeForMarkdown(item.display_name, isForTableCell) + '](' + (current_folder ? '../' + item.folder : item.folder) + '/' + item.file_link + ')';
+                        return '[' + MarkdownGenerationContext.escapeForMarkdown(item.display_name, isForTableCell) + '](' + item.file_link + ')';
+                    return '[' + MarkdownGenerationContext.escapeForMarkdown(item.display_name, isForTableCell) + '](' + (current_folder ? '../' + item.folder : item.folder) + '/' + item.file_link + ')';
                 }
-                var c = MarkdownGenerationContextConstructor.normalizeWhiteSpace(action);
+                var c = MarkdownGenerationContext.normalizeWhiteSpace(action);
                 if (c)
                     return '`' + c + '`';
             }
             return '*Empty*';
         },
 
-        getCatItemMdLink(cat_item, current_folder, isForTableCell) {
+        getCatItemMdLink: function(cat_item, current_folder, isForTableCell) {
             if (!gs.nil(cat_item)) {
                 /** @type {MarkdownMapping} */
                 var item = this.getCatItemMapping(cat_item);
                 if (item) {
                     if (!item.folder || current_folder == item.folder)
-                        return '[' + MarkdownGenerationContextConstructor.escapeForMarkdown(item.display_name, isForTableCell) + '](' + item.file_link + ')';
-                    return '[' + MarkdownGenerationContextConstructor.escapeForMarkdown(item.display_name, isForTableCell) + '](' + (current_folder ? '../' + item.folder : item.folder) + '/' + item.file_link + ')';
+                        return '[' + MarkdownGenerationContext.escapeForMarkdown(item.display_name, isForTableCell) + '](' + item.file_link + ')';
+                    return '[' + MarkdownGenerationContext.escapeForMarkdown(item.display_name, isForTableCell) + '](' + (current_folder ? '../' + item.folder : item.folder) + '/' + item.file_link + ')';
                 }
-                var c = MarkdownGenerationContextConstructor.normalizeWhiteSpace(cat_item);
+                var c = MarkdownGenerationContext.normalizeWhiteSpace(cat_item);
                 if (c)
                     return '`' + c + '`';
             }
             return '*Empty*';
         },
 
-        getFlowMdLink(flow, current_folder, isForTableCell) {
+        getFlowMdLink: function(flow, current_folder, isForTableCell) {
             if (!gs.nil(flow)) {
                 /** @type {FlowMarkdownMapping} */
                 var item = this.getFlowMapping(flow);
                 if (item) {
                     if (!item.folder || current_folder == item.folder)
-                        return '[' + MarkdownGenerationContextConstructor.escapeForMarkdown(item.display_name, isForTableCell) + '](' + item.file_link + ')';
-                    return '[' + MarkdownGenerationContextConstructor.escapeForMarkdown(item.display_name, isForTableCell) + '](' + (current_folder ? '../' + item.folder : item.folder) + '/' + item.file_link + ')';
+                        return '[' + MarkdownGenerationContext.escapeForMarkdown(item.display_name, isForTableCell) + '](' + item.file_link + ')';
+                    return '[' + MarkdownGenerationContext.escapeForMarkdown(item.display_name, isForTableCell) + '](' + (current_folder ? '../' + item.folder : item.folder) + '/' + item.file_link + ')';
                 }
-                var c = MarkdownGenerationContextConstructor.normalizeWhiteSpace(flow);
+                var c = MarkdownGenerationContext.normalizeWhiteSpace(flow);
                 if (c)
                     return '`' + c + '`';
             }
             return '*Empty*';
         },
 
-        getTableMdLink(table, current_folder, isForTableCell) {
+        getTableMdLink: function(table, current_folder, isForTableCell) {
             if (!gs.nil(table)) {
                 /** @type {TableMarkdownMapping} */
                 var item = this.getTableMapping(table);
                 if (item) {
                     if (!item.folder || current_folder == item.folder)
-                        return '[' + MarkdownGenerationContextConstructor.escapeForMarkdown(item.display_name, isForTableCell) + '](' + item.file_link + ')';
-                    return '[' + MarkdownGenerationContextConstructor.escapeForMarkdown(item.display_name, isForTableCell) + '](' + (current_folder ? '../' + item.folder : item.folder) + '/' + item.file_link + ')';
+                        return '[' + MarkdownGenerationContext.escapeForMarkdown(item.display_name, isForTableCell) + '](' + item.file_link + ')';
+                    return '[' + MarkdownGenerationContext.escapeForMarkdown(item.display_name, isForTableCell) + '](' + (current_folder ? '../' + item.folder : item.folder) + '/' + item.file_link + ')';
                 }
-                var c = MarkdownGenerationContextConstructor.normalizeWhiteSpace(table);
+                var c = MarkdownGenerationContext.normalizeWhiteSpace(table);
                 if (c)
                     return '`' + c + '`';
             }
             return '*Empty*';
         },
 
-        getColumnMdLink(table, field, current_folder, isForTableCell) {
+        getColumnMdLink: function(table, field, current_folder, isForTableCell) {
             if (!gs.nil(field)) {
                 /** @type {TableMarkdownMapping} */
                 var item = this.getTableMapping(table);
@@ -421,35 +421,35 @@ var ReferenceLinkMapper = (function() {
                     gr.addQuery('element', n);
                     gr.query();
                     if (gr.next()) {
-                        l = gr.getValue('label');
+                        l = gr.getValue('column_label');
                         n = gr.getValue('element');
                     } else {
                         l = n;
                     }
                     if (!item.folder)
-                        return '[' + MarkdownGenerationContextConstructor.escapeForMarkdown(l, isForTableCell) + '](' + item.file_link + ')';
+                        return '[' + MarkdownGenerationContext.escapeForMarkdown(l, isForTableCell) + '](' + item.file_link + ')';
                     if (current_folder == item.folder)
-                        return '[' + MarkdownGenerationContextConstructor.escapeForMarkdown(l, isForTableCell) + '](' + item.file_link + "#column-" + n + ')';
-                    return '[' + MarkdownGenerationContextConstructor.escapeForMarkdown(l, isForTableCell) + '](' + (current_folder ? '../' + item.folder : item.folder) + '/' + item.file_link + "#column-" + n + ')';
+                        return '[' + MarkdownGenerationContext.escapeForMarkdown(l, isForTableCell) + '](' + item.file_link + "#column-" + n + ')';
+                    return '[' + MarkdownGenerationContext.escapeForMarkdown(l, isForTableCell) + '](' + (current_folder ? '../' + item.folder : item.folder) + '/' + item.file_link + "#column-" + n + ')';
                 }
-                var t = MarkdownGenerationContextConstructor.normalizeWhiteSpace(table);
-                var e = MarkdownGenerationContextConstructor.normalizeWhiteSpace(field);
+                var t = MarkdownGenerationContext.normalizeWhiteSpace(table);
+                var e = MarkdownGenerationContext.normalizeWhiteSpace(field);
                 if (t && e)
                     return '`[' + c + '.' + e + ']`';
             }
             return '*Empty*';
         },
 
-        getVarSetMdLink(variable_set, current_folder, isForTableCell) {
+        getVarSetMdLink: function(variable_set, current_folder, isForTableCell) {
             if (!gs.nil(variable_set)) {
                 /** @type {VarSetMarkdownMapping} */
                 var item = this.getVarSetMapping(variable_set);
                 if (item) {
                     if (!item.folder || current_folder == item.folder)
-                        return '[' + MarkdownGenerationContextConstructor.escapeForMarkdown(item.display_name, isForTableCell) + '](' + item.file_link + ')';
-                    return '[' + MarkdownGenerationContextConstructor.escapeForMarkdown(item.display_name, isForTableCell) + '](' + (current_folder ? '../' + item.folder : item.folder) + '/' + item.file_link + ')';
+                        return '[' + MarkdownGenerationContext.escapeForMarkdown(item.display_name, isForTableCell) + '](' + item.file_link + ')';
+                    return '[' + MarkdownGenerationContext.escapeForMarkdown(item.display_name, isForTableCell) + '](' + (current_folder ? '../' + item.folder : item.folder) + '/' + item.file_link + ')';
                 }
-                var c = MarkdownGenerationContextConstructor.normalizeWhiteSpace(variable_set);
+                var c = MarkdownGenerationContext.normalizeWhiteSpace(variable_set);
                 if (c)
                     return '`[' + c + ']`';
             }
@@ -465,13 +465,13 @@ var ReferenceLinkMapper = (function() {
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-06-27 00:07:17</sys_created_on>
         <sys_id>621d07d887314b104d9a0f28cebb35b4</sys_id>
-        <sys_mod_count>2</sys_mod_count>
+        <sys_mod_count>6</sys_mod_count>
         <sys_name>ReferenceLinkMapper</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_621d07d887314b104d9a0f28cebb35b4</sys_update_name>
         <sys_updated_by>lerwinesa</sys_updated_by>
-        <sys_updated_on>2026-06-27 02:07:44</sys_updated_on>
+        <sys_updated_on>2026-07-29 22:05:27</sys_updated_on>
     </sys_script_include>
 </record_update>

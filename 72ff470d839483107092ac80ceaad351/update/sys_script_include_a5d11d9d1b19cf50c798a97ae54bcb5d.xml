@@ -38,7 +38,6 @@
         context.pushDisplayValueListItem(varGr.order, markdownLines, multiLineStack);
         context.pushListItemIfTrue(varGr.show_help, markdownLines);
         if (varGr.getDisplayValue('show_help') == 'true') {
-            markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(varGr.show_help.getLabel()) + ':** True');
             context.pushDisplayValueListItem(varGr.help_tag, markdownLines, multiLineStack);
             context.pushDisplayValueListItem(varGr.help_text, markdownLines, multiLineStack);
             context.pushCodeListItem(varGr.instructions, 'html', markdownLines, multiLineStack);
@@ -91,13 +90,14 @@
                 context.pushDisplayValueListItem(varGr.lookup_source, markdownLines, multiLineStack);
                 switch (varGr.getValue('lookup_source')) {
                     case 'choice':
+                    case 'choices':
                         if (!gs.nil(varGr.choice_table)) {
                             context.pushTableReferenceListItem(varGr.choice_table, markdownLines);
                             context.pushFieldReferenceListItem(varGr.choice_table, varGr.choice_field, markdownLines);
                         }
                         break;
                 }
-                context.pushListItemIfTrue(varGr.choice_direction, markdownLines);
+                context.pushDisplayValueListItem(varGr.choice_direction, markdownLines, multiLineStack);
                 context.pushListItemIfTrue(varGr.include_none, markdownLines);
                 context.pushListItemIfTrue(varGr.lookup_unique, markdownLines);
                 context.pushValueListItem(varGr.reference_qual, markdownLines, multiLineStack);
@@ -158,8 +158,26 @@
                 break;
         }
         switch (type) {
+            case 2: // Multi Line Text
+            case 7: // CheckBox
+            case 9: // Date
+            case 10: // Date/Time
+                context.pushCodeListItem(varGr.default_value, 'text', markdownLines, multiLineStack);
+                break;
+            case 1: // Yes / No
+            case 3: // Multiple Choice
+            case 4: // Numeric Scale
+            case 6: // Single Line Text
+            case 16: // Wide Single Line Text
+            case 26: // Email
+            case 27: // URL
+            case 28: // IP Address
+            case 29: // Duration
+            case 5: // Select Box
+                context.pushCodeListItem(varGr.default_value, 'text', markdownLines, multiLineStack, true);
+                break;
             case 23: // HTML
-                if (gs.nil(glideRecord.default_html_value))
+                if (gs.nil(varGr.default_html_value))
                     context.pushCodeListItem(varGr.default_value, 'text', markdownLines, multiLineStack, true);
                 else
                     context.pushCodeListItem(varGr.default_html_value, 'html', markdownLines, multiLineStack, true);
@@ -193,9 +211,8 @@
                 markdownLines.push('');
                 markdownLines.push('| Label | Value | Sequence |');
                 markdownLines.push('| ----- | ----- | -------- |');
-                text = text + "\n\n**Choices:**\n\n| Label | Value | Sequence |\n| ----- | ----- | -------- |";
                 do {
-                    markdownLines.push("\n| " + MarkdownGenerationContext.escapeForMarkdown(choiceGr.getValue('text'), true) + " | " + MarkdownGenerationContext.escapeForMarkdown(choiceGr.getValue('value'), true) + " | " + choiceGr.getDisplayValue('order') + " |");
+                    markdownLines.push("| " + MarkdownGenerationContext.escapeForMarkdown(choiceGr.getValue('text'), true) + " | " + MarkdownGenerationContext.escapeForMarkdown(choiceGr.getValue('value'), true) + " | " + choiceGr.getDisplayValue('order') + " |");
                 } while (choiceGr.next());
             }
         }
@@ -203,12 +220,24 @@
 
     /**
      * @param {(GlideRecord | GlideRecordSecure)} varSetGr - item_option_new_set
-     * @param {number} order
+     * @param {string} order
      * @param {string[]} markdownLines
      * @param {MarkdownGenerationContext} context
      */
-    function pushVariableSetDetailMarkdown(varSetGr, markdownLines, context) {
+    function pushVariableSetDetailMarkdown(varSetGr, order, markdownLines, context) {
+        markdownLines.push('');
+        markdownLines.push("### Variable Set: " + varSetGr.getValue('internal_name'));
+        markdownLines.push('');
 
+        markdownLines.push('- **Title:** [' + MarkdownGenerationContext.escapeForMarkdown(gs.nil(varSetGr.title) ? varSetGr.getValue('internal_name') : varSetGr.getValue('title')) + '](' + context.mapper.getVarSetUrl(varSetGr, context.getCurrentFolder()) + ')');
+        markdownLines.push('- **Order:** ' + order);
+        /** @type {MultiLineItem[]} */
+        var multiLineStack = [];
+        context.pushDisplayValueListItem(varSetGr.type, markdownLines, multiLineStack);
+        context.pushListItemIfTrue(varSetGr.display_title, markdownLines);
+        context.pushDisplayValueListItem(varSetGr.layout, markdownLines, multiLineStack);
+        context.pushDisplayValueListItem(varSetGr.description, markdownLines, multiLineStack);
+        context.pushMultiLineItems(multiLineStack, markdownLines);
     }
 
     /**
@@ -251,9 +280,12 @@
         context.pushListItemIfTrue(catItemGr.no_attachment_v2, markdownLines);
         context.pushListItemIfTrue(catItemGr.mandatory_attachment, markdownLines);
         context.pushListItemIfTrue(catItemGr.no_save_as_draft, markdownLines);
+        var cat_item_sys_id = catItemGr.getValue('sys_id');
+        markdownLines.push('- **Links:** [Dev](' + MarkdownGenerationContext.getInstanceUrl('nav_to.do?uri=sc_cat_item_producer.do?sys_id=' + cat_item_sys_id) + ')');
         context.pushMultiLineItems(multiLineStack, markdownLines);
 
-        var cat_item_sys_id = catItemGr.getValue('sys_id');
+        markdownLines.push('', '_______________________________________________');
+
         /** @type {RecordProducerQuestionItem[]} */
         var allVariables = [];
         var variableGr = new GlideRecord('item_option_new');
@@ -280,18 +312,18 @@
                 }
             });
         var varSetGr = new GlideRecord('io_set_item');
-        varSetGr.addQuery('cat_item', cat_item_sys_id);
+        varSetGr.addQuery('sc_cat_item', cat_item_sys_id);
         varSetGr.orderBy('order');
         varSetGr.orderBy('variable_set.internal_name');
         varSetGr.query();
         while (varSetGr.next())
             allVariables.push({
-                sys_id: varSetGr.getValue('sys_id'),
+                sys_id: varSetGr.getValue('variable_set'),
                 typeValue: NaN,
                 typeLabel: 'Variable Set',
                 question_text: MarkdownGenerationContext.escapeForMarkdown(varSetGr.getDisplayValue('variable_set')),
                 field: '',
-                name: varSetGr.getValue('internal_name'),
+                name: varSetGr.variable_set.getRefRecord().getValue('internal_name'),
                 is_set: true,
                 order: gs.nil(varSetGr.order) ? {
                     display: '',
@@ -353,22 +385,24 @@
             for (i = 0; i < allVariables.length; i++) {
                 item = allVariables[i];
                 var type = item.typeLabel;
+                var linkTxt = '[' + MarkdownGenerationContext.escapeForMarkdown(item.question_text ? item.question_text : item.name) + (item.is_set ? '](#variable-set-' : '](#variable-') + item.name + ')';
                 if (!item.is_set)
                     switch (item.typeValue) {
                         case 19: // Container Start
                         case 24: // Container Split
                         case 20: // Container End
+                        linkTxt = '*' + linkTxt + '*';
                             type = '*\\(' + type + '\\)*';
                             break;
                     }
-                markdownLines.push('| ' + type + ' | [' + (item.question_text ? item.question_text : item.name) + (item.is_set ? '](#variable-set-' : '](#variable-') + item.name + ') | ' + item.field + ' | ' + item.order.display + ' |');
+                markdownLines.push('| ' + type + ' | ' + linkTxt + ' | ' + item.field + ' | ' + item.order.display + ' |');
             }
             for (i = 0; i < allVariables.length; i++) {
                 item = allVariables[i];
                 if (item.is_set) {
-                    varSetGr = new GlideRecord('io_set_item');
+                    varSetGr = new GlideRecord('item_option_new_set');
                     varSetGr.get(allVariables[i].sys_id);
-                    pushVariableSetDetailMarkdown(varSetGr, markdownLines, context);
+                    pushVariableSetDetailMarkdown(varSetGr, item.order.display, markdownLines, context);
                 } else {
                     variableGr = new GlideRecord('item_option_new');
                     variableGr.get(allVariables[i].sys_id);
@@ -420,9 +454,12 @@
         context.pushListItemIfTrue(catItemGr.no_save_as_draft, markdownLines);
         context.pushListItemIfTrue(catItemGr.no_attachment_v2, markdownLines);
         context.pushListItemIfTrue(catItemGr.mandatory_attachment, markdownLines);
+        var cat_item_sys_id = catItemGr.getValue('sys_id');
+        markdownLines.push('- **Links:** [Dev](' + MarkdownGenerationContext.getInstanceUrl('nav_to.do?uri=sc_cat_item.do?sys_id=' + cat_item_sys_id) + ')');
         context.pushMultiLineItems(multiLineStack, markdownLines);
 
-        var cat_item_sys_id = catItemGr.getValue('sys_id');
+        markdownLines.push('', '_______________________________________________');
+
         /** @type {QuestionItem[]} */
         var allVariables = [];
         var variableGr = new GlideRecord('item_option_new');
@@ -448,7 +485,7 @@
                 }
             });
         var varSetGr = new GlideRecord('io_set_item');
-        varSetGr.addQuery('cat_item', cat_item_sys_id);
+        varSetGr.addQuery('sc_cat_item', cat_item_sys_id);
         varSetGr.orderBy('order');
         varSetGr.orderBy('variable_set.internal_name');
         varSetGr.query();
@@ -458,7 +495,7 @@
                 typeValue: NaN,
                 typeLabel: 'Variable Set',
                 question_text: MarkdownGenerationContext.escapeForMarkdown(varSetGr.getDisplayValue('variable_set')),
-                name: varSetGr.getValue('internal_name'),
+                name: varSetGr.variable_set.getRefRecord().getValue('internal_name'),
                 is_set: true,
                 order: gs.nil(varSetGr.order) ? {
                     display: '',
@@ -468,7 +505,7 @@
                     value: parseInt(varSetGr.getValue('order'))
                 }
             });
-        if (allVariables.length > 0) {
+        if (allVariables.length > 1) {
             /** @type {QuestionItem} */
             var item;
             var i;
@@ -520,22 +557,24 @@
             for (i = 0; i < allVariables.length; i++) {
                 item = allVariables[i];
                 var type = item.typeLabel;
+                var linkTxt = '[' + MarkdownGenerationContext.escapeForMarkdown(item.question_text ? item.question_text : item.name) + (item.is_set ? '](#variable-set-' : '](#variable-') + item.name + ')';
                 if (!item.is_set)
                     switch (item.typeValue) {
                         case 19: // Container Start
                         case 24: // Container Split
                         case 20: // Container End
+                        linkTxt = '*' + linkTxt + '*';
                             type = '*\\(' + type + '\\)*';
                             break;
                     }
-                markdownLines.push('| ' + type + ' | [' + (item.question_text ? item.question_text : item.name) + (item.is_set ? '](#variable-set-' : '](#variable-') + item.name + ') | ' + item.order.display + ' |');
+                markdownLines.push('| ' + type + ' | ' + linkTxt + ' | ' + item.order.display + ' |');
             }
             for (i = 0; i < allVariables.length; i++) {
                 item = allVariables[i];
                 if (item.is_set) {
-                    varSetGr = new GlideRecord('io_set_item');
+                    varSetGr = new GlideRecord('item_option_new_set');
                     varSetGr.get(allVariables[i].sys_id);
-                    pushVariableSetDetailMarkdown(varSetGr, markdownLines, context);
+                    pushVariableSetDetailMarkdown(varSetGr, item.order.display, markdownLines, context);
                 } else {
                     variableGr = new GlideRecord('item_option_new');
                     variableGr.get(allVariables[i].sys_id);
@@ -565,11 +604,14 @@
         context.pushListItemIfTrue(varSetGr.display_title, markdownLines);
         context.pushDisplayValueListItem(varSetGr.layout, markdownLines, multiLineStack);
         context.pushDisplayValueListItem(varSetGr.description, markdownLines, multiLineStack);
+        var var_set_sys_id = catItemGr.getValue('sys_id');
+        markdownLines.push('- **Links:** [Dev](' + MarkdownGenerationContext.getInstanceUrl('nav_to.do?uri=item_option_new_set.do?sys_id=' + var_set_sys_id) + ')');
         context.pushMultiLineItems(multiLineStack, markdownLines);
 
-        var cat_item_sys_id = catItemGr.getValue('sys_id');
+        markdownLines.push('', '_______________________________________________');
+
         var variableGr = new GlideRecord('item_option_new');
-        variableGr.addQuery('cat_item', cat_item_sys_id);
+        variableGr.addQuery('cat_item', var_set_sys_id);
         variableGr.orderBy('order');
         variableGr.orderBy('name');
         variableGr.addActiveQuery();
@@ -595,7 +637,7 @@
                 markdownLines.push('| ' + type + ' | [' + gs.nil(variableGr.question_text) ? name : MarkdownGenerationContext.escapeForMarkdown(variableGr.getDisplayValue('question_text')) + '](#variable-' + name + ') | ' + (gs.nil(variableGr.order) ? ' |' : variableGr.getDisplayValue('order') + ' |'));
             } while (variableGr.next());
             variableGr = new GlideRecord('item_option_new');
-            variableGr.addQuery('cat_item', cat_item_sys_id);
+            variableGr.addQuery('cat_item', var_set_sys_id);
             variableGr.orderBy('order');
             variableGr.orderBy('name');
             variableGr.addActiveQuery();
@@ -666,13 +708,13 @@
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-06-04 22:14:00</sys_created_on>
         <sys_id>a5d11d9d1b19cf50c798a97ae54bcb5d</sys_id>
-        <sys_mod_count>4</sys_mod_count>
+        <sys_mod_count>17</sys_mod_count>
         <sys_name>ServiceCatalogMarkdownGenerator</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_a5d11d9d1b19cf50c798a97ae54bcb5d</sys_update_name>
         <sys_updated_by>lerwinesa</sys_updated_by>
-        <sys_updated_on>2026-06-27 02:45:51</sys_updated_on>
+        <sys_updated_on>2026-07-29 22:20:50</sys_updated_on>
     </sys_script_include>
 </record_update>
