@@ -9,34 +9,7 @@
         <mobile_callable>false</mobile_callable>
         <name>ReferenceLinkMapper</name>
         <sandbox_callable>false</sandbox_callable>
-        <script><![CDATA[/**
- * @typedef MarkdownMapping
- * @property {string} display_name
- * @property {string} sys_id
- * @property {string} [folder]
- * @property {string} file_link
- */
-/**
- * @typedef CatItemMarkdownMappingExt
- */
-/** @typedef {CatItemMarkdownMappingExt & MarkdownMapping} CatItemMarkdownMapping */
-/**
- * @typedef FlowMarkdownMappingExt
- * @property {string} internal_name
- */
-/** @typedef {FlowMarkdownMappingExt & MarkdownMapping} FlowMarkdownMapping */
-/**
- * @typedef TableMarkdownMappingExt
- * @property {string} name
- */
-/** @typedef {TableMarkdownMappingExt & MarkdownMapping} TableMarkdownMapping */
-/**
- * @typedef VarSetMarkdownMappingExt
- * @property {string} internal_name
- */
-/** @typedef {VarSetMarkdownMappingExt & MarkdownMapping} VarSetMarkdownMapping */
-
-var ReferenceLinkMapper = (function() {
+        <script><![CDATA[var ReferenceLinkMapper = (function() {
     var instanceUri = gs.getProperty('glide.servlet.uri');
 
     ReferenceLinkMapperConstructor = Class.create();
@@ -53,7 +26,7 @@ var ReferenceLinkMapper = (function() {
     function getMappingBySysId(sys_id, mappings) {
         for (var i = 0; i < mappings.length; i++) {
             var item = mappings[i];
-            if (item == sys_id)
+            if (item.sys_id == sys_id)
                 return item;
         }
     }
@@ -85,7 +58,7 @@ var ReferenceLinkMapper = (function() {
             /** @type {FlowMarkdownMapping} */
             var item;
             if (action instanceof GlideRecord) {
-                item = getMappingBySysId(this._action_md_mappings, action.getUniqueValue());
+                item = getMappingBySysId(action.getUniqueValue(), this._action_md_mappings);
                 if (!item) {
                     item = {
                         display_name: action.getValue('name'),
@@ -98,7 +71,7 @@ var ReferenceLinkMapper = (function() {
                 return item;
             }
             var n = '' + action;
-            item = getMappingBySysId(this._action_md_mappings, action);
+            item = getMappingBySysId(n, this._action_md_mappings);
             if (item)
                 return item;
             for (var i = 0; i < this._action_md_mappings.length; i++) {
@@ -131,7 +104,7 @@ var ReferenceLinkMapper = (function() {
             /** @type {MarkdownMapping} */
             var item;
             if (cat_item instanceof GlideRecord) {
-                item = getMappingBySysId(this._cat_item_md_mappings, cat_item.getUniqueValue());
+                item = getMappingBySysId(cat_item.getUniqueValue(), this._cat_item_md_mappings);
                 if (!item) {
                     item = {
                         display_name: cat_item.getValue('name'),
@@ -143,7 +116,7 @@ var ReferenceLinkMapper = (function() {
                 return item;
             }
             var n = '' + cat_item;
-            item = getMappingBySysId(this._cat_item_md_mappings, n);
+            item = getMappingBySysId(n, this._cat_item_md_mappings);
             if (item)
                 return item;
             var gr = new GlideRecordSecure('sc_cat_item');
@@ -165,7 +138,7 @@ var ReferenceLinkMapper = (function() {
             /** @type {FlowMarkdownMapping} */
             var item;
             if (flow instanceof GlideRecord) {
-                item = getMappingBySysId(this._flow_md_mappings, flow.getUniqueValue());
+                item = getMappingBySysId(flow.getUniqueValue(), this._flow_md_mappings);
                 if (!item) {
                     item = {
                         display_name: flow.getValue('name'),
@@ -178,7 +151,7 @@ var ReferenceLinkMapper = (function() {
                 return item;
             }
             var n = '' + flow;
-            item = getMappingBySysId(this._flow_md_mappings, n);
+            item = getMappingBySysId(n, this._flow_md_mappings);
             if (item)
                 return item;
             for (var i = 0; i < this._flow_md_mappings.length; i++) {
@@ -211,7 +184,7 @@ var ReferenceLinkMapper = (function() {
             /** @type {TableMarkdownMapping} */
             var item;
             if (table instanceof GlideRecord) {
-                item = getMappingBySysId(this._table_md_mappings, table.getUniqueValue());
+                item = getMappingBySysId(table.getUniqueValue(), this._table_md_mappings);
                 if (!item) {
                     item = {
                         display_name: table.getValue('label'),
@@ -224,7 +197,7 @@ var ReferenceLinkMapper = (function() {
                 return item;
             }
             var n = '' + table;
-            item = getMappingBySysId(this._table_md_mappings, n);
+            item = getMappingBySysId(n, this._table_md_mappings);
             if (item)
                 return item;
             for (var i = 0; i < this._table_md_mappings.length; i++) {
@@ -256,8 +229,8 @@ var ReferenceLinkMapper = (function() {
 
             /** @type {VarSetMarkdownMapping} */
             var item;
-            if (variable_set instanceof GlideRecord) {
-                item = getMappingBySysId(this._var_set_md_mappings, variable_set.getUniqueValue());
+            if (variable_set instanceof GlideRecord || variable_set instanceof GlideRecordSecure) {
+                item = getMappingBySysId(variable_set.getUniqueValue(), this._var_set_md_mappings);
                 if (!item) {
                     item = {
                         display_name: variable_set.getValue('title'),
@@ -270,7 +243,7 @@ var ReferenceLinkMapper = (function() {
                 return item;
             }
             var n = '' + variable_set;
-            item = getMappingBySysId(this._var_set_md_mappings, n);
+            item = getMappingBySysId(n, this._var_set_md_mappings);
             if (item)
                 return item;
             for (var i = 0; i < this._var_set_md_mappings.length; i++) {
@@ -465,13 +438,13 @@ var ReferenceLinkMapper = (function() {
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-06-27 00:07:17</sys_created_on>
         <sys_id>621d07d887314b104d9a0f28cebb35b4</sys_id>
-        <sys_mod_count>6</sys_mod_count>
+        <sys_mod_count>9</sys_mod_count>
         <sys_name>ReferenceLinkMapper</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_621d07d887314b104d9a0f28cebb35b4</sys_update_name>
-        <sys_updated_by>lerwinesa</sys_updated_by>
-        <sys_updated_on>2026-07-29 22:05:27</sys_updated_on>
+        <sys_updated_by>lerwine</sys_updated_by>
+        <sys_updated_on>2026-08-28 19:54:25</sys_updated_on>
     </sys_script_include>
 </record_update>

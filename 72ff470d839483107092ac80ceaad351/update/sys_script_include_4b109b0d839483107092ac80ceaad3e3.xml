@@ -473,7 +473,7 @@ var LTEDevHelper = (function() {
     }
 
     /**
-     * @param {LabelValuePair[]} lvArr 
+     * @param {LabelValuePair[]} lvArr
      */
     function labelsAndValuesToString(lvArr) {
         /** @type {number} */
@@ -1467,13 +1467,13 @@ var LTEDevHelper = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-04-15 17:39:37</sys_created_on>
         <sys_id>4b109b0d839483107092ac80ceaad3e3</sys_id>
-        <sys_mod_count>27</sys_mod_count>
+        <sys_mod_count>28</sys_mod_count>
         <sys_name>LTEDevHelper</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_4b109b0d839483107092ac80ceaad3e3</sys_update_name>
-        <sys_updated_by>lerwinesa</sys_updated_by>
-        <sys_updated_on>2026-06-11 23:49:06</sys_updated_on>
+        <sys_updated_by>lerwine</sys_updated_by>
+        <sys_updated_on>2026-08-28 20:57:02</sys_updated_on>
     </sys_script_include>
 </record_update>

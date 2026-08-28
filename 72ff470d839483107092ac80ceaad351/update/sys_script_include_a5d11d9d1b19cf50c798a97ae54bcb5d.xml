@@ -29,7 +29,7 @@
             markdownLines.push(context.getColumnReferenceMdLink(varGr.record_producer_table, varGr.field));
         }
 
-        /** @type {MultiLineItem[]} */
+        /** @type {tyLabeledMultilineStackItem[]} */
         var multiLineStack = [];
         context.pushDisplayValueListItem(varGr.type, markdownLines, multiLineStack);
         context.pushDisplayValueListItem(varGr.question_text, markdownLines, multiLineStack);
@@ -38,7 +38,8 @@
         context.pushDisplayValueListItem(varGr.order, markdownLines, multiLineStack);
         context.pushListItemIfTrue(varGr.show_help, markdownLines);
         if (varGr.getDisplayValue('show_help') == 'true') {
-            context.pushDisplayValueListItem(varGr.help_tag, markdownLines, multiLineStack);
+            if (varGr.help_tag != 'More information')
+                context.pushValueListItem(varGr.help_tag, markdownLines, multiLineStack);
             context.pushDisplayValueListItem(varGr.help_text, markdownLines, multiLineStack);
             context.pushCodeListItem(varGr.instructions, 'html', markdownLines, multiLineStack);
         }
@@ -103,6 +104,19 @@
                 context.pushValueListItem(varGr.reference_qual, markdownLines, multiLineStack);
                 context.pushCodeListItem(varGr.attributes, 'text', markdownLines, multiLineStack);
                 break;
+            case 21: // List Collector
+                context.pushTableReferenceListItem(varGr.list_table, markdownLines);
+                context.pushDisplayValueListItem(varGr.use_reference_qualifier, markdownLines, multiLineStack);
+                switch (varGr.getValue('use_reference_qualifier')) {
+                    case 'simple':
+                        context.pushCodeListItem(varGr.reference_qual_condition, 'text', markdownLines, multiLineStack);
+                        break;
+                    default:
+                        context.pushCodeListItem(varGr.reference_qual, 'text', markdownLines, multiLineStack);
+                        break;
+                }
+                context.pushCodeListItem(varGr.attributes, 'text', markdownLines, multiLineStack);
+                break;
             case 4: // Numeric Scale
             case 6: // Single Line Text
             case 7: // CheckBox
@@ -115,7 +129,6 @@
             case 16: // Wide Single Line Text
             case 17: // Custom with Label
             case 20: // Container End
-            case 21: // List Collector
             case 23: // HTML
             case 24: // Container Split
             case 25: // Masked
@@ -169,6 +182,7 @@
             case 4: // Numeric Scale
             case 6: // Single Line Text
             case 16: // Wide Single Line Text
+            case 18: // Lookup Select Box
             case 26: // Email
             case 27: // URL
             case 28: // IP Address
@@ -231,7 +245,7 @@
 
         markdownLines.push('- **Title:** [' + MarkdownGenerationContext.escapeForMarkdown(gs.nil(varSetGr.title) ? varSetGr.getValue('internal_name') : varSetGr.getValue('title')) + '](' + context.mapper.getVarSetUrl(varSetGr, context.getCurrentFolder()) + ')');
         markdownLines.push('- **Order:** ' + order);
-        /** @type {MultiLineItem[]} */
+        /** @type {tyLabeledMultilineStackItem[]} */
         var multiLineStack = [];
         context.pushDisplayValueListItem(varSetGr.type, markdownLines, multiLineStack);
         context.pushListItemIfTrue(varSetGr.display_title, markdownLines);
@@ -241,17 +255,283 @@
     }
 
     /**
-     * @typedef QuestionItem
+     * @param {(GlideRecord | GlideRecordSecure)} catItemGr - sc_cat_item
+     * @param {string[]} markdownLines
+     * @param {MarkdownGenerationContext} context
+     */
+    function pushAvailabilitySection(catItemGr, markdownLines, context) {
+        var catItemSysId = catItemGr.getUniqueValue();
+        var availGr = new GlideRecord('sc_cat_item_user_criteria_mtom');
+        availGr.addQuery('sc_cat_item', catItemSysId);
+        availGr.orderBy('user_criteria.name');
+        availGr.query();
+        var notAvailGr = new GlideRecord('sc_cat_item_user_criteria_no_mtom');
+        notAvailGr.addQuery('sc_cat_item', catItemSysId);
+        notAvailGr.orderBy('user_criteria.name');
+        notAvailGr.query();
+        if (!(availGr.hasNext() || notAvailGr.hasNext()))
+            return;
+
+        markdownLines.push('', '## Availability');
+
+        if (availGr.next()) {
+            markdownLines.push('', '**Available for:**', '');
+            do {
+                markdownLines.push('- ' + MarkdownGenerationContext.escapeForMarkdown(availGr.getDisplayValue('user_criteria')));
+            } while (availGr.next());
+        }
+
+        if (notAvailGr.next()) {
+            markdownLines.push('', '**Not available for:**', '');
+            do {
+                markdownLines.push('- ' + MarkdownGenerationContext.escapeForMarkdown(notAvailGr.getDisplayValue('user_criteria')));
+            } while (notAvailGr.next());
+        }
+    }
+
+    /**
+     * @typedef QuestionItemOld
      * @property {string} sys_id
-     * @property {number} typeValue
-     * @property {string} typeLabel
+     * @property {number} type_value
+     * @property {string} type_label
      * @property {string} question_text
      * @property {string} name
      * @property {boolean} is_set
      * @property {({ display: string: value: number })} order
      */
 
-    /** @typedef {(QuestionItem & { field: string })} RecordProducerQuestionItem */
+    /**
+     * @param {string} text
+     * @returns {string}
+     */
+    function decodeCatalogConditions(text) {
+        var re = /^([^^]+(?:\^(?!NQ)[^^]+)*)\^NQ ?/g;
+        var iml = re.test(text);
+        if (iml) {
+            text = text.replace(re, "\n  - $1^EQ\n  - *OR:* ");
+            text = text.replace(/\^NQ ?/g, "^EQ\n  - *OR:* ");
+        }
+        text = text.replace(/\s?ISNOTEMPTY\^EQ/g, ' is not empty');
+        text = text.replace(/\s?ISNOTEMPTY\^\s?/g, ' is not empty **AND** ');
+        text = text.replace(/\s?ISEMPTY\^EQ/g, ' is empty');
+        text = text.replace(/\s?ISEMPTY\^\s?/g, ' is empty **AND** ');
+        text = text.replace(/\s?NOT IN(\w+),(\w+),(\w+),(\w+)\^EQ/g, ' is not one of `$1`, `$2`, `$3`, `$4`');
+        text = text.replace(/\s?NOT IN(\w+),(\w+),(\w+)\^EQ/g, ' is not one of `$1`, `$2`, `$3`');
+        text = text.replace(/\s?NOT IN(\w+),(\w+)\^EQ/g, ' is not one of `$1`, `$2`');
+        text = text.replace(/\s?NOT IN(\w+),(\w+),(\w+),(\w+)\^\s?/g, ' is not one of `$1`, `$2`, `$3`, `$4` **AND** ');
+        text = text.replace(/\s?NOT IN(\w+),(\w+),(\w+)\^\s?/g, ' is not one of `$1`, `$2`, `$3` **AND** ');
+        text = text.replace(/\s?NOT IN(\w+),(\w+)\^\s?/g, ' is not one of `$1`, `$2` **AND** ');
+        text = text.replace(/\s?IN(\w+),(\w+),(\w+),(\w+)\^EQ/g, ' is one of `$1`, `$2`, `$3`, `$4`');
+        text = text.replace(/\s?IN(\w+),(\w+),(\w+)\^EQ/g, ' is one of `$1`, `$2`, `$3`');
+        text = text.replace(/\s?IN(\w+),(\w+)\^EQ/g, ' is one of `$1`, `$2`');
+        text = text.replace(/\s?IN(\w+),(\w+),(\w+),(\w+)\^\s?/g, ' is one of `$1`, `$2`, `$3`, `$4` **AND** ');
+        text = text.replace(/\s?IN(\w+),(\w+),(\w+)\^\s?/g, ' is one of `$1`, `$2`, `$3` **AND** ');
+        text = text.replace(/\s?IN(\w+),(\w+)\^\s?/g, ' is one of `$1`, `$2` **AND** ');
+        text = text.replace(/\s?!=(\w+)\^EQ/g, ' is not `$1`');
+        text = text.replace(/\s?!=(\w+)\^\s?/g, ' is not `$1` **AND** ');
+        text = text.replace(/\s?=(\w+)\^EQ/g, ' is `$1`');
+        text = text.replace(/\s?=(\w+)\^\s?/g, ' is `$1` **AND** ');
+
+        text = text.replace(/\s?!=\^EQ/g, ' is not empty');
+        text = text.replace(/\s?!=\^\s?/g, ' is not empty **AND** ');
+        text = text.replace(/\s?=\^EQ/g, ' is empty');
+        text = text.replace(/\s?=\^\s?/g, ' is empty **AND** ');
+        return iml ? text : ' ' + text;
+    }
+
+    var emptyFuncRe = /^[\r\n\s]*function\s+onCondition\s*\(\s*\)[\r\n\s]*\{[\r\n\s]*\}[\r\n\s]*$/g;
+    var idRe = /IO:([a-f\d]{32})/g;
+
+    /**
+     * @param {string} filterField
+     * @param {string} filterValue
+     * @param {({ [key: string]: QuestionItemOld })} varsBySysId
+     * @param {({ [key: string]: QuestionItemOld })} varsByName
+     * @param {string[]} markdownLines
+     * @param {MarkdownGenerationContext} context
+     */
+    function pushCatalogUiPoliciesSection(filterField, filterValue, varsBySysId, varsByName, markdownLines, context) {
+        var policyGr = new GlideRecord('catalog_ui_policy');
+        policyGr.addActiveQuery();
+        policyGr.addQuery(filterField, filterValue);
+        policyGr.orderBy('short_description');
+        policyGr.query();
+        if (!policyGr.next())
+            return;
+
+        markdownLines.push('', '## Catalog UI Policies');
+        do {
+            markdownLines.push('', '### UI Policy: ' + MarkdownGenerationContext.escapeForMarkdown(policyGr.getValue('short_description')), '');
+            /** @type {tyLabeledMultilineStackItem[]} */
+            var multiLineStack = [];
+            /** @type {(QuestionItemOld | undefined)} */
+            var item = undefined;
+            if (!gs.nil(policyGr.catalog_conditions)) {
+                var catalog_conditions = policyGr.getValue('catalog_conditions');
+                var match = idRe.exec(catalog_conditions);
+                var decoded = '';
+                var startIndex = 0;
+                while (match !== null) {
+                    if (match.index > startIndex)
+                        decoded += catalog_conditions.substring(startIndex, match.index);
+                    item = varsBySysId[match[1]];
+                    if (item)
+                        decoded += '[' + item.question_text + (item.is_set ? '](#variable-set-' : '](#variable-') + item.name + ')';
+                    else
+                        decoded += match[0];
+                    startIndex = idRe.lastIndex;
+                    match = idRe.exec(catalog_conditions);
+                }
+                if (startIndex < catalog_conditions.length)
+                    decoded += catalog_conditions.substring(startIndex);
+                markdownLines.push("- **Catalog conditions:**" + decodeCatalogConditions(decoded.trim()));
+            }
+            context.pushListItemIfTrue(policyGr.applies_catalog, markdownLines);
+            context.pushListItemIfTrue(policyGr.applies_sc_task, markdownLines);
+            context.pushListItemIfTrue(policyGr.applies_req_item, markdownLines);
+            context.pushListItemIfTrue(policyGr.on_load, markdownLines);
+            context.pushListItemIfTrue(policyGr.reverse_if_false, markdownLines);
+            context.pushListItemIfTrue(policyGr.run_scripts, markdownLines);
+            if (policyGr.getDisplayValue('run_scripts') == 'true')
+                context.pushDisplayValueListItem(policyGr.ui_type, markdownLines, multiLineStack);
+            context.pushMultiLineItems(multiLineStack, markdownLines);
+            if (!gs.nil(policyGr.description))
+                markdownLines.push('', "**Description:**", '', '```text', policyGr.getValue('description'), '```');
+
+            var actionGr = new GlideRecord('catalog_ui_policy_action');
+            actionGr.addQuery('ui_policy', policyGr.getUniqueValue());
+            actionGr.orderBy('variable');
+            actionGr.query();
+            if (actionGr.next()) {
+                markdownLines.push('', '**Catalog UI Policy Actions:**', '', '| Name | Mandatory | Visible | Read only | Order | Value action |', '| ---- | --------- | ------- | --------- | ----- | ------------ |');
+                do {
+                    var vn = actionGr.getValue('variable');
+                    item = varsByName[vn];
+                    // var vn = actionGr.getValue('catalog_variable');
+                    var lineText = "| [" + ((typeof item === 'undefined') ? vn : item.question_text) + ((typeof item !== 'undefined' && item.is_set) ? "](#variable-set-" : "](#variable-") + vn + ") | ";
+                    switch (actionGr.getValue('mandatory')) {
+                        case 'true':
+                            lineText += 'True |';
+                            break;
+                        case 'false':
+                            lineText += 'False |';
+                            break;
+                        default:
+                            lineText += 'Leave alone |';
+                            break;
+                    }
+                    switch (actionGr.getValue('visible')) {
+                        case 'true':
+                            lineText += 'True |';
+                            break;
+                        case 'false':
+                            lineText += 'False |';
+                            break;
+                        default:
+                            lineText += 'Leave alone |';
+                            break;
+                    }
+                    switch (actionGr.getValue('disabled')) {
+                        case 'true':
+                            lineText += 'True |';
+                            break;
+                        case 'false':
+                            lineText += 'False |';
+                            break;
+                        default:
+                            lineText += 'Leave alone |';
+                            break;
+                    }
+                    if (gs.nil(actionGr.order))
+                        lineText += ' |';
+                    else
+                        lineText += actionGr.getDisplayValue('order') + ' |';
+                    if (actionGr.cleared)
+                        lineText += "Clear value |";
+                    else
+                        switch (actionGr.getValue('value_action')) {
+                            case 'clear_value':
+                                lineText += 'Clear value |';
+                                break;
+                            case 'set_value':
+                                lineText += 'Set value: ' +  MarkdownGenerationContext.escapeForMarkdown(actionGr.getDisplayValue('value')) + ' |';
+                                break;
+                            default:
+                                lineText += 'Leave alone |';
+                                break;
+                        }
+                    markdownLines.push(lineText);
+                } while (actionGr.next());
+            }
+
+            if (policyGr.getDisplayValue('run_scripts') == 'true') {
+                var scriptText;
+                if (!gs.nil(policyGr.script_true)) {
+                    scriptText = policyGr.getValue('script_true');
+                    if (!emptyFuncRe.test(scriptText))
+                        markdownLines.push('', '**Execute if true:**', '', '```javascript', scriptText, '```');
+                }
+                if (!gs.nil(policyGr.script_false)) {
+                    scriptText = policyGr.getValue('script_false');
+                    if (!emptyFuncRe.test(scriptText))
+                        markdownLines.push('', '**Execute if false:**', '', '```javascript', scriptText, '```');
+                }
+            }
+        } while (policyGr.next());
+    }
+
+    /**
+     * @param {string} filterField
+     * @param {string} filterValue
+     * @param {({ [key: string]: QuestionItemOld })} varsBySysId
+     * @param {string[]} markdownLines
+     * @param {MarkdownGenerationContext} context
+     */
+    function pushCatalogClientScriptsSection(filterField, filterValue, varsBySysId, markdownLines, context) {
+        var scriptGr = new GlideRecord('catalog_script_client');
+        scriptGr.addActiveQuery();
+        scriptGr.addQuery(filterField, filterValue);
+        scriptGr.orderBy('name');
+        scriptGr.query();
+        if (!scriptGr.hasNext())
+            return;
+
+        markdownLines.push('', '## Client Scripts');
+
+        while (scriptGr.next()) {
+            /** @type {tyLabeledMultilineStackItem[]} */
+            var multiLineStack = [];
+            markdownLines.push('', '### Client Script: ' + scriptGr.getValue('name'), '');
+            context.pushDisplayValueListItem(scriptGr.applies_to, markdownLines, multiLineStack);
+            context.pushDisplayValueListItem(scriptGr.ui_type, markdownLines, multiLineStack);
+            context.pushDisplayValueListItem(scriptGr.type, markdownLines, multiLineStack);
+            if (scriptGr.type == 'onChange' && !gs.nil(scriptGr.cat_variable)) {
+                /** @type {(QuestionItemOld | undefined)} */
+                var item = undefined;
+                var id = scriptGr.getValue('cat_variable');
+                if (id.startsWith('IO:') && id.length > 3)
+                    item = varsBySysId[id.substring(3)];
+                if (item)
+                    markdownLines.push("- **Variable name:** [" + item.question_text + (item.is_set ? "](#variable-set-" : "](#variable-") + item.name + ")");
+                else
+                    markdownLines.push("- **Variable name:** `" + id + "`");
+            }
+            context.pushDisplayValueListItem(scriptGr.order, markdownLines, multiLineStack);
+            context.pushListItemIfTrue(scriptGr.applies_catalog, markdownLines);
+            context.pushListItemIfTrue(scriptGr.applies_req_item, markdownLines);
+            context.pushListItemIfTrue(scriptGr.applies_sc_task, markdownLines);
+            context.pushListItemIfTrue(scriptGr.applies_extended, markdownLines);
+            context.pushListItemIfTrue(scriptGr.global, markdownLines);
+            context.pushListItemIfFalse(scriptGr.isolate_script, markdownLines);
+            context.pushMultiLineItems(multiLineStack, markdownLines);
+            if (!gs.nil(scriptGr.description))
+                markdownLines.push('', "**Description:**", '', '```text', scriptGr.getValue('description'), '```');
+            if (!gs.nil(scriptGr.script))
+                markdownLines.push('', "**Script:**", '', '```javascript', scriptGr.getValue('script'), '```');
+        }
+    }
+
+    /** @typedef {(QuestionItemOld & { field: string })} RecordProducerQuestionItemOld */
 
     /**
      * @param {(GlideRecord | GlideRecordSecure)} catItemGr - sc_cat_item_producer
@@ -261,12 +541,12 @@
     function getRecordProducerMarkdown(catItemGr, context) {
         /** @type {string[]} */
         var markdownLines = ['# "' + MarkdownGenerationContext.escapeForMarkdown(catItemGr.getValue('name')) + '" Record Producer', ''];
-        /** @type {MultiLineItem[]} */
+        /** @type {tyLabeledMultilineStackItem[]} */
         var multiLineStack = [];
         context.pushTableReferenceListItem(catItemGr.table_name, markdownLines);
-        context.pushValueListItem(catItemGr.short_description, markdownLines, multiLineStack);
+        context.pushDisplayValueListItem(catItemGr.short_description, markdownLines, multiLineStack);
         context.pushCodeListItem(catItemGr.description, 'html', markdownLines, multiLineStack);
-        context.pushValueListItem(catItemGr.meta, markdownLines, multiLineStack);
+        context.pushDisplayValueListItem(catItemGr.meta, markdownLines, multiLineStack);
         context.pushDisplayValueListItem(catItemGr.redirect_url, markdownLines, multiLineStack);
         context.pushCodeListItem(catItemGr.script, 'javascript', markdownLines, multiLineStack);
         context.pushImageListItem(catItemGr.icon, markdownLines);
@@ -286,130 +566,154 @@
 
         markdownLines.push('', '_______________________________________________');
 
-        /** @type {RecordProducerQuestionItem[]} */
-        var allVariables = [];
-        var variableGr = new GlideRecord('item_option_new');
-        variableGr.addQuery('cat_item', cat_item_sys_id);
-        variableGr.orderBy('order');
-        variableGr.orderBy('name');
-        variableGr.addActiveQuery();
-        variableGr.query();
-        while (variableGr.next())
-            allVariables.push({
-                sys_id: variableGr.getValue('sys_id'),
-                typeValue: parseInt(variableGr.getValue('type')),
-                typeLabel: MarkdownGenerationContext.escapeForMarkdown(variableGr.getDisplayValue('type')),
-                question_text: gs.nil(variableGr.question_text) ? '' : MarkdownGenerationContext.escapeForMarkdown(variableGr.getDisplayValue('question_text')),
-                field: gs.nil(variableGr.field) ? '' : MarkdownGenerationContext.escapeForMarkdown(variableGr.getDisplayValue('field')),
-                name: variableGr.getValue('name'),
-                is_set: false,
-                order: gs.nil(variableGr.order) ? {
-                    display: '',
-                    value: NaN
-                } : {
-                    display: variableGr.getDisplayValue('order'),
-                    value: parseInt(variableGr.getValue('order'))
-                }
-            });
-        var varSetGr = new GlideRecord('io_set_item');
-        varSetGr.addQuery('sc_cat_item', cat_item_sys_id);
-        varSetGr.orderBy('order');
-        varSetGr.orderBy('variable_set.internal_name');
-        varSetGr.query();
-        while (varSetGr.next())
-            allVariables.push({
-                sys_id: varSetGr.getValue('variable_set'),
-                typeValue: NaN,
-                typeLabel: 'Variable Set',
-                question_text: MarkdownGenerationContext.escapeForMarkdown(varSetGr.getDisplayValue('variable_set')),
-                field: '',
-                name: varSetGr.variable_set.getRefRecord().getValue('internal_name'),
-                is_set: true,
-                order: gs.nil(varSetGr.order) ? {
-                    display: '',
-                    value: NaN
-                } : {
-                    display: varSetGr.getDisplayValue('order'),
-                    value: parseInt(varSetGr.getValue('order'))
-                }
-            });
-        if (allVariables.length > 0) {
-            /** @type {RecordProducerQuestionItem} */
-            var item;
-            var i;
-            if (allVariables.length > 1) {
-                allVariables = allVariables.sort(function(a, b) {
-                    if (isNaN(a.order.value)) {
-                        if (!isNaN(b.order.value))
-                            return -1;
-                    } else {
-                        if (isNaN(b.order.value))
-                            return 1;
-                        var d = a.order.value - b.order.value;
-                        if (d != 0)
-                            return d;
-                    }
-                    if (a.name < b.name)
-                        return -1;
-                    return (a.name > b.name) ? 1 : 0;
-                });
-                var containerName = '';
-                for (i = 0; i < allVariables.length; i++) {
-                    item = allVariables[i];
-                    if (!item.is_set) {
-                        switch (item.typeValue) {
-                            case 19: // Container Start
-                                if (!gs.nil(item.question_text))
-                                    containerName = item.question_text;
-                                break;
-                            case 24: // Container Split
-                                if (containerName != '')
-                                    item.question_text = containerName;
-                                break;
-                            case 20: // Container End
-                                if (containerName != '')
-                                    item.question_text = containerName;
-                                containerName = '';
-                                break;
-                        }
-                    }
-                }
-            }
-            markdownLines.push(
-                '',
-                '## Variables',
-                '',
-                '| Type | Question | Field | Order |',
-                '| ---- | -------- | ----- | ----- |'
-            );
-            for (i = 0; i < allVariables.length; i++) {
-                item = allVariables[i];
-                var type = item.typeLabel;
-                var linkTxt = '[' + MarkdownGenerationContext.escapeForMarkdown(item.question_text ? item.question_text : item.name) + (item.is_set ? '](#variable-set-' : '](#variable-') + item.name + ')';
-                if (!item.is_set)
-                    switch (item.typeValue) {
-                        case 19: // Container Start
-                        case 24: // Container Split
-                        case 20: // Container End
-                        linkTxt = '*' + linkTxt + '*';
-                            type = '*\\(' + type + '\\)*';
-                            break;
-                    }
-                markdownLines.push('| ' + type + ' | ' + linkTxt + ' | ' + item.field + ' | ' + item.order.display + ' |');
-            }
-            for (i = 0; i < allVariables.length; i++) {
-                item = allVariables[i];
-                if (item.is_set) {
-                    varSetGr = new GlideRecord('item_option_new_set');
-                    varSetGr.get(allVariables[i].sys_id);
-                    pushVariableSetDetailMarkdown(varSetGr, item.order.display, markdownLines, context);
-                } else {
-                    variableGr = new GlideRecord('item_option_new');
-                    variableGr.get(allVariables[i].sys_id);
-                    pushVariableDetailMarkdown(variableGr, markdownLines, context);
-                }
-            }
-        }
+        /** @type {VariableMap} */
+        var varMap = new VariableMap(catItemGr);
+        varMap.pushVariablesSectionMarkdown(context, markdownLines);
+
+        // /** @type {RecordProducerQuestionItemOld[]} */
+        // var allVariables = [];
+        // /** @type {({ [key: string]: QuestionItemOld })} */
+        // var varsBySysId = {};
+        // /** @type {({ [key: string]: QuestionItemOld })} */
+        // var varsByName = {};
+        // var variableGr = new GlideRecord('item_option_new');
+        // variableGr.addQuery('cat_item', cat_item_sys_id);
+        // variableGr.orderBy('order');
+        // variableGr.orderBy('name');
+        // variableGr.addActiveQuery();
+        // variableGr.query();
+        // /** @type {QuestionItemOld} */
+        // var qItem;
+        // while (variableGr.next()) {
+        //     var varName = variableGr.getValue('name');
+        //     qItem = {
+        //         sys_id: variableGr.getValue('sys_id'),
+        //         type_value: parseInt(variableGr.getValue('type')),
+        //         type_label: MarkdownGenerationContext.escapeForMarkdown(variableGr.getDisplayValue('type')),
+        //         question_text: gs.nil(variableGr.question_text) ? '' : MarkdownGenerationContext.escapeForMarkdown(variableGr.getDisplayValue('question_text')),
+        //         field: gs.nil(variableGr.field) ? '' : MarkdownGenerationContext.escapeForMarkdown(variableGr.getDisplayValue('field')),
+        //         name: varName,
+        //         is_set: false,
+        //         order: gs.nil(variableGr.order) ? {
+        //             display: '',
+        //             value: NaN
+        //         } : {
+        //             display: variableGr.getDisplayValue('order'),
+        //             value: parseInt(variableGr.getValue('order'))
+        //         }
+        //     };
+        //     varsBySysId[variableGr.getUniqueValue()] = qItem;
+        //     varsByName[qItem.name] = qItem;
+        //     allVariables.push(qItem);
+        // }
+        // var varSetGr = new GlideRecord('io_set_item');
+        // varSetGr.addQuery('sc_cat_item', cat_item_sys_id);
+        // varSetGr.orderBy('order');
+        // varSetGr.orderBy('variable_set.internal_name');
+        // varSetGr.query();
+        // while (varSetGr.next()) {
+        //     qItem = {
+        //         sys_id: varSetGr.getValue('variable_set'),
+        //         type_value: NaN,
+        //         type_label: 'Variable Set',
+        //         question_text: MarkdownGenerationContext.escapeForMarkdown(varSetGr.getDisplayValue('variable_set')),
+        //         field: '',
+        //         name: varSetGr.variable_set.getRefRecord().getValue('internal_name'),
+        //         is_set: true,
+        //         order: gs.nil(varSetGr.order) ? {
+        //             display: '',
+        //             value: NaN
+        //         } : {
+        //             display: varSetGr.getDisplayValue('order'),
+        //             value: parseInt(varSetGr.getValue('order'))
+        //         }
+        //     };
+        //     varsBySysId[varSetGr.getUniqueValue()] = qItem;
+        //     varsByName[qItem.name] = qItem;
+        //     allVariables.push(qItem);
+        // }
+
+        // if (allVariables.length > 0) {
+        //     /** @type {RecordProducerQuestionItemOld} */
+        //     var item;
+        //     var i;
+        //     if (allVariables.length > 1) {
+        //         allVariables = allVariables.sort(function(a, b) {
+        //             if (isNaN(a.order.value)) {
+        //                 if (!isNaN(b.order.value))
+        //                     return -1;
+        //             } else {
+        //                 if (isNaN(b.order.value))
+        //                     return 1;
+        //                 var d = a.order.value - b.order.value;
+        //                 if (d != 0)
+        //                     return d;
+        //             }
+        //             if (a.name < b.name)
+        //                 return -1;
+        //             return (a.name > b.name) ? 1 : 0;
+        //         });
+        //         var containerName = '';
+        //         for (i = 0; i < allVariables.length; i++) {
+        //             item = allVariables[i];
+        //             if (!item.is_set) {
+        //                 switch (item.type_value) {
+        //                     case 19: // Container Start
+        //                         if (!gs.nil(item.question_text))
+        //                             containerName = item.question_text;
+        //                         break;
+        //                     case 24: // Container Split
+        //                         if (containerName != '')
+        //                             item.question_text = containerName;
+        //                         break;
+        //                     case 20: // Container End
+        //                         if (containerName != '')
+        //                             item.question_text = containerName;
+        //                         containerName = '';
+        //                         break;
+        //                 }
+        //             }
+        //         }
+        //     }
+        //     markdownLines.push(
+        //         '',
+        //         '## Variables',
+        //         '',
+        //         '| Type | Question | Field | Order |',
+        //         '| ---- | -------- | ----- | ----- |'
+        //     );
+        //     for (i = 0; i < allVariables.length; i++) {
+        //         item = allVariables[i];
+        //         var type = item.type_label;
+        //         var linkTxt = '[' + MarkdownGenerationContext.escapeForMarkdown(item.question_text ? item.question_text : item.name) + (item.is_set ? '](#variable-set-' : '](#variable-') + item.name + ')';
+        //         if (!item.is_set)
+        //             switch (item.type_value) {
+        //                 case 19: // Container Start
+        //                 case 24: // Container Split
+        //                 case 20: // Container End
+        //                 linkTxt = '*' + linkTxt + '*';
+        //                     type = '*\\(' + type + '\\)*';
+        //                     break;
+        //             }
+        //         markdownLines.push('| ' + type + ' | ' + linkTxt + ' | ' + item.field + ' | ' + item.order.display + ' |');
+        //     }
+        //     for (i = 0; i < allVariables.length; i++) {
+        //         item = allVariables[i];
+        //         if (item.is_set) {
+        //             varSetGr = new GlideRecord('item_option_new_set');
+        //             varSetGr.get(allVariables[i].sys_id);
+        //             pushVariableSetDetailMarkdown(varSetGr, item.order.display, markdownLines, context);
+        //         } else {
+        //             variableGr = new GlideRecord('item_option_new');
+        //             variableGr.get(allVariables[i].sys_id);
+        //             pushVariableDetailMarkdown(variableGr, markdownLines, context);
+        //         }
+        //     }
+        // }
+
+        pushAvailabilitySection(catItemGr, markdownLines, context);
+        pushCatalogUiPoliciesSection('catalog_item', catItemGr.getUniqueValue(), varsBySysId, varsByName, markdownLines, context);
+        pushCatalogClientScriptsSection('cat_item', catItemGr.getUniqueValue(), varsBySysId, markdownLines, context);
 
         return markdownLines.join("\n") + "\n";
     }
@@ -430,17 +734,19 @@
         }
         /** @type {string[]} */
         var markdownLines = ['# "' + MarkdownGenerationContext.escapeForMarkdown(catItemGr.getValue('name')) + '" Catalog Item', ''];
-        /** @type {MultiLineItem[]} */
+        /** @type {tyLabeledMultilineStackItem[]} */
         var multiLineStack = [];
+        context.pushDisplayValueListItem(catItemGr.short_description, markdownLines, multiLineStack);
+        context.pushCodeListItem(catItemGr.description, 'html', markdownLines, multiLineStack);
         context.pushDisplayValueListItem(catItemGr.sc_catalogs, markdownLines, multiLineStack);
         context.pushDisplayValueListItem(catItemGr.category, markdownLines, multiLineStack);
         context.pushDisplayValueListItem(catItemGr.roles, markdownLines, multiLineStack);
-        context.pushDisplayValueListItem(catItemGr.fulfillment_automation_level, markdownLines, multiLineStack);
+        if (!gs.nil(catItemGr.fulfillment_automation_level) && catItemGr.fulfillment_automation_level != 'unspecified')
+            context.pushDisplayValueListItem(catItemGr.fulfillment_automation_level, markdownLines, multiLineStack);
         context.pushDisplayValueListItem(catItemGr.group, markdownLines);
-        context.pushDisplayValueListItem(catItemGr.order, markdownLines, multiLineStack);
-        context.pushValueListItem(catItemGr.short_description, markdownLines, multiLineStack);
-        context.pushCodeListItem(catItemGr.description, 'html', markdownLines, multiLineStack);
-        context.pushValueListItem(catItemGr.meta, markdownLines, multiLineStack);
+        if (catItemGr.order != '0')
+            context.pushDisplayValueListItem(catItemGr.order, markdownLines, multiLineStack);
+        context.pushDisplayValueListItem(catItemGr.meta, markdownLines, multiLineStack);
         if (gs.nil(catItemGr.flow_designer_flow))
             context.pushDisplayValueListItem(gs.nil(catItemGr.workflow) ? catItemGr.workflow : catItemGr.delivery_plan, markdownLines, multiLineStack);
         else
@@ -460,128 +766,150 @@
 
         markdownLines.push('', '_______________________________________________');
 
-        /** @type {QuestionItem[]} */
-        var allVariables = [];
-        var variableGr = new GlideRecord('item_option_new');
-        variableGr.addQuery('cat_item', cat_item_sys_id);
-        variableGr.orderBy('order');
-        variableGr.orderBy('name');
-        variableGr.addActiveQuery();
-        variableGr.query();
-        while (variableGr.next())
-            allVariables.push({
-                sys_id: variableGr.getValue('sys_id'),
-                typeValue: parseInt(variableGr.getValue('type')),
-                typeLabel: MarkdownGenerationContext.escapeForMarkdown(variableGr.getDisplayValue('type')),
-                question_text: gs.nil(variableGr.question_text) ? '' : MarkdownGenerationContext.escapeForMarkdown(variableGr.getDisplayValue('question_text')),
-                name: variableGr.getValue('name'),
-                is_set: false,
-                order: gs.nil(variableGr.order) ? {
-                    display: '',
-                    value: NaN
-                } : {
-                    display: variableGr.getDisplayValue('order'),
-                    value: parseInt(variableGr.getValue('order'))
-                }
-            });
-        var varSetGr = new GlideRecord('io_set_item');
-        varSetGr.addQuery('sc_cat_item', cat_item_sys_id);
-        varSetGr.orderBy('order');
-        varSetGr.orderBy('variable_set.internal_name');
-        varSetGr.query();
-        while (varSetGr.next())
-            allVariables.push({
-                sys_id: varSetGr.getValue('variable_set'),
-                typeValue: NaN,
-                typeLabel: 'Variable Set',
-                question_text: MarkdownGenerationContext.escapeForMarkdown(varSetGr.getDisplayValue('variable_set')),
-                name: varSetGr.variable_set.getRefRecord().getValue('internal_name'),
-                is_set: true,
-                order: gs.nil(varSetGr.order) ? {
-                    display: '',
-                    value: NaN
-                } : {
-                    display: varSetGr.getDisplayValue('order'),
-                    value: parseInt(varSetGr.getValue('order'))
-                }
-            });
-        if (allVariables.length > 1) {
-            /** @type {QuestionItem} */
-            var item;
-            var i;
-            if (allVariables.length > 1) {
-                allVariables = allVariables.sort(function(a, b) {
-                    if (isNaN(a.order.value)) {
-                        if (!isNaN(b.order.value))
-                            return -1;
-                    } else {
-                        if (isNaN(b.order.value))
-                            return 1;
-                        var d = a.order.value - b.order.value;
-                        if (d != 0)
-                            return d;
-                    }
-                    if (a.name < b.name)
-                        return -1;
-                    return (a.name > b.name) ? 1 : 0;
-                });
-                var containerName = '';
-                for (i = 0; i < allVariables.length; i++) {
-                    item = allVariables[i];
-                    if (!item.is_set) {
-                        switch (item.typeValue) {
-                            case 19: // Container Start
-                                if (!gs.nil(item.question_text))
-                                    containerName = item.question_text;
-                                break;
-                            case 24: // Container Split
-                                if (containerName != '')
-                                    item.question_text = containerName;
-                                break;
-                            case 20: // Container End
-                                if (containerName != '')
-                                    item.question_text = containerName;
-                                containerName = '';
-                                break;
-                        }
-                    }
-                }
-            }
-            markdownLines.push(
-                '',
-                '## Variables',
-                '',
-                '| Type | Question | Order |',
-                '| ---- | -------- | ----- |'
-            );
-            for (i = 0; i < allVariables.length; i++) {
-                item = allVariables[i];
-                var type = item.typeLabel;
-                var linkTxt = '[' + MarkdownGenerationContext.escapeForMarkdown(item.question_text ? item.question_text : item.name) + (item.is_set ? '](#variable-set-' : '](#variable-') + item.name + ')';
-                if (!item.is_set)
-                    switch (item.typeValue) {
-                        case 19: // Container Start
-                        case 24: // Container Split
-                        case 20: // Container End
-                        linkTxt = '*' + linkTxt + '*';
-                            type = '*\\(' + type + '\\)*';
-                            break;
-                    }
-                markdownLines.push('| ' + type + ' | ' + linkTxt + ' | ' + item.order.display + ' |');
-            }
-            for (i = 0; i < allVariables.length; i++) {
-                item = allVariables[i];
-                if (item.is_set) {
-                    varSetGr = new GlideRecord('item_option_new_set');
-                    varSetGr.get(allVariables[i].sys_id);
-                    pushVariableSetDetailMarkdown(varSetGr, item.order.display, markdownLines, context);
-                } else {
-                    variableGr = new GlideRecord('item_option_new');
-                    variableGr.get(allVariables[i].sys_id);
-                    pushVariableDetailMarkdown(variableGr, markdownLines, context);
-                }
-            }
-        }
+        /** @type {VariableMap} */
+        var varMap = new VariableMap(catItemGr);
+        varMap.pushVariablesSectionMarkdown(context, markdownLines);
+
+        // /** @type {QuestionItemOld[]} */
+        // var allVariables = [];
+        // /** @type {({ [key: string]: QuestionItemOld })} */
+        // var varsBySysId = {};
+        // /** @type {({ [key: string]: QuestionItemOld })} */
+        // var varsByName = {};
+        // var variableGr = new GlideRecord('item_option_new');
+        // variableGr.addQuery('cat_item', cat_item_sys_id);
+        // variableGr.orderBy('order');
+        // variableGr.orderBy('name');
+        // variableGr.addActiveQuery();
+        // variableGr.query();
+        // /** @type {QuestionItemOld} */
+        // var qItem;
+        // while (variableGr.next()) {
+        //     qItem = {
+        //         sys_id: variableGr.getValue('sys_id'),
+        //         type_value: parseInt(variableGr.getValue('type')),
+        //         type_label: MarkdownGenerationContext.escapeForMarkdown(variableGr.getDisplayValue('type')),
+        //         question_text: gs.nil(variableGr.question_text) ? '' : MarkdownGenerationContext.escapeForMarkdown(variableGr.getDisplayValue('question_text')),
+        //         name: variableGr.getValue('name'),
+        //         is_set: false,
+        //         order: gs.nil(variableGr.order) ? {
+        //             display: '',
+        //             value: NaN
+        //         } : {
+        //             display: variableGr.getDisplayValue('order'),
+        //             value: parseInt(variableGr.getValue('order'))
+        //         }
+        //     };
+        //     varsBySysId[variableGr.getUniqueValue()] = qItem;
+        //     varsByName[qItem.name] = qItem;
+        //     allVariables.push(qItem);
+        // }
+        // var varSetGr = new GlideRecord('io_set_item');
+        // varSetGr.addQuery('sc_cat_item', cat_item_sys_id);
+        // varSetGr.orderBy('order');
+        // varSetGr.orderBy('variable_set.internal_name');
+        // varSetGr.query();
+        // while (varSetGr.next()) {
+        //     qItem = {
+        //         sys_id: varSetGr.getValue('variable_set'),
+        //         type_value: NaN,
+        //         type_label: 'Variable Set',
+        //         question_text: MarkdownGenerationContext.escapeForMarkdown(varSetGr.getDisplayValue('variable_set')),
+        //         name: varSetGr.variable_set.getRefRecord().getValue('internal_name'),
+        //         is_set: true,
+        //         order: gs.nil(varSetGr.order) ? {
+        //             display: '',
+        //             value: NaN
+        //         } : {
+        //             display: varSetGr.getDisplayValue('order'),
+        //             value: parseInt(varSetGr.getValue('order'))
+        //         }
+        //     };
+        //     varsBySysId[varSetGr.getUniqueValue()] = qItem;
+        //     varsByName[qItem.name] = qItem;
+        //     allVariables.push(qItem);
+        // }
+        // if (allVariables.length > 0) {
+        //     /** @type {QuestionItemOld} */
+        //     var item;
+        //     var i;
+        //     if (allVariables.length > 1) {
+        //         allVariables = allVariables.sort(function(a, b) {
+        //             if (isNaN(a.order.value)) {
+        //                 if (!isNaN(b.order.value))
+        //                     return -1;
+        //             } else {
+        //                 if (isNaN(b.order.value))
+        //                     return 1;
+        //                 var d = a.order.value - b.order.value;
+        //                 if (d != 0)
+        //                     return d;
+        //             }
+        //             if (a.name < b.name)
+        //                 return -1;
+        //             return (a.name > b.name) ? 1 : 0;
+        //         });
+        //         var containerName = '';
+        //         for (i = 0; i < allVariables.length; i++) {
+        //             item = allVariables[i];
+        //             if (!item.is_set) {
+        //                 switch (item.type_value) {
+        //                     case 19: // Container Start
+        //                         if (!gs.nil(item.question_text))
+        //                             containerName = item.question_text;
+        //                         break;
+        //                     case 24: // Container Split
+        //                         if (containerName != '')
+        //                             item.question_text = containerName;
+        //                         break;
+        //                     case 20: // Container End
+        //                         if (containerName != '')
+        //                             item.question_text = containerName;
+        //                         containerName = '';
+        //                         break;
+        //                 }
+        //             }
+        //         }
+        //     }
+        //     markdownLines.push(
+        //         '',
+        //         '## Variables',
+        //         '',
+        //         '| Type | Question | Order |',
+        //         '| ---- | -------- | ----- |'
+        //     );
+        //     for (i = 0; i < allVariables.length; i++) {
+        //         item = allVariables[i];
+        //         var type = item.type_label;
+        //         var linkTxt = '[' + MarkdownGenerationContext.escapeForMarkdown(item.question_text ? item.question_text : item.name) + (item.is_set ? '](#variable-set-' : '](#variable-') + item.name + ')';
+        //         if (!item.is_set)
+        //             switch (item.type_value) {
+        //                 case 19: // Container Start
+        //                 case 24: // Container Split
+        //                 case 20: // Container End
+        //                     linkTxt = '*' + linkTxt + '*';
+        //                     type = '*\\(' + type + '\\)*';
+        //                     break;
+        //             }
+        //         markdownLines.push('| ' + type + ' | ' + linkTxt + ' | ' + item.order.display + ' |');
+        //     }
+        //     for (i = 0; i < allVariables.length; i++) {
+        //         item = allVariables[i];
+        //         if (item.is_set) {
+        //             varSetGr = new GlideRecord('item_option_new_set');
+        //             varSetGr.get(allVariables[i].sys_id);
+        //             pushVariableSetDetailMarkdown(varSetGr, item.order.display, markdownLines, context);
+        //         } else {
+        //             variableGr = new GlideRecord('item_option_new');
+        //             variableGr.get(allVariables[i].sys_id);
+        //             pushVariableDetailMarkdown(variableGr, markdownLines, context);
+        //         }
+        //     }
+        // }
+
+        pushAvailabilitySection(catItemGr, markdownLines, context);
+        pushCatalogUiPoliciesSection('catalog_item', catItemGr.getUniqueValue(), varsBySysId, varsByName, markdownLines, context);
+        pushCatalogClientScriptsSection('cat_item', catItemGr.getUniqueValue(), varsBySysId, markdownLines, context);
 
         return markdownLines.join("\n") + "\n";
     }
@@ -595,8 +923,8 @@
      */
     function getVariableSetMarkdown(varSetGr, context) {
         /** @type {string[]} */
-        var markdownLines = ['# "' + MarkdownGenerationContext.escapeForMarkdown(varSetGr.getValue(gs.nil(varSetGr.title) ? 'title' : 'internal_name')) + '" Variable Set', ''];
-        /** @type {MultiLineItem[]} */
+        var markdownLines = ['# "' + MarkdownGenerationContext.escapeForMarkdown(varSetGr.getValue(gs.nil(varSetGr.title) ? 'internal_name' : 'title')) + '" Variable Set', ''];
+        /** @type {tyLabeledMultilineStackItem[]} */
         var multiLineStack = [];
         context.pushDisplayValueListItem(varSetGr.internal_name, markdownLines, multiLineStack);
         context.pushDisplayValueListItem(varSetGr.order, markdownLines, multiLineStack);
@@ -604,47 +932,105 @@
         context.pushListItemIfTrue(varSetGr.display_title, markdownLines);
         context.pushDisplayValueListItem(varSetGr.layout, markdownLines, multiLineStack);
         context.pushDisplayValueListItem(varSetGr.description, markdownLines, multiLineStack);
-        var var_set_sys_id = catItemGr.getValue('sys_id');
+        var var_set_sys_id = varSetGr.getValue('sys_id');
         markdownLines.push('- **Links:** [Dev](' + MarkdownGenerationContext.getInstanceUrl('nav_to.do?uri=item_option_new_set.do?sys_id=' + var_set_sys_id) + ')');
         context.pushMultiLineItems(multiLineStack, markdownLines);
 
         markdownLines.push('', '_______________________________________________');
 
-        var variableGr = new GlideRecord('item_option_new');
-        variableGr.addQuery('cat_item', var_set_sys_id);
-        variableGr.orderBy('order');
-        variableGr.orderBy('name');
-        variableGr.addActiveQuery();
-        variableGr.query();
-        if (variableGr.next()) {
-            markdownLines.push(
-                '',
-                '## Variables',
-                '',
-                '| Type | Question | Order |',
-                '| ---- | -------- | ----- |'
-            );
-            do {
-                var type = MarkdownGenerationContext.escapeForMarkdown(variableGr.getDisplayValue('type'));
-                switch (parseInt(variableGr.getValue('type'))) {
-                    case 19: // Container Start
-                    case 24: // Container Split
-                    case 20: // Container End
-                        type = '*\\(' + type + '\\)*';
-                        break;
-                }
-                var name = variableGr.getDisplayValue('name');
-                markdownLines.push('| ' + type + ' | [' + gs.nil(variableGr.question_text) ? name : MarkdownGenerationContext.escapeForMarkdown(variableGr.getDisplayValue('question_text')) + '](#variable-' + name + ') | ' + (gs.nil(variableGr.order) ? ' |' : variableGr.getDisplayValue('order') + ' |'));
-            } while (variableGr.next());
-            variableGr = new GlideRecord('item_option_new');
-            variableGr.addQuery('cat_item', var_set_sys_id);
-            variableGr.orderBy('order');
-            variableGr.orderBy('name');
-            variableGr.addActiveQuery();
-            variableGr.query();
-            while (variableGr.next())
-                pushVariableDetailMarkdown(variableGr, markdownLines, context);
-        }
+        /** @type {VariableMap} */
+        var varMap = new VariableMap(catItemGr);
+        varMap.pushVariablesSectionMarkdown(context, markdownLines);
+
+        // /** @type {QuestionItemOld[]} */
+        // var allVariables = [];
+        // /** @type {({ [key: string]: QuestionItemOld })} */
+        // var varsBySysId = {};
+        // /** @type {({ [key: string]: QuestionItemOld })} */
+        // var varsByName = {};
+        // var variableGr = new GlideRecord('item_option_new');
+        // variableGr.addQuery('variable_set', var_set_sys_id);
+        // variableGr.orderBy('order');
+        // variableGr.orderBy('name');
+        // variableGr.addActiveQuery();
+        // variableGr.query();
+        // if (variableGr.next()) {
+        //     /** @type {QuestionItemOld} */
+        //     var qItem;
+        //     do {
+        //         qItem = {
+        //             sys_id: variableGr.getValue('sys_id'),
+        //             type_value: parseInt(variableGr.getValue('type')),
+        //             type_label: MarkdownGenerationContext.escapeForMarkdown(variableGr.getDisplayValue('type')),
+        //             question_text: gs.nil(variableGr.question_text) ? '' : MarkdownGenerationContext.escapeForMarkdown(variableGr.getDisplayValue('question_text')),
+        //             name: variableGr.getValue('name'),
+        //             is_set: false,
+        //             order: gs.nil(variableGr.order) ? {
+        //                 display: '',
+        //                 value: NaN
+        //             } : {
+        //                 display: variableGr.getDisplayValue('order'),
+        //                 value: parseInt(variableGr.getValue('order'))
+        //             }
+        //         };
+        //         varsBySysId[variableGr.getUniqueValue()] = qItem;
+        //         varsByName[qItem.name] = qItem;
+        //         allVariables.push(qItem);
+        //     } while (variableGr.next());
+        //     var containerName = '';
+        //     /** @type {QuestionItemOld} */
+        //     var item;
+        //     var i;
+        //     for (i = 0; i < allVariables.length; i++) {
+        //         item = allVariables[i];
+        //         switch (item.type_value) {
+        //             case 19: // Container Start
+        //                 if (!gs.nil(item.question_text))
+        //                     containerName = item.question_text;
+        //                 break;
+        //             case 24: // Container Split
+        //                 if (containerName != '')
+        //                     item.question_text = containerName;
+        //                 break;
+        //             case 20: // Container End
+        //                 if (containerName != '')
+        //                     item.question_text = containerName;
+        //                 containerName = '';
+        //                 break;
+        //         }
+        //     }
+
+        //     markdownLines.push(
+        //         '',
+        //         '## Variables',
+        //         '',
+        //         '| Type | Question | Order |',
+        //         '| ---- | -------- | ----- |'
+        //     );
+        //     for (i = 0; i < allVariables.length; i++) {
+        //         item = allVariables[i];
+        //         var type = item.type_label;
+        //         var linkTxt = '[' + MarkdownGenerationContext.escapeForMarkdown(item.question_text ? item.question_text : item.name) + (item.is_set ? '](#variable-set-' : '](#variable-') + item.name + ')';
+        //         switch (item.type_value) {
+        //             case 19: // Container Start
+        //             case 24: // Container Split
+        //             case 20: // Container End
+        //             linkTxt = '*' + linkTxt + '*';
+        //                 type = '*\\(' + type + '\\)*';
+        //                 break;
+        //         }
+        //         markdownLines.push('| ' + type + ' | ' + linkTxt + ' | ' + item.order.display + ' |');
+        //     }
+        //     for (i = 0; i < allVariables.length; i++) {
+        //         item = allVariables[i];
+        //         variableGr = new GlideRecord('item_option_new');
+        //         variableGr.get(allVariables[i].sys_id);
+        //         pushVariableDetailMarkdown(variableGr, markdownLines, context);
+        //     }
+        // }
+
+        pushCatalogUiPoliciesSection('variable_set', varSetGr.getUniqueValue(), varsBySysId, varsByName, markdownLines, context);
+        pushCatalogClientScriptsSection('variable_set', varSetGr.getUniqueValue(), varsBySysId, markdownLines, context);
 
         return markdownLines.join("\n") + "\n";
     }
@@ -708,13 +1094,13 @@
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-06-04 22:14:00</sys_created_on>
         <sys_id>a5d11d9d1b19cf50c798a97ae54bcb5d</sys_id>
-        <sys_mod_count>17</sys_mod_count>
+        <sys_mod_count>59</sys_mod_count>
         <sys_name>ServiceCatalogMarkdownGenerator</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_a5d11d9d1b19cf50c798a97ae54bcb5d</sys_update_name>
-        <sys_updated_by>lerwinesa</sys_updated_by>
-        <sys_updated_on>2026-07-29 22:20:50</sys_updated_on>
+        <sys_updated_by>lerwine</sys_updated_by>
+        <sys_updated_on>2026-08-28 20:57:02</sys_updated_on>
     </sys_script_include>
 </record_update>
