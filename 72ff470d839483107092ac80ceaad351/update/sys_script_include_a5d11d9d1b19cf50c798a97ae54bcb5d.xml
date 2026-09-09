@@ -290,17 +290,6 @@
     }
 
     /**
-     * @typedef QuestionItemOld
-     * @property {string} sys_id
-     * @property {number} type_value
-     * @property {string} type_label
-     * @property {string} question_text
-     * @property {string} name
-     * @property {boolean} is_set
-     * @property {({ display: string: value: number })} order
-     */
-
-    /**
      * @param {string} text
      * @returns {string}
      */
@@ -345,12 +334,11 @@
     /**
      * @param {string} filterField
      * @param {string} filterValue
-     * @param {({ [key: string]: QuestionItemOld })} varsBySysId
-     * @param {({ [key: string]: QuestionItemOld })} varsByName
+     * @param {(VariableMap)} varMap
      * @param {string[]} markdownLines
      * @param {MarkdownGenerationContext} context
      */
-    function pushCatalogUiPoliciesSection(filterField, filterValue, varsBySysId, varsByName, markdownLines, context) {
+    function pushCatalogUiPoliciesSection(filterField, filterValue, varMap, markdownLines, context) {
         var policyGr = new GlideRecord('catalog_ui_policy');
         policyGr.addActiveQuery();
         policyGr.addQuery(filterField, filterValue);
@@ -364,19 +352,27 @@
             markdownLines.push('', '### UI Policy: ' + MarkdownGenerationContext.escapeForMarkdown(policyGr.getValue('short_description')), '');
             /** @type {tyLabeledMultilineStackItem[]} */
             var multiLineStack = [];
-            /** @type {(QuestionItemOld | undefined)} */
+            /** @type {(QuestionItem | undefined)} */
             var item = undefined;
             if (!gs.nil(policyGr.catalog_conditions)) {
                 var catalog_conditions = policyGr.getValue('catalog_conditions');
                 var match = idRe.exec(catalog_conditions);
                 var decoded = '';
                 var startIndex = 0;
+                var parent_sys_id = varMap.getParentSysID();
+                var current_folder = context.getCurrentFolder();
                 while (match !== null) {
                     if (match.index > startIndex)
                         decoded += catalog_conditions.substring(startIndex, match.index);
-                    item = varsBySysId[match[1]];
-                    if (item)
-                        decoded += '[' + item.question_text + (item.is_set ? '](#variable-set-' : '](#variable-') + item.name + ')';
+                    item = varMap.getVariableBySysId(match[1]);
+                    if (item) {
+                        if (item.parent_sys_id == parent_sys_id)
+                            decoded += '[' + item.question_text + (item.set_map ? '](#variable-set-' : '](#variable-') + item.name + ')';
+                        else {
+                            var link = (item.parent_type == "variable_set") ? context.mapper.getVarSetUrl(item.parent_sys_id, current_folder) : context.mapper.getCatItemUrl(item.parent_sys_id, current_folder);
+                            decoded += '[' + item.question_text + (item.set_map ? '](' + link + '#variable-set-' : '](' + link + '#variable-') + item.name + ')';
+                        }
+                    }
                     else
                         decoded += match[0];
                     startIndex = idRe.lastIndex;
@@ -406,9 +402,9 @@
                 markdownLines.push('', '**Catalog UI Policy Actions:**', '', '| Name | Mandatory | Visible | Read only | Order | Value action |', '| ---- | --------- | ------- | --------- | ----- | ------------ |');
                 do {
                     var vn = actionGr.getValue('variable');
-                    item = varsByName[vn];
+                    item = varMap.getVariableByName(vn);
                     // var vn = actionGr.getValue('catalog_variable');
-                    var lineText = "| [" + ((typeof item === 'undefined') ? vn : item.question_text) + ((typeof item !== 'undefined' && item.is_set) ? "](#variable-set-" : "](#variable-") + vn + ") | ";
+                    var lineText = "| [" + ((typeof item === 'undefined') ? vn : item.question_text) + ((typeof item !== 'undefined' && item.set_map) ? "](#variable-set-" : "](#variable-") + vn + ") | ";
                     switch (actionGr.getValue('mandatory')) {
                         case 'true':
                             lineText += 'True |';
@@ -483,11 +479,11 @@
     /**
      * @param {string} filterField
      * @param {string} filterValue
-     * @param {({ [key: string]: QuestionItemOld })} varsBySysId
+     * @param {(VariableMap)} varMap
      * @param {string[]} markdownLines
      * @param {MarkdownGenerationContext} context
      */
-    function pushCatalogClientScriptsSection(filterField, filterValue, varsBySysId, markdownLines, context) {
+    function pushCatalogClientScriptsSection(filterField, filterValue, varMap, markdownLines, context) {
         var scriptGr = new GlideRecord('catalog_script_client');
         scriptGr.addActiveQuery();
         scriptGr.addQuery(filterField, filterValue);
@@ -506,13 +502,13 @@
             context.pushDisplayValueListItem(scriptGr.ui_type, markdownLines, multiLineStack);
             context.pushDisplayValueListItem(scriptGr.type, markdownLines, multiLineStack);
             if (scriptGr.type == 'onChange' && !gs.nil(scriptGr.cat_variable)) {
-                /** @type {(QuestionItemOld | undefined)} */
+                /** @type {(QuestionItem | undefined)} */
                 var item = undefined;
                 var id = scriptGr.getValue('cat_variable');
                 if (id.startsWith('IO:') && id.length > 3)
-                    item = varsBySysId[id.substring(3)];
+                    item = varMap.getVariableBySysId(id.substring(3));
                 if (item)
-                    markdownLines.push("- **Variable name:** [" + item.question_text + (item.is_set ? "](#variable-set-" : "](#variable-") + item.name + ")");
+                    markdownLines.push("- **Variable name:** [" + item.question_text + (item.set_map ? "](#variable-set-" : "](#variable-") + item.name + ")");
                 else
                     markdownLines.push("- **Variable name:** `" + id + "`");
             }
@@ -531,7 +527,7 @@
         }
     }
 
-    /** @typedef {(QuestionItemOld & { field: string })} RecordProducerQuestionItemOld */
+    // /** @typedef {(QuestionItemOld & { field: string })} RecordProducerQuestionItemOld */
 
     /**
      * @param {(GlideRecord | GlideRecordSecure)} catItemGr - sc_cat_item_producer
@@ -712,8 +708,8 @@
         // }
 
         pushAvailabilitySection(catItemGr, markdownLines, context);
-        pushCatalogUiPoliciesSection('catalog_item', catItemGr.getUniqueValue(), varsBySysId, varsByName, markdownLines, context);
-        pushCatalogClientScriptsSection('cat_item', catItemGr.getUniqueValue(), varsBySysId, markdownLines, context);
+        pushCatalogUiPoliciesSection('catalog_item', catItemGr.getUniqueValue(), varMap, markdownLines, context);
+        pushCatalogClientScriptsSection('cat_item', catItemGr.getUniqueValue(), varMap, markdownLines, context);
 
         return markdownLines.join("\n") + "\n";
     }
@@ -770,146 +766,9 @@
         var varMap = new VariableMap(catItemGr);
         varMap.pushVariablesSectionMarkdown(context, markdownLines);
 
-        // /** @type {QuestionItemOld[]} */
-        // var allVariables = [];
-        // /** @type {({ [key: string]: QuestionItemOld })} */
-        // var varsBySysId = {};
-        // /** @type {({ [key: string]: QuestionItemOld })} */
-        // var varsByName = {};
-        // var variableGr = new GlideRecord('item_option_new');
-        // variableGr.addQuery('cat_item', cat_item_sys_id);
-        // variableGr.orderBy('order');
-        // variableGr.orderBy('name');
-        // variableGr.addActiveQuery();
-        // variableGr.query();
-        // /** @type {QuestionItemOld} */
-        // var qItem;
-        // while (variableGr.next()) {
-        //     qItem = {
-        //         sys_id: variableGr.getValue('sys_id'),
-        //         type_value: parseInt(variableGr.getValue('type')),
-        //         type_label: MarkdownGenerationContext.escapeForMarkdown(variableGr.getDisplayValue('type')),
-        //         question_text: gs.nil(variableGr.question_text) ? '' : MarkdownGenerationContext.escapeForMarkdown(variableGr.getDisplayValue('question_text')),
-        //         name: variableGr.getValue('name'),
-        //         is_set: false,
-        //         order: gs.nil(variableGr.order) ? {
-        //             display: '',
-        //             value: NaN
-        //         } : {
-        //             display: variableGr.getDisplayValue('order'),
-        //             value: parseInt(variableGr.getValue('order'))
-        //         }
-        //     };
-        //     varsBySysId[variableGr.getUniqueValue()] = qItem;
-        //     varsByName[qItem.name] = qItem;
-        //     allVariables.push(qItem);
-        // }
-        // var varSetGr = new GlideRecord('io_set_item');
-        // varSetGr.addQuery('sc_cat_item', cat_item_sys_id);
-        // varSetGr.orderBy('order');
-        // varSetGr.orderBy('variable_set.internal_name');
-        // varSetGr.query();
-        // while (varSetGr.next()) {
-        //     qItem = {
-        //         sys_id: varSetGr.getValue('variable_set'),
-        //         type_value: NaN,
-        //         type_label: 'Variable Set',
-        //         question_text: MarkdownGenerationContext.escapeForMarkdown(varSetGr.getDisplayValue('variable_set')),
-        //         name: varSetGr.variable_set.getRefRecord().getValue('internal_name'),
-        //         is_set: true,
-        //         order: gs.nil(varSetGr.order) ? {
-        //             display: '',
-        //             value: NaN
-        //         } : {
-        //             display: varSetGr.getDisplayValue('order'),
-        //             value: parseInt(varSetGr.getValue('order'))
-        //         }
-        //     };
-        //     varsBySysId[varSetGr.getUniqueValue()] = qItem;
-        //     varsByName[qItem.name] = qItem;
-        //     allVariables.push(qItem);
-        // }
-        // if (allVariables.length > 0) {
-        //     /** @type {QuestionItemOld} */
-        //     var item;
-        //     var i;
-        //     if (allVariables.length > 1) {
-        //         allVariables = allVariables.sort(function(a, b) {
-        //             if (isNaN(a.order.value)) {
-        //                 if (!isNaN(b.order.value))
-        //                     return -1;
-        //             } else {
-        //                 if (isNaN(b.order.value))
-        //                     return 1;
-        //                 var d = a.order.value - b.order.value;
-        //                 if (d != 0)
-        //                     return d;
-        //             }
-        //             if (a.name < b.name)
-        //                 return -1;
-        //             return (a.name > b.name) ? 1 : 0;
-        //         });
-        //         var containerName = '';
-        //         for (i = 0; i < allVariables.length; i++) {
-        //             item = allVariables[i];
-        //             if (!item.is_set) {
-        //                 switch (item.type_value) {
-        //                     case 19: // Container Start
-        //                         if (!gs.nil(item.question_text))
-        //                             containerName = item.question_text;
-        //                         break;
-        //                     case 24: // Container Split
-        //                         if (containerName != '')
-        //                             item.question_text = containerName;
-        //                         break;
-        //                     case 20: // Container End
-        //                         if (containerName != '')
-        //                             item.question_text = containerName;
-        //                         containerName = '';
-        //                         break;
-        //                 }
-        //             }
-        //         }
-        //     }
-        //     markdownLines.push(
-        //         '',
-        //         '## Variables',
-        //         '',
-        //         '| Type | Question | Order |',
-        //         '| ---- | -------- | ----- |'
-        //     );
-        //     for (i = 0; i < allVariables.length; i++) {
-        //         item = allVariables[i];
-        //         var type = item.type_label;
-        //         var linkTxt = '[' + MarkdownGenerationContext.escapeForMarkdown(item.question_text ? item.question_text : item.name) + (item.is_set ? '](#variable-set-' : '](#variable-') + item.name + ')';
-        //         if (!item.is_set)
-        //             switch (item.type_value) {
-        //                 case 19: // Container Start
-        //                 case 24: // Container Split
-        //                 case 20: // Container End
-        //                     linkTxt = '*' + linkTxt + '*';
-        //                     type = '*\\(' + type + '\\)*';
-        //                     break;
-        //             }
-        //         markdownLines.push('| ' + type + ' | ' + linkTxt + ' | ' + item.order.display + ' |');
-        //     }
-        //     for (i = 0; i < allVariables.length; i++) {
-        //         item = allVariables[i];
-        //         if (item.is_set) {
-        //             varSetGr = new GlideRecord('item_option_new_set');
-        //             varSetGr.get(allVariables[i].sys_id);
-        //             pushVariableSetDetailMarkdown(varSetGr, item.order.display, markdownLines, context);
-        //         } else {
-        //             variableGr = new GlideRecord('item_option_new');
-        //             variableGr.get(allVariables[i].sys_id);
-        //             pushVariableDetailMarkdown(variableGr, markdownLines, context);
-        //         }
-        //     }
-        // }
-
         pushAvailabilitySection(catItemGr, markdownLines, context);
-        pushCatalogUiPoliciesSection('catalog_item', catItemGr.getUniqueValue(), varsBySysId, varsByName, markdownLines, context);
-        pushCatalogClientScriptsSection('cat_item', catItemGr.getUniqueValue(), varsBySysId, markdownLines, context);
+        pushCatalogUiPoliciesSection('catalog_item', catItemGr.getUniqueValue(), varMap, markdownLines, context);
+        pushCatalogClientScriptsSection('cat_item', catItemGr.getUniqueValue(), varMap, markdownLines, context);
 
         return markdownLines.join("\n") + "\n";
     }
@@ -1029,8 +888,8 @@
         //     }
         // }
 
-        pushCatalogUiPoliciesSection('variable_set', varSetGr.getUniqueValue(), varsBySysId, varsByName, markdownLines, context);
-        pushCatalogClientScriptsSection('variable_set', varSetGr.getUniqueValue(), varsBySysId, markdownLines, context);
+        pushCatalogUiPoliciesSection('variable_set', varSetGr.getUniqueValue(), varMap, markdownLines, context);
+        pushCatalogClientScriptsSection('variable_set', varSetGr.getUniqueValue(), varMap, markdownLines, context);
 
         return markdownLines.join("\n") + "\n";
     }
@@ -1094,13 +953,13 @@
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-06-04 22:14:00</sys_created_on>
         <sys_id>a5d11d9d1b19cf50c798a97ae54bcb5d</sys_id>
-        <sys_mod_count>59</sys_mod_count>
+        <sys_mod_count>65</sys_mod_count>
         <sys_name>ServiceCatalogMarkdownGenerator</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_a5d11d9d1b19cf50c798a97ae54bcb5d</sys_update_name>
         <sys_updated_by>lerwine</sys_updated_by>
-        <sys_updated_on>2026-08-28 20:57:02</sys_updated_on>
+        <sys_updated_on>2026-09-09 21:37:50</sys_updated_on>
     </sys_script_include>
 </record_update>
