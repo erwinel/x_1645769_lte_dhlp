@@ -134,7 +134,7 @@
             var i;
             /** @type {QuestionItem} */
             var item;
-            var type, linkTxt;
+            var type, linkTxt, question_text;
             if (this._parent_is_record_producer) {
                 markdownLines.push(
                     '',
@@ -146,7 +146,8 @@
                 for (i = 0; i < this._allVariables.length; i++) {
                     item = this._allVariables[i];
                     type = item.type_label;
-                    linkTxt = '[' + MarkdownGenerationContext.escapeForMarkdown(item.question_text ? item.question_text : item.name, true) + (item.set_map ? '](#variable-set-' : '](#variable-') + item.name + ')';
+                    question_text = item.question_text ? item.question_text : item.name;
+                    linkTxt = '[' + MarkdownGenerationContext.escapeForTableCellMarkdown(question_text) + (item.set_map ? '](#variable-set-' : '](#variable-') + MarkdownGenerationContext.convertToHeadingFragment(question_text) + ')';
                     if (!item.set_map)
                         switch (item.type_value) {
                             case 19: // Container Start
@@ -169,7 +170,8 @@
                 for (i = 0; i < this._allVariables.length; i++) {
                     item = this._allVariables[i];
                     type = item.type_label;
-                    linkTxt = '[' + MarkdownGenerationContext.escapeForMarkdown(item.question_text ? item.question_text : item.name) + (item.set_map ? '](#variable-set-' : '](#variable-') + item.name + ')';
+                    question_text = item.question_text ? item.question_text : item.name;
+                    linkTxt = '[' + MarkdownGenerationContext.escapeForTableCellMarkdown(question_text) + (item.set_map ? '](#variable-set-' : '](#variable-') + MarkdownGenerationContext.convertToHeadingFragment(question_text) + ')';
                     if (!item.set_map)
                         switch (item.type_value) {
                             case 19: // Container Start
@@ -190,10 +192,9 @@
                     varSetGr = new GlideRecord('item_option_new_set');
                     varSetGr.get(item.sys_id);
                     markdownLines.push('');
-                    markdownLines.push("### Variable Set: " + varSetGr.getValue('internal_name'));
+                    markdownLines.push("### Variable Set: " + varSetGr.getValue(gs.nil(varSetGr.title) ? 'internal_name' : 'title'));
                     markdownLines.push('');
-
-                    markdownLines.push('- **Title:** [' + MarkdownGenerationContext.escapeForMarkdown(gs.nil(varSetGr.title) ? varSetGr.getValue('internal_name') : varSetGr.getValue('title')) + '](' + context.mapper.getVarSetUrl(varSetGr, context.getCurrentFolder()) + ')');
+                    markdownLines.push('- **Internal name:** [' + MarkdownGenerationContext.minimalEscapeForMarkdown(varSetGr.getValue('internal_name')) + '](' + context.mapper.getVarSetUrl(varSetGr, context.getCurrentFolder()) + ')');
                     markdownLines.push('- **Order:** ' + item.order.display_value);
                     context.pushDisplayValueListItem(varSetGr.type, markdownLines, multiLineStack);
                     context.pushListItemIfTrue(varSetGr.display_title, markdownLines);
@@ -203,8 +204,9 @@
                 } else {
                     variableGr = new GlideRecord('item_option_new');
                     variableGr.get(item.sys_id);
+                    question_text = variableGr.getValue(gs.nil(variableGr.question_text) ? 'name' : 'question_text');
                     markdownLines.push('');
-                    markdownLines.push("### Variable: " + variableGr.getValue('name'));
+                    markdownLines.push("### Variable: " + MarkdownGenerationContext.escapeForMarkdown(question_text));
                     markdownLines.push('');
 
                     if (variableGr.getDisplayValue('map_to_field') == 'true') {
@@ -212,7 +214,7 @@
                         markdownLines.push(context.getColumnReferenceMdLink(variableGr.record_producer_table, variableGr.field));
                     }
                     context.pushDisplayValueListItem(variableGr.type, markdownLines, multiLineStack);
-                    context.pushDisplayValueListItem(variableGr.question_text, markdownLines, multiLineStack);
+                    context.pushValueListItem(variableGr.name, markdownLines, multiLineStack);
                     context.pushDisplayValueListItem(variableGr.conversational_label, markdownLines, multiLineStack);
                     context.pushDisplayValueListItem(variableGr.tooltip, markdownLines, multiLineStack);
                     context.pushDisplayValueListItem(variableGr.order, markdownLines, multiLineStack);
@@ -406,7 +408,7 @@
                             markdownLines.push('| Label | Value | Sequence |');
                             markdownLines.push('| ----- | ----- | -------- |');
                             do {
-                                markdownLines.push("| " + MarkdownGenerationContext.escapeForMarkdown(choiceGr.getValue('text'), true) + " | " + MarkdownGenerationContext.escapeForMarkdown(choiceGr.getValue('value'), true) + " | " + choiceGr.getDisplayValue('order') + " |");
+                                markdownLines.push("| " + MarkdownGenerationContext.escapeForTableCellMarkdown(choiceGr.getValue('text')) + " | " + MarkdownGenerationContext.minimalEscapeForTableCellMarkdown(choiceGr.getValue('value')) + " | " + choiceGr.getDisplayValue('order') + " |");
                             } while (choiceGr.next());
                         }
                     }
@@ -439,9 +441,9 @@
                 throw new Error("Parameter must represent a Catalog Item or Variable Set.");
 
             this._parent_sys_id = parentGlideRecord.getUniqueValue();
-            this._parent_display_value = MarkdownGenerationContext.escapeForMarkdown(parentGlideRecord.getDisplayValue());
+            this._parent_display_value = MarkdownGenerationContext.minimalEscapeForMarkdown(parentGlideRecord.getDisplayValue());
             this._parent_table_name = parentGlideRecord.getTableName();
-            this._parent_class_name = MarkdownGenerationContext.escapeForMarkdown(parentGlideRecord.getClassDisplayValue());
+            this._parent_class_name = MarkdownGenerationContext.minimalEscapeForMarkdown(parentGlideRecord.getClassDisplayValue());
             if (gs.nil(this._parent_class_name))
                 this._parent_class_name = this._parent_table_name;
             var variableGr = new GlideRecord('item_option_new');
@@ -490,7 +492,7 @@
                 };
                 if (this._parent_is_record_producer && !gs.nil(variableGr.field))
                     item.field = {
-                        value: MarkdownGenerationContext.escapeForMarkdown(variableGr.getValue('field')),
+                        value: MarkdownGenerationContext.minimalEscapeForMarkdown(variableGr.getValue('field')),
                         display_value: MarkdownGenerationContext.escapeForMarkdown(variableGr.getDisplayValue('field'))
                     };
                 allVariables.push(item);
@@ -583,13 +585,13 @@
         <sys_created_by>lerwine</sys_created_by>
         <sys_created_on>2026-08-28 19:53:39</sys_created_on>
         <sys_id>4a93662c87cfcf104d9a0f28cebb3512</sys_id>
-        <sys_mod_count>13</sys_mod_count>
+        <sys_mod_count>19</sys_mod_count>
         <sys_name>VariableMap</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_4a93662c87cfcf104d9a0f28cebb3512</sys_update_name>
         <sys_updated_by>lerwine</sys_updated_by>
-        <sys_updated_on>2026-09-09 21:28:53</sys_updated_on>
+        <sys_updated_on>2026-09-10 00:52:45</sys_updated_on>
     </sys_script_include>
 </record_update>
