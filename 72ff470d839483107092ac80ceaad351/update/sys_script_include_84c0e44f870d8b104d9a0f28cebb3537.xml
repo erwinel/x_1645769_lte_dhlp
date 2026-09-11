@@ -10,7 +10,7 @@
         <name>MarkdownGenerationContext</name>
         <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[/** @type {MarkdownGenerationContextConstructor} */
-var MarkdownGenerationContext = (function() {
+var MarkdownGenerationContext = (function () {
     /** @type {MarkdownGenerationContextConstructor} */
     var MarkdownGenerationContextConstructor = Class.create();
 
@@ -26,28 +26,67 @@ var MarkdownGenerationContext = (function() {
     var codeBlockReqRe = /[(?:\r\n|\n)`]/g;
     var headingFragmentConvertRe = /[^\w\s-]+/g;
     var singleSpaceRe = /\s/g;
+    var iixExtensionRe = /^(.+?)\.iix$/gi;
+    var nameAndxtensionRe = /^(.+?)(\.[^.]*)$/gi;
 
     /**
      * @param {string} [path]
      * @return {string}
      */
     function getInstanceUrl(path) {
-        if (gs.nil(path))
-            return instanceUri;
+        if (gs.nil(path)) return instanceUri;
         var p = '' + path;
-        while (p.startsWith('/') || p.startsWith('\\'))
-            p = p.substring(1);
+        while (p.startsWith('/') || p.startsWith('\\')) p = p.substring(1);
         return instanceUri + p;
     }
 
     MarkdownGenerationContextConstructor.getInstanceUrl = getInstanceUrl;
+    
+    /**
+     * @param {string} pathFrom
+     * @param {string} pathTo
+     * @returns {string}
+     */
+    function convertToRelativePath(pathFrom, pathTo) {
+        var fromElements = pathFrom.split('/').filter(function (e) {
+            return e.length > 0;
+        });
+        var toElements = pathTo.split('/').filter(function (e) {
+            return e.length > 0;
+        });
+        if (fromElements.length == 0) return toElements.join('/');
+        if (toElements.length == 0) {
+            fromElements.forEach(function (elt, idx, arr) {
+                arr[idx] = '..';
+            });
+            return fromElements.join('/');
+        }
+        while (fromElements[0] == toElements[0]) {
+            fromElements.shift();
+            toElements.shift();
+            if (fromElements.length == 0) return toElements.join('/');
+            if (toElements.length == 0) {
+                fromElements.forEach(function (elt, idx, arr) {
+                    arr[idx] = '..';
+                });
+                return fromElements.join('/');
+            }
+        }
+        fromElements.forEach(function (elt, idx, arr) {
+            arr[idx] = '..';
+        });
+        return fromElements.concat(toElements).join('/');
+    }
 
     /**
      * @param {string} text
      * @returns {string}
      */
     function encodeHtmlSpecial(text) {
-        return text.replace('&', '&amp;').replace('>', '&gt;').replace('<', '&lt;');
+        return text
+            .replace('&', '&amp;')
+            .replace('>', '&gt;')
+            .replace('<', '&lt;');
     }
 
     /**
@@ -56,7 +95,13 @@ var MarkdownGenerationContext = (function() {
      * @returns {string}
      */
     function escapeForMarkdown(text, isTableCellContent) {
-        return gs.nil(text) ? '' : encodeHtmlSpecial(isTableCellContent ? text.replace(markdownTableReservedFullRe, '\\$&') : text.replace(markdownReservedFullRe, '\\$&'));
+        return gs.nil(text)
+            ? ''
+            : encodeHtmlSpecial(
+                  isTableCellContent
+                      ? text.replace(markdownTableReservedFullRe, '\\$&')
+                      : text.replace(markdownReservedFullRe, '\\$&')
+              );
     }
 
     MarkdownGenerationContextConstructor.escapeForMarkdown = escapeForMarkdown;
@@ -67,10 +112,17 @@ var MarkdownGenerationContext = (function() {
      * @returns {string}
      */
     function minimalEscapeForMarkdown(text, isTableCellContent) {
-        return gs.nil(text) ? '' : encodeHtmlSpecial(isTableCellContent ? text.replace(markdownTableReservedMinimalRe, '\\$&') : text.replace(markdownReservedMinimalRe, '\\$&'));
+        return gs.nil(text)
+            ? ''
+            : encodeHtmlSpecial(
+                  isTableCellContent
+                      ? text.replace(markdownTableReservedMinimalRe, '\\$&')
+                      : text.replace(markdownReservedMinimalRe, '\\$&')
+              );
     }
 
-    MarkdownGenerationContextConstructor.minimalEscapeForMarkdown = minimalEscapeForMarkdown;
+    MarkdownGenerationContextConstructor.minimalEscapeForMarkdown =
+        minimalEscapeForMarkdown;
 
     /**
      * @param {string} text
@@ -78,10 +130,15 @@ var MarkdownGenerationContext = (function() {
      * @returns {string}
      */
     function escapeForTableCellMarkdown(text) {
-        return gs.nil(text) ? '' : encodeHtmlSpecial(text.replace(markdownTableReservedFullRe, '\\$&'));
+        return gs.nil(text)
+            ? ''
+            : encodeHtmlSpecial(
+                  text.replace(markdownTableReservedFullRe, '\\$&')
+              );
     }
 
-    MarkdownGenerationContextConstructor.escapeForTableCellMarkdown = escapeForTableCellMarkdown;
+    MarkdownGenerationContextConstructor.escapeForTableCellMarkdown =
+        escapeForTableCellMarkdown;
 
     /**
      * @param {string} text
@@ -89,10 +146,15 @@ var MarkdownGenerationContext = (function() {
      * @returns {string}
      */
     function minimalEscapeForTableCellMarkdown(text) {
-        return gs.nil(text) ? '' : encodeHtmlSpecial(text.replace(markdownTableReservedMinimalRe, '\\$&'));
+        return gs.nil(text)
+            ? ''
+            : encodeHtmlSpecial(
+                  text.replace(markdownTableReservedMinimalRe, '\\$&')
+              );
     }
 
-    MarkdownGenerationContextConstructor.minimalEscapeForTableCellMarkdown = minimalEscapeForTableCellMarkdown;
+    MarkdownGenerationContextConstructor.minimalEscapeForTableCellMarkdown =
+        minimalEscapeForTableCellMarkdown;
 
     /**
      * @param {string} text
@@ -100,10 +162,17 @@ var MarkdownGenerationContext = (function() {
      * @returns {string}
      */
     function escapeForMarkdownStartOfLine(text) {
-        return gs.nil(text) ? '' : encodeHtmlSpecial(text.replace(markdownReservedFullRe, '\\$&').replace(markdownLeadReservedRe, '\\$&'));
+        return gs.nil(text)
+            ? ''
+            : encodeHtmlSpecial(
+                  text
+                      .replace(markdownReservedFullRe, '\\$&')
+                      .replace(markdownLeadReservedRe, '\\$&')
+              );
     }
 
-    MarkdownGenerationContextConstructor.escapeForMarkdownStartOfLine = escapeForMarkdownStartOfLine;
+    MarkdownGenerationContextConstructor.escapeForMarkdownStartOfLine =
+        escapeForMarkdownStartOfLine;
 
     /**
      * @param {string} text
@@ -111,10 +180,17 @@ var MarkdownGenerationContext = (function() {
      * @returns {string}
      */
     function minimalEscapeForMarkdownStartOfLine(text) {
-        return gs.nil(text) ? '' : encodeHtmlSpecial(text.replace(markdownReservedMinimalRe, '\\$&').replace(markdownLeadReservedRe, '\\$&'));
+        return gs.nil(text)
+            ? ''
+            : encodeHtmlSpecial(
+                  text
+                      .replace(markdownReservedMinimalRe, '\\$&')
+                      .replace(markdownLeadReservedRe, '\\$&')
+              );
     }
 
-    MarkdownGenerationContextConstructor.minimalEscapeForMarkdownStartOfLine = minimalEscapeForMarkdownStartOfLine;
+    MarkdownGenerationContextConstructor.minimalEscapeForMarkdownStartOfLine =
+        minimalEscapeForMarkdownStartOfLine;
 
     /**
      * @param {string} text
@@ -122,152 +198,317 @@ var MarkdownGenerationContext = (function() {
      * @returns {string}
      */
     function convertToHeadingFragment(text) {
-        return gs.nil(text) ? '' : text.toLocaleLowerCase().replace(headingFragmentConvertRe, '').trim().replace(singleSpaceRe, '-');
+        return gs.nil(text)
+            ? ''
+            : text
+                  .toLocaleLowerCase()
+                  .replace(headingFragmentConvertRe, '')
+                  .trim()
+                  .replace(singleSpaceRe, '-');
     }
 
-    MarkdownGenerationContextConstructor.convertToHeadingFragment = convertToHeadingFragment;
+    MarkdownGenerationContextConstructor.convertToHeadingFragment =
+        convertToHeadingFragment;
 
     /**
      * @param {string} text
      * @returns {string}
      */
     function normalizeWhiteSpace(text) {
-        return gs.nil(text) ? '' : ('' + text).replace(abnormalWsRe, ' ').trim();
+        return gs.nil(text)
+            ? ''
+            : ('' + text).replace(abnormalWsRe, ' ').trim();
     }
 
-    MarkdownGenerationContextConstructor.normalizeWhiteSpace = normalizeWhiteSpace;
+    MarkdownGenerationContextConstructor.normalizeWhiteSpace =
+        normalizeWhiteSpace;
 
     MarkdownGenerationContextConstructor.prototype = {
         mapper: null,
         _current_folder: '',
 
-        initialize: function() {
+        initialize: function () {
             this.mapper = new ReferenceLinkMapper();
         },
 
-        getCurrentFolder: function() {
+        getCurrentFolder: function () {
             return this._current_folder;
         },
 
-        setCurrentFolder: function(folder) {
-            this._current_folder = ('' + folder);
+        setCurrentFolder: function (folder) {
+            this._current_folder = '' + folder;
         },
 
-        getTableReferenceMdLink: function(glideElement, isForTableCell) {
-            return this.mapper.getTableMdLink(glideElement, this._current_folder, isForTableCell);
+        getTableReferenceMdLink: function (glideElement, isForTableCell) {
+            return this.mapper.getTableMdLink(
+                glideElement,
+                this._current_folder,
+                isForTableCell
+            );
         },
 
-        getColumnReferenceMdLink: function(tableElement, columnElement, isForTableCell) {
-            return this.mapper.getColumnMarkdownLink(tableElement, columnElement, this._current_folder, isForTableCell);
+        getColumnReferenceMdLink: function (
+            tableElement,
+            columnElement,
+            isForTableCell
+        ) {
+            return this.mapper.getColumnMdLink(
+                tableElement,
+                columnElement,
+                this._current_folder,
+                isForTableCell
+            );
         },
 
-        getCatItemReferenceMdLink: function(glideElement, isForTableCell) {
-            return this.mapper.getCatItemMdLink(glideElement, this._current_folder, isForTableCell);
+        getCatItemReferenceMdLink: function (glideElement, isForTableCell) {
+            return this.mapper.getCatItemMdLink(
+                glideElement,
+                this._current_folder,
+                isForTableCell
+            );
         },
 
-        getFlowReferenceMdLink: function(glideElement, isForTableCell) {
-            return this.mapper.getFlowMdLink(glideElement, this._current_folder, isForTableCell);
+        getFlowReferenceMdLink: function (glideElement, isForTableCell) {
+            return this.mapper.getFlowMdLink(
+                glideElement,
+                this._current_folder,
+                isForTableCell
+            );
         },
 
-        getVarSetReferenceMdLink: function(glideElement, isForTableCell) {
-            return this.mapper.getVarSetMdLink(glideElement, this._current_folder, isForTableCell);
+        getVarSetReferenceMdLink: function (glideElement, isForTableCell) {
+            return this.mapper.getVarSetMdLink(
+                glideElement,
+                this._current_folder,
+                isForTableCell
+            );
         },
 
-        pushTableReferenceListItem: function(glideElement, markdownLines, showEmpty) {
+        pushTableReferenceListItem: function (
+            glideElement,
+            markdownLines,
+            showEmpty
+        ) {
             if (gs.nil(glideElement)) {
                 if (showEmpty)
-                    markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** *Empty*');
+                    markdownLines.push(
+                        '- **' +
+                            escapeForMarkdown(glideElement.getLabel()) +
+                            ':** *Empty*'
+                    );
             } else
-                markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** ' + this.mapper.getTableMdLink(glideElement.getValue(), this._current_folder));
+                markdownLines.push(
+                    '- **' +
+                        escapeForMarkdown(glideElement.getLabel()) +
+                        ':** ' +
+                        this.mapper.getTableMdLink(
+                            glideElement.getValue(),
+                            this._current_folder
+                        )
+                );
         },
 
-        pushFieldReferenceListItem: function(tableElement, fieldElement, markdownLines, showEmpty) {
+        pushFieldReferenceListItem: function (
+            tableElement,
+            fieldElement,
+            markdownLines,
+            showEmpty
+        ) {
             if (gs.nil(fieldElement)) {
                 if (showEmpty)
-                    markdownLines.push('- **' + escapeForMarkdown(fieldElement.getLabel()) + ':** *Empty*');
+                    markdownLines.push(
+                        '- **' +
+                            escapeForMarkdown(fieldElement.getLabel()) +
+                            ':** *Empty*'
+                    );
             } else
-                markdownLines.push('- **' + escapeForMarkdown(fieldElement.getLabel()) + ':** ' + this.mapper.getColumnMdLink(tableElement, fieldElement, this._current_folder));
+                markdownLines.push(
+                    '- **' +
+                        escapeForMarkdown(fieldElement.getLabel()) +
+                        ':** ' +
+                        this.mapper.getColumnMdLink(
+                            tableElement,
+                            fieldElement,
+                            this._current_folder
+                        )
+                );
         },
 
-        pushCatItemReferenceListItem: function(glideElement, markdownLines, showEmpty) {
+        pushCatItemReferenceListItem: function (
+            glideElement,
+            markdownLines,
+            showEmpty
+        ) {
             if (gs.nil(glideElement)) {
                 if (showEmpty)
-                    markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** *Empty*');
+                    markdownLines.push(
+                        '- **' +
+                            escapeForMarkdown(glideElement.getLabel()) +
+                            ':** *Empty*'
+                    );
             } else
-                markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** ' + this.mapper.getCatItemMdLink(glideElement.getValue(), this._current_folder));
+                markdownLines.push(
+                    '- **' +
+                        escapeForMarkdown(glideElement.getLabel()) +
+                        ':** ' +
+                        this.mapper.getCatItemMdLink(
+                            glideElement.getValue(),
+                            this._current_folder
+                        )
+                );
         },
 
-        pushFlowReferenceListItem: function(glideElement, markdownLines, showEmpty) {
+        pushFlowReferenceListItem: function (
+            glideElement,
+            markdownLines,
+            showEmpty
+        ) {
             if (gs.nil(glideElement)) {
                 if (showEmpty)
-                    markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** *Empty*');
+                    markdownLines.push(
+                        '- **' +
+                            escapeForMarkdown(glideElement.getLabel()) +
+                            ':** *Empty*'
+                    );
             } else
-                markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** ' + this.mapper.getFlowMdLink(glideElement.getValue(), this._current_folder));
+                markdownLines.push(
+                    '- **' +
+                        escapeForMarkdown(glideElement.getLabel()) +
+                        ':** ' +
+                        this.mapper.getFlowMdLink(
+                            glideElement.getValue(),
+                            this._current_folder
+                        )
+                );
         },
 
-        pushVarSetReferenceListItem: function(glideElement, markdownLines, showEmpty) {
+        pushVarSetReferenceListItem: function (
+            glideElement,
+            markdownLines,
+            showEmpty
+        ) {
             if (gs.nil(glideElement)) {
                 if (showEmpty)
-                    markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** *Empty*');
+                    markdownLines.push(
+                        '- **' +
+                            escapeForMarkdown(glideElement.getLabel()) +
+                            ':** *Empty*'
+                    );
             } else
-                markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** ' + this.mapper.getVarSetMdLink(glideElement.getValue(), this._current_folder));
+                markdownLines.push(
+                    '- **' +
+                        escapeForMarkdown(glideElement.getLabel()) +
+                        ':** ' +
+                        this.mapper.getVarSetMdLink(
+                            glideElement.getValue(),
+                            this._current_folder
+                        )
+                );
         },
 
-        pushDisplayValueListItem: function(glideElement, markdownLines, multiLineStack, showEmpty) {
+        pushDisplayValueListItem: function (
+            glideElement,
+            markdownLines,
+            multiLineStack,
+            showEmpty
+        ) {
             if (gs.nil(glideElement)) {
                 if (showEmpty)
-                    markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** *Empty*');
+                    markdownLines.push(
+                        '- **' +
+                            escapeForMarkdown(glideElement.getLabel()) +
+                            ':** *Empty*'
+                    );
             } else {
                 var value = glideElement.getDisplayValue();
                 if (newLineRe.test(value))
                     multiLineStack.push({
                         label: glideElement.getLabel(),
                         language: 'text',
-                        value: value
+                        value: value,
                     });
                 else
-                    markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** ' + escapeForMarkdown(value));
+                    markdownLines.push(
+                        '- **' +
+                            escapeForMarkdown(glideElement.getLabel()) +
+                            ':** ' +
+                            escapeForMarkdown(value)
+                    );
             }
         },
 
-        pushValueListItem: function(glideElement, markdownLines, multiLineStack, showEmpty) {
+        pushValueListItem: function (
+            glideElement,
+            markdownLines,
+            multiLineStack,
+            showEmpty
+        ) {
             if (gs.nil(glideElement)) {
                 if (showEmpty)
-                    markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** *Empty*');
+                    markdownLines.push(
+                        '- **' +
+                            escapeForMarkdown(glideElement.getLabel()) +
+                            ':** *Empty*'
+                    );
             } else {
                 var value = glideElement.getValue();
                 if (newLineRe.test(value))
                     multiLineStack.push({
                         label: glideElement.getLabel(),
                         language: 'text',
-                        value: value
+                        value: value,
                     });
                 else
-                    markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** ' + minimalEscapeForMarkdown(value));
+                    markdownLines.push(
+                        '- **' +
+                            escapeForMarkdown(glideElement.getLabel()) +
+                            ':** ' +
+                            minimalEscapeForMarkdown(value)
+                    );
             }
         },
 
-        pushCodeListItem: function(glideElement, language, markdownLines, multiLineStack, showEmpty) {
+        pushCodeListItem: function (
+            glideElement,
+            language,
+            markdownLines,
+            multiLineStack,
+            showEmpty
+        ) {
             if (gs.nil(glideElement)) {
                 if (showEmpty)
-                    markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** *Empty*');
+                    markdownLines.push(
+                        '- **' +
+                            escapeForMarkdown(glideElement.getLabel()) +
+                            ':** *Empty*'
+                    );
             } else {
                 var value = glideElement.getValue();
                 if (newLineRe.test(value))
                     multiLineStack.push({
                         label: glideElement.getLabel(),
                         language: language,
-                        value: value
+                        value: value,
                     });
                 else
-                    markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** `' + value + '`');
+                    markdownLines.push(
+                        '- **' +
+                            escapeForMarkdown(glideElement.getLabel()) +
+                            ':** `' +
+                            value +
+                            '`'
+                    );
             }
         },
 
-        pushBoolean: function(glideElement, markdownLines, showEmpty) {
+        pushBoolean: function (glideElement, markdownLines, showEmpty) {
             if (gs.nil(glideElement)) {
                 if (showEmpty)
-                    markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** *Empty*');
+                    markdownLines.push(
+                        '- **' +
+                            escapeForMarkdown(glideElement.getLabel()) +
+                            ':** *Empty*'
+                    );
             } else {
                 var value = glideElement.getDisplayValue();
                 switch (value) {
@@ -281,76 +522,139 @@ var MarkdownGenerationContext = (function() {
                         value = escapeForMarkdown(value);
                         berak;
                 }
-                markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** ' + value);
+                markdownLines.push(
+                    '- **' +
+                        escapeForMarkdown(glideElement.getLabel()) +
+                        ':** ' +
+                        value
+                );
             }
         },
 
-        pushListItemIfTrue: function(glideElement, markdownLines) {
-            if (!gs.nil(glideElement) && glideElement.getDisplayValue() == 'true')
-                markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** True');
+        pushListItemIfTrue: function (glideElement, markdownLines) {
+            if (
+                !gs.nil(glideElement) &&
+                glideElement.getDisplayValue() == 'true'
+            )
+                markdownLines.push(
+                    '- **' +
+                        escapeForMarkdown(glideElement.getLabel()) +
+                        ':** True'
+                );
         },
 
-        pushListItemIfFalse: function(glideElement, markdownLines, nilIsFalse) {
-            if (gs.nil(glideElement) ? nilIsFalse : glideElement.getDisplayValue() == 'false')
-                markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** False');
+        pushListItemIfFalse: function (
+            glideElement,
+            markdownLines,
+            nilIsFalse
+        ) {
+            if (
+                gs.nil(glideElement)
+                    ? nilIsFalse
+                    : glideElement.getDisplayValue() == 'false'
+            )
+                markdownLines.push(
+                    '- **' +
+                        escapeForMarkdown(glideElement.getLabel()) +
+                        ':** False'
+                );
         },
 
-        pushImageListItem: function(glideElement, markdownLines, showEmpty) {
+        pushImageListItem: function (glideElement, markdownLines, showEmpty) {
             if (gs.nil(glideElement)) {
                 if (showEmpty)
-                    markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** *Empty*');
+                    markdownLines.push(
+                        '- **' +
+                            escapeForMarkdown(glideElement.getLabel()) +
+                            ':** *Empty*'
+                    );
             } else {
                 var attachmentGr = new GlideRecord('sys_attachment');
                 if (attachmentGr.get(glideElement.getValue())) {
-                    var remoteFileName = glideElement.getDisplayValue();
+                    var remoteFileName = gs.nil(attachmentGr.file_name)
+                        ? glideElement.getDisplayValue()
+                        : attachmentGr.getValue('file_name');
                     var fileName = remoteFileName;
                     var content_type = attachmentGr.getValue('content_type');
-                    var m;
+                    var m, e;
                     switch (content_type) {
                         case 'image/png':
-                            m = fileName.match(iixExtensionRe);
-                            if (m)
-                                fileName = m[1] + '.jpg';
+                            m = fileName.match(nameAndxtensionRe);
+                            if (m) {
+                                if (m[2].toLower() == '.iix')
+                                    fileName = m[1] + '.jpg';
+                            } else fileName += '.jpg';
                             break;
                         case 'image/jpeg':
                             m = fileName.match(iixExtensionRe);
-                            if (m)
-                                fileName = m[1] + '.png';
+                            if (m) {
+                                if (m[2].toLower() == '.iix')
+                                    fileName = m[1] + '.png';
+                            } else fileName += '.png';
+                            break;
+                        case 'image/svg+xml':
+                            m = fileName.match(iixExtensionRe);
+                            if (m) {
+                                if (m[2].toLower() == '.iix')
+                                    fileName = m[1] + '.svg';
+                            } else fileName += '.svg';
                             break;
                         default:
                             fileName = fileName + '; ' + content_type;
                             break;
                     }
-                    markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** ![' + escapeForMarkdown(fileName) + '](' + instanceUri + remoteFileName + ')');
+                    markdownLines.push(
+                        '- **' +
+                            escapeForMarkdown(glideElement.getLabel()) +
+                            ':** ![' +
+                            escapeForMarkdown(fileName) +
+                            '](' +
+                            instanceUri +
+                            remoteFileName +
+                            ')'
+                    );
                 } else
-                    markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** ' + escapeForMarkdown(glideElement.getDisplayValue()));
+                    markdownLines.push(
+                        '- **' +
+                            escapeForMarkdown(glideElement.getLabel()) +
+                            ':** ' +
+                            escapeForMarkdown(glideElement.getDisplayValue())
+                    );
             }
         },
 
-        pushMultiLineItems: function(multiLineStack, markdownLines) {
+        pushMultiLineItems: function (multiLineStack, markdownLines) {
             for (var i = 0; i < multiLineStack.length; i++) {
                 /** @type {LabeledMultilineStackItem} */
                 var mi = multiLineStack[i];
-                markdownLines.push('', '**' + mi.label + ':**', '', '```' + mi.language, mi.value, '```');
+                markdownLines.push(
+                    '',
+                    '**' + mi.label + ':**',
+                    '',
+                    '```' + mi.language,
+                    mi.value,
+                    '```'
+                );
             }
         },
 
-        type: 'MarkdownGenerationContext'
+        type: 'MarkdownGenerationContext',
     };
 
     return MarkdownGenerationContextConstructor;
-})();]]></script>
+})();
+]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-05-28 16:21:34</sys_created_on>
         <sys_id>84c0e44f870d8b104d9a0f28cebb3537</sys_id>
-        <sys_mod_count>16</sys_mod_count>
+        <sys_mod_count>19</sys_mod_count>
         <sys_name>MarkdownGenerationContext</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_84c0e44f870d8b104d9a0f28cebb3537</sys_update_name>
         <sys_updated_by>lerwine</sys_updated_by>
-        <sys_updated_on>2026-09-10 00:44:17</sys_updated_on>
+        <sys_updated_on>2026-09-11 22:49:06</sys_updated_on>
     </sys_script_include>
 </record_update>
