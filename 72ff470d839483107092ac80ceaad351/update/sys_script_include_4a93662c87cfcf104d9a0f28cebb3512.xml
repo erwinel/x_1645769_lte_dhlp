@@ -11,6 +11,10 @@
         <sandbox_callable>false</sandbox_callable>
         <script><![CDATA[var VariableMap = (function() {
     var VariableMapConstructor = Class.create();
+
+    var idRe = /IO:([a-f\d]{32})/g;
+    var encodedRe = /^([^^]+(?:\^(?!NQ)[^^]+)*)\^NQ ?/g;
+    
     VariableMapConstructor.prototype = {
         _parent_sys_id: '',
 
@@ -199,7 +203,7 @@
                     context.pushDisplayValueListItem(varSetGr.type, markdownLines, multiLineStack);
                     context.pushListItemIfTrue(varSetGr.display_title, markdownLines);
                     context.pushDisplayValueListItem(varSetGr.layout, markdownLines, multiLineStack);
-                    context.pushDisplayValueListItem(varSetGr.description, markdownLines, multiLineStack);
+                    context.pushCodeBlockListItem(varSetGr.description, 'html', multiLineStack);
                     context.pushMultiLineItems(multiLineStack, markdownLines);
                 } else {
                     variableGr = new GlideRecord('item_option_new');
@@ -211,7 +215,7 @@
 
                     if (variableGr.getDisplayValue('map_to_field') == 'true') {
                         markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(variableGr.map_to_field.getLabel()) + ':** True');
-                        markdownLines.push(context.getColumnReferenceMdLink(variableGr.record_producer_table, variableGr.field));
+                        markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(variableGr.field.getLabel()) + ':** ' + context.getColumnReferenceMdLink(variableGr.record_producer_table, variableGr.field));
                     }
                     context.pushDisplayValueListItem(variableGr.type, markdownLines, multiLineStack);
                     context.pushValueListItem(variableGr.name, markdownLines, multiLineStack);
@@ -223,7 +227,7 @@
                         if (variableGr.help_tag != 'More information')
                             context.pushValueListItem(variableGr.help_tag, markdownLines, multiLineStack);
                         context.pushDisplayValueListItem(variableGr.help_text, markdownLines, multiLineStack);
-                        context.pushCodeListItem(variableGr.instructions, 'html', markdownLines, multiLineStack);
+                        context.pushCodeBlockListItem(variableGr.instructions, 'html', multiLineStack);
                     }
                     var listChoices = false;
                     type = parseInt(variableGr.getValue('type'));
@@ -257,10 +261,12 @@
                             context.pushDisplayValueListItem(variableGr.use_reference_qualifier, markdownLines, multiLineStack);
                             switch (variableGr.getValue('use_reference_qualifier')) {
                                 case 'simple':
-                                    context.pushCodeListItem(variableGr.reference_qual_condition, 'text', markdownLines, multiLineStack);
+                                    if (!gs.nil(variableGr.reference_qual_condition))
+                                        markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(variableGr.reference_qual_condition.getLabel()) + ':** ' + this.decodeConditionString(variableGr.getValue('reference_qual_condition'), context));
+                                    // context.pushCodeListItem(variableGr.reference_qual_condition, 'text', markdownLines, multiLineStack);
                                     break;
                                 default:
-                                    context.pushCodeListItem(variableGr.reference_qual, 'text', markdownLines, multiLineStack);
+                                    context.pushCodeListItem(variableGr.reference_qual, 'javascript', markdownLines, multiLineStack);
                                     break;
                             }
                             context.pushCodeListItem(variableGr.attributes, 'text', markdownLines, multiLineStack);
@@ -283,7 +289,8 @@
                             context.pushDisplayValueListItem(variableGr.choice_direction, markdownLines, multiLineStack);
                             context.pushListItemIfTrue(variableGr.include_none, markdownLines);
                             context.pushListItemIfTrue(variableGr.lookup_unique, markdownLines);
-                            context.pushValueListItem(variableGr.reference_qual, markdownLines, multiLineStack);
+                            if (!gs.nil(variableGr.reference_qual))
+                                markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(variableGr.reference_qual.getLabel()) + ':** ' + this.decodeConditionString(variableGr.getValue('reference_qual'), context));
                             context.pushCodeListItem(variableGr.attributes, 'text', markdownLines, multiLineStack);
                             break;
                         case 21: // List Collector
@@ -291,10 +298,11 @@
                             context.pushDisplayValueListItem(variableGr.use_reference_qualifier, markdownLines, multiLineStack);
                             switch (variableGr.getValue('use_reference_qualifier')) {
                                 case 'simple':
-                                    context.pushCodeListItem(variableGr.reference_qual_condition, 'text', markdownLines, multiLineStack);
+                                    if (!gs.nil(variableGr.reference_qual_condition))
+                                        markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(variableGr.reference_qual_condition.getLabel()) + ':** ' + this.decodeConditionString(variableGr.getValue('reference_qual_condition'), context));
                                     break;
                                 default:
-                                    context.pushCodeListItem(variableGr.reference_qual, 'text', markdownLines, multiLineStack);
+                                    context.pushCodeListItem(variableGr.reference_qual, 'javascript', markdownLines, multiLineStack);
                                     break;
                             }
                             context.pushCodeListItem(variableGr.attributes, 'text', markdownLines, multiLineStack);
@@ -374,12 +382,12 @@
                             break;
                         case 23: // HTML
                             if (gs.nil(variableGr.default_html_value))
-                                context.pushCodeListItem(variableGr.default_value, 'text', markdownLines, multiLineStack, true);
+                                context.pushCodeListItem(variableGr.default_value, 'text', markdownLines, multiLineStack);
                             else
-                                context.pushCodeListItem(variableGr.default_html_value, 'html', markdownLines, multiLineStack, true);
+                                context.pushCodeBlockListItem(variableGr.default_html_value, 'html', multiLineStack);
                             break;
                         case 32: // Rich Text Label
-                            context.pushCodeListItem(variableGr.rich_text, 'html', markdownLines, multiLineStack, true);
+                            context.pushCodeBlockListItem(variableGr.rich_text, 'html', multiLineStack);
                             break;
                         case 19: // Container Start
                         case 20: // Container End
@@ -414,6 +422,76 @@
                     }
                 }
             }
+        },
+
+        /**
+         * @param {string} conditionString
+         * @param {MarkdownGenerationContext} context
+         * @returns {string}
+         */
+        decodeConditionString: function(conditionString, context) {
+            if (typeof conditionString != 'string')
+                conditionString = '' + conditionString;
+            if (conditionString == '')
+                return '';
+            
+            var current_folder = context.getCurrentFolder();
+            var match = idRe.exec(conditionString);
+            var decoded = '';
+            var startIndex = 0;
+            while (match !== null) {
+                if (match.index > startIndex)
+                    decoded += conditionString.substring(startIndex, match.index);
+                item = this.getVariableBySysId(match[1]);
+                if (item) {
+                    question_text = item.question_text ? item.question_text : item.name;
+                    if (item.parent_sys_id == this._parent_sys_id)
+                        decoded += '[' + MarkdownGenerationContext.escapeForMarkdown(question_text) + (item.set_map ? '](#variable-set-' : '](#variable-') + MarkdownGenerationContext.convertToHeadingFragment(question_text) + ')';
+                    else {
+                        var link = (item.parent_type == "variable_set") ? context.mapper.getVarSetUrl(item.parent_sys_id, current_folder) : context.mapper.getCatItemUrl(item.parent_sys_id, current_folder);
+                        decoded += '[' + MarkdownGenerationContext.escapeForMarkdown(question_text) + (item.set_map ? '](' + link + '#variable-set-' : '](' + link + '#variable-') + MarkdownGenerationContext.convertToHeadingFragment(question_text) + ')';
+                    }
+                }
+                else
+                    decoded += match[0];
+                startIndex = idRe.lastIndex;
+                match = idRe.exec(conditionString);
+            }
+            if (startIndex < conditionString.length)
+                decoded += conditionString.substring(startIndex);
+            decoded = decoded.trim();
+            
+            var iml = encodedRe.test(decoded);
+            if (iml) {
+                decoded = decoded.replace(encodedRe, "\n  - $1^EQ\n  - *OR:* ");
+                decoded = decoded.replace(/\^NQ ?/g, "^EQ\n  - *OR:* ");
+            }
+            decoded = decoded.replace(/\s?ISNOTEMPTY\^EQ/g, ' is not empty');
+            decoded = decoded.replace(/\s?ISNOTEMPTY\^\s?/g, ' is not empty **AND** ');
+            decoded = decoded.replace(/\s?ISEMPTY\^EQ/g, ' is empty');
+            decoded = decoded.replace(/\s?ISEMPTY\^\s?/g, ' is empty **AND** ');
+            decoded = decoded.replace(/\s?NOT IN(\w+),(\w+),(\w+),(\w+)\^EQ/g, ' is not one of `$1`, `$2`, `$3`, `$4`');
+            decoded = decoded.replace(/\s?NOT IN(\w+),(\w+),(\w+)\^EQ/g, ' is not one of `$1`, `$2`, `$3`');
+            decoded = decoded.replace(/\s?NOT IN(\w+),(\w+)\^EQ/g, ' is not one of `$1`, `$2`');
+            decoded = decoded.replace(/\s?NOT IN(\w+),(\w+),(\w+),(\w+)\^\s?/g, ' is not one of `$1`, `$2`, `$3`, `$4` **AND** ');
+            decoded = decoded.replace(/\s?NOT IN(\w+),(\w+),(\w+)\^\s?/g, ' is not one of `$1`, `$2`, `$3` **AND** ');
+            decoded = decoded.replace(/\s?NOT IN(\w+),(\w+)\^\s?/g, ' is not one of `$1`, `$2` **AND** ');
+            decoded = decoded.replace(/\s?IN(\w+),(\w+),(\w+),(\w+)\^EQ/g, ' is one of `$1`, `$2`, `$3`, `$4`');
+            decoded = decoded.replace(/\s?IN(\w+),(\w+),(\w+)\^EQ/g, ' is one of `$1`, `$2`, `$3`');
+            decoded = decoded.replace(/\s?IN(\w+),(\w+)\^EQ/g, ' is one of `$1`, `$2`');
+            decoded = decoded.replace(/\s?IN(\w+),(\w+),(\w+),(\w+)\^\s?/g, ' is one of `$1`, `$2`, `$3`, `$4` **AND** ');
+            decoded = decoded.replace(/\s?IN(\w+),(\w+),(\w+)\^\s?/g, ' is one of `$1`, `$2`, `$3` **AND** ');
+            decoded = decoded.replace(/\s?IN(\w+),(\w+)\^\s?/g, ' is one of `$1`, `$2` **AND** ');
+            decoded = decoded.replace(/\s?!=(\w+)\^EQ/g, ' is not `$1`');
+            decoded = decoded.replace(/\s?!=(\w+)\^\s?/g, ' is not `$1` **AND** ');
+            decoded = decoded.replace(/\s?=(\w+)\^EQ/g, ' is `$1`');
+            decoded = decoded.replace(/\s?=(\w+)\^\s?/g, ' is `$1` **AND** ');
+
+            decoded = decoded.replace(/\s?!=\^EQ/g, ' is not empty');
+            decoded = decoded.replace(/\s?!=\^\s?/g, ' is not empty **AND** ');
+            decoded = decoded.replace(/\s?=\^EQ/g, ' is empty');
+            decoded = decoded.replace(/\s?=\^\s?/g, ' is empty **AND** ');
+            return iml ? decoded : ' ' + decoded;
         },
 
         initialize: function(parentGlideRecord) {
@@ -585,13 +663,13 @@
         <sys_created_by>lerwine</sys_created_by>
         <sys_created_on>2026-08-28 19:53:39</sys_created_on>
         <sys_id>4a93662c87cfcf104d9a0f28cebb3512</sys_id>
-        <sys_mod_count>19</sys_mod_count>
+        <sys_mod_count>29</sys_mod_count>
         <sys_name>VariableMap</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_4a93662c87cfcf104d9a0f28cebb3512</sys_update_name>
         <sys_updated_by>lerwine</sys_updated_by>
-        <sys_updated_on>2026-09-10 00:52:45</sys_updated_on>
+        <sys_updated_on>2026-09-12 04:20:28</sys_updated_on>
     </sys_script_include>
 </record_update>

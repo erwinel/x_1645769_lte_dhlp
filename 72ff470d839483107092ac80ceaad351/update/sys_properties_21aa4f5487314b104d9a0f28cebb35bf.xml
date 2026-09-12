@@ -11,14 +11,14 @@
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-06-26 22:26:26</sys_created_on>
         <sys_id>21aa4f5487314b104d9a0f28cebb35bf</sys_id>
-        <sys_mod_count>3</sys_mod_count>
+        <sys_mod_count>4</sys_mod_count>
         <sys_name>x_1645769_lte_dhlp.var_set_md_mappings</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy/>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_properties_21aa4f5487314b104d9a0f28cebb35bf</sys_update_name>
         <sys_updated_by>lerwine</sys_updated_by>
-        <sys_updated_on>2026-09-11 22:28:58</sys_updated_on>
+        <sys_updated_on>2026-09-12 03:04:51</sys_updated_on>
         <type>string</type>
         <value>[&#13;
     {&#13;
@@ -55,6 +55,13 @@
         "sys_id": "6af891431b7dce50c798a97ae54bcb1d",&#13;
         "folder": "service-catalog",&#13;
         "file_link": "Peripheral-Location-Variable-Set.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "USM Employee Info",&#13;
+        "internal_name": "usm_employee_info",&#13;
+        "sys_id": "7cba13191bd21410edce10ad9c4bcbdc",&#13;
+        "folder": "service-catalog",&#13;
+        "file_link": "USM-Employee-Info-Variable-Set.md"&#13;
     }&#13;
 ]</value>
         <write_roles>x_1645769_lte_dhlp.admin</write_roles>

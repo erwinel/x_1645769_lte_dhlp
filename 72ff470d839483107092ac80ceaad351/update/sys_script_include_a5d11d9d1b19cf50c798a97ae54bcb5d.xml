@@ -14,247 +14,6 @@
     ServiceCatalogMarkdownGeneratorConstructor = Class.create();
 
     /**
-     * @param {(GlideRecord | GlideRecordSecure)} varGr - item_option_new
-     * @param {string[]} markdownLines
-     * @param {MarkdownGenerationContext} context
-     * @param {string} [tableUrl]
-     */
-    function pushVariableDetailMarkdown(varGr, markdownLines, context) {
-        markdownLines.push('');
-        markdownLines.push("### Variable: " + varGr.getValue(gs.nil(varGr.question_text) ? 'name' : 'question_text'));
-        markdownLines.push('');
-
-        if (varGr.getDisplayValue('map_to_field') == 'true') {
-            markdownLines.push('- **' + MarkdownGenerationContext.escapeForMarkdown(varGr.map_to_field.getLabel()) + ':** True');
-            markdownLines.push(context.getColumnReferenceMdLink(varGr.record_producer_table, varGr.field));
-        }
-
-        /** @type {tyLabeledMultilineStackItem[]} */
-        var multiLineStack = [];
-        context.pushDisplayValueListItem(varGr.type, markdownLines, multiLineStack);
-        context.pushDisplayValueListItem(varGr.name, markdownLines, multiLineStack);
-        context.pushDisplayValueListItem(varGr.conversational_label, markdownLines, multiLineStack);
-        context.pushDisplayValueListItem(varGr.tooltip, markdownLines, multiLineStack);
-        context.pushDisplayValueListItem(varGr.order, markdownLines, multiLineStack);
-        context.pushListItemIfTrue(varGr.show_help, markdownLines);
-        if (varGr.getDisplayValue('show_help') == 'true') {
-            if (varGr.help_tag != 'More information')
-                context.pushValueListItem(varGr.help_tag, markdownLines, multiLineStack);
-            context.pushDisplayValueListItem(varGr.help_text, markdownLines, multiLineStack);
-            context.pushCodeListItem(varGr.instructions, 'html', markdownLines, multiLineStack);
-        }
-        var listChoices = false;
-        var type = parseInt(varGr.getValue('type'));
-        switch (type) {
-            case 1: // Yes / No
-                context.pushListItemIfTrue(varGr.include_none, markdownLines);
-                break;
-            case 2: // Multi Line Text
-                context.pushCodeListItem(varGr.attributes, 'text', markdownLines, multiLineStack);
-                break;
-            case 3: // Multiple Choice
-                context.pushDisplayValueListItem(varGr.choice_direction, markdownLines, multiLineStack);
-                context.pushListItemIfTrue(varGr.include_none, markdownLines);
-                context.pushListItemIfTrue(varGr.do_not_select_first, markdownLines);
-                context.pushCodeListItem(varGr.attributes, 'text', markdownLines, multiLineStack);
-                listChoices = true;
-                break;
-            case 5: // Select Box
-            case 18: // Lookup Select Box
-                if (!gs.nil(varGr.choice_table)) {
-                    context.pushTableReferenceListItem(varGr.choice_table, markdownLines);
-                    context.pushFieldReferenceListItem(varGr.choice_table, varGr.choice_field, markdownLines);
-                }
-                context.pushListItemIfTrue(varGr.include_none, markdownLines);
-                context.pushListItemIfTrue(varGr.lookup_unique, markdownLines);
-                context.pushCodeListItem(varGr.attributes, 'text', markdownLines, multiLineStack);
-                listChoices = true;
-                break;
-            case 8: // Reference
-                context.pushTableReferenceListItem(varGr.reference, markdownLines);
-                context.pushDisplayValueListItem(varGr.use_reference_qualifier, markdownLines, multiLineStack);
-                switch (varGr.getValue('use_reference_qualifier')) {
-                    case 'simple':
-                        context.pushCodeListItem(varGr.reference_qual_condition, 'text', markdownLines, multiLineStack);
-                        break;
-                    default:
-                        context.pushCodeListItem(varGr.reference_qual, 'text', markdownLines, multiLineStack);
-                        break;
-                }
-                context.pushCodeListItem(varGr.attributes, 'text', markdownLines, multiLineStack);
-                break;
-            case 19: // Container Start
-                context.pushListItemIfTrue(varGr.display_title, markdownLines);
-                context.pushDisplayValueListItem(varGr.layout, markdownLines, multiLineStack);
-                break;
-            case 22: // Lookup Multiple Choice
-                context.pushDisplayValueListItem(varGr.lookup_source, markdownLines, multiLineStack);
-                switch (varGr.getValue('lookup_source')) {
-                    case 'choice':
-                    case 'choices':
-                        if (!gs.nil(varGr.choice_table)) {
-                            context.pushTableReferenceListItem(varGr.choice_table, markdownLines);
-                            context.pushFieldReferenceListItem(varGr.choice_table, varGr.choice_field, markdownLines);
-                        }
-                        break;
-                }
-                context.pushDisplayValueListItem(varGr.choice_direction, markdownLines, multiLineStack);
-                context.pushListItemIfTrue(varGr.include_none, markdownLines);
-                context.pushListItemIfTrue(varGr.lookup_unique, markdownLines);
-                context.pushValueListItem(varGr.reference_qual, markdownLines, multiLineStack);
-                context.pushCodeListItem(varGr.attributes, 'text', markdownLines, multiLineStack);
-                break;
-            case 21: // List Collector
-                context.pushTableReferenceListItem(varGr.list_table, markdownLines);
-                context.pushDisplayValueListItem(varGr.use_reference_qualifier, markdownLines, multiLineStack);
-                switch (varGr.getValue('use_reference_qualifier')) {
-                    case 'simple':
-                        context.pushCodeListItem(varGr.reference_qual_condition, 'text', markdownLines, multiLineStack);
-                        break;
-                    default:
-                        context.pushCodeListItem(varGr.reference_qual, 'text', markdownLines, multiLineStack);
-                        break;
-                }
-                context.pushCodeListItem(varGr.attributes, 'text', markdownLines, multiLineStack);
-                break;
-            case 4: // Numeric Scale
-            case 6: // Single Line Text
-            case 7: // CheckBox
-            case 9: // Date
-            case 10: // Date/Time
-            case 11: // Label
-            case 12: // Break
-            case 14: // Custom
-            case 15: // UI Page
-            case 16: // Wide Single Line Text
-            case 17: // Custom with Label
-            case 20: // Container End
-            case 23: // HTML
-            case 24: // Container Split
-            case 25: // Masked
-            case 26: // Email
-            case 27: // URL
-            case 28: // IP Address
-            case 29: // Duration
-            case 31: // Requested For
-            case 32: // Rich Text Label
-            case 33: // Attachment
-            case 40: // Table Name
-                break;
-            default:
-                markdownLines.push("- **Unknown type:** *" + varGr.getValue('type') + '*');
-                break;
-        }
-
-        context.pushListItemIfTrue(varGr.global, markdownLines);
-        context.pushListItemIfTrue(varGr.disable_initial_slot_fill, markdownLines);
-        context.pushDisplayValueListItem(varGr.variable_width, markdownLines, multiLineStack);
-        context.pushListItemIfFalse(varGr.visible_standalone, markdownLines);
-        context.pushListItemIfFalse(varGr.visible_bundle, markdownLines);
-        context.pushListItemIfTrue(varGr.not_available_conversation, markdownLines);
-        context.pushListItemIfFalse(varGr.visible_guide, markdownLines);
-        context.pushListItemIfFalse(varGr.visible_summary, markdownLines);
-        switch (type) {
-            case 20: // Container End
-            case 24: // Container Split
-            case 32: // Rich Text Label
-                break;
-            case 19: // Container Start
-                context.pushListItemIfTrue(varGr.hidden, markdownLines);
-                break;
-            default:
-                context.pushListItemIfTrue(varGr.mandatory, markdownLines);
-                if (!varGr.mandatory) {
-                    context.pushListItemIfTrue(varGr.hidden, markdownLines);
-                    context.pushListItemIfTrue(varGr.read_only, markdownLines);
-                }
-                break;
-        }
-        switch (type) {
-            case 2: // Multi Line Text
-            case 7: // CheckBox
-            case 9: // Date
-            case 10: // Date/Time
-                context.pushCodeListItem(varGr.default_value, 'text', markdownLines, multiLineStack);
-                break;
-            case 1: // Yes / No
-            case 3: // Multiple Choice
-            case 4: // Numeric Scale
-            case 6: // Single Line Text
-            case 16: // Wide Single Line Text
-            case 18: // Lookup Select Box
-            case 26: // Email
-            case 27: // URL
-            case 28: // IP Address
-            case 29: // Duration
-            case 5: // Select Box
-                context.pushCodeListItem(varGr.default_value, 'text', markdownLines, multiLineStack, true);
-                break;
-            case 23: // HTML
-                if (gs.nil(varGr.default_html_value))
-                    context.pushCodeListItem(varGr.default_value, 'text', markdownLines, multiLineStack, true);
-                else
-                    context.pushCodeListItem(varGr.default_html_value, 'html', markdownLines, multiLineStack, true);
-                break;
-            case 32: // Rich Text Label
-                context.pushCodeListItem(varGr.rich_text, 'html', markdownLines, multiLineStack, true);
-                break;
-            case 19: // Container Start
-            case 20: // Container End
-            case 24: // Container Split
-                break;
-            default:
-                context.pushDisplayValueListItem(varGr.default_value, markdownLines, multiLineStack);
-                break;
-        }
-
-        context.pushDisplayValueListItem(varGr.example_text, markdownLines, multiLineStack);
-        context.pushDisplayValueListItem(varGr.validate_regex, markdownLines, multiLineStack);
-        context.pushDisplayValueListItem(varGr.roles_to_use_also_request_for, markdownLines, multiLineStack);
-        context.pushMultiLineItems(multiLineStack, markdownLines);
-
-        if (listChoices) {
-            var choiceGr = new GlideRecord('question_choice');
-            choiceGr.addQuery('question', varGr.sys_id);
-            choiceGr.addQuery('inactive', false);
-            choiceGr.orderBy('order');
-            choiceGr.query();
-            if (choiceGr.next()) {
-                markdownLines.push('');
-                markdownLines.push('**Choices:**');
-                markdownLines.push('');
-                markdownLines.push('| Label | Value | Sequence |');
-                markdownLines.push('| ----- | ----- | -------- |');
-                do {
-                    markdownLines.push("| " + MarkdownGenerationContext.escapeForTableCellMarkdown(choiceGr.getValue('text')) + " | " + MarkdownGenerationContext.escapeForTableCellMarkdown(choiceGr.getValue('value')) + " | " + choiceGr.getDisplayValue('order') + " |");
-                } while (choiceGr.next());
-            }
-        }
-    }
-
-    /**
-     * @param {(GlideRecord | GlideRecordSecure)} varSetGr - item_option_new_set
-     * @param {string} order
-     * @param {string[]} markdownLines
-     * @param {MarkdownGenerationContext} context
-     */
-    function pushVariableSetDetailMarkdown(varSetGr, order, markdownLines, context) {
-        markdownLines.push('');
-        markdownLines.push("### Variable Set: " + varSetGr.getValue(gs.nil(varSetGr.title) ? 'internal_name' : 'title'));
-        markdownLines.push('');
-
-        markdownLines.push('- **Internal Name:** [' + varSetGr.getValue('internal_name') + '](' + context.mapper.getVarSetUrl(varSetGr, context.getCurrentFolder()) + ')');
-        markdownLines.push('- **Order:** ' + order);
-        /** @type {tyLabeledMultilineStackItem[]} */
-        var multiLineStack = [];
-        context.pushDisplayValueListItem(varSetGr.type, markdownLines, multiLineStack);
-        context.pushListItemIfTrue(varSetGr.display_title, markdownLines);
-        context.pushDisplayValueListItem(varSetGr.layout, markdownLines, multiLineStack);
-        context.pushDisplayValueListItem(varSetGr.description, markdownLines, multiLineStack);
-        context.pushMultiLineItems(multiLineStack, markdownLines);
-    }
-
-    /**
      * @param {(GlideRecord | GlideRecordSecure)} catItemGr - sc_cat_item
      * @param {string[]} markdownLines
      * @param {MarkdownGenerationContext} context
@@ -289,47 +48,7 @@
         }
     }
 
-    /**
-     * @param {string} text
-     * @returns {string}
-     */
-    function decodeCatalogConditions(text) {
-        var re = /^([^^]+(?:\^(?!NQ)[^^]+)*)\^NQ ?/g;
-        var iml = re.test(text);
-        if (iml) {
-            text = text.replace(re, "\n  - $1^EQ\n  - *OR:* ");
-            text = text.replace(/\^NQ ?/g, "^EQ\n  - *OR:* ");
-        }
-        text = text.replace(/\s?ISNOTEMPTY\^EQ/g, ' is not empty');
-        text = text.replace(/\s?ISNOTEMPTY\^\s?/g, ' is not empty **AND** ');
-        text = text.replace(/\s?ISEMPTY\^EQ/g, ' is empty');
-        text = text.replace(/\s?ISEMPTY\^\s?/g, ' is empty **AND** ');
-        text = text.replace(/\s?NOT IN(\w+),(\w+),(\w+),(\w+)\^EQ/g, ' is not one of `$1`, `$2`, `$3`, `$4`');
-        text = text.replace(/\s?NOT IN(\w+),(\w+),(\w+)\^EQ/g, ' is not one of `$1`, `$2`, `$3`');
-        text = text.replace(/\s?NOT IN(\w+),(\w+)\^EQ/g, ' is not one of `$1`, `$2`');
-        text = text.replace(/\s?NOT IN(\w+),(\w+),(\w+),(\w+)\^\s?/g, ' is not one of `$1`, `$2`, `$3`, `$4` **AND** ');
-        text = text.replace(/\s?NOT IN(\w+),(\w+),(\w+)\^\s?/g, ' is not one of `$1`, `$2`, `$3` **AND** ');
-        text = text.replace(/\s?NOT IN(\w+),(\w+)\^\s?/g, ' is not one of `$1`, `$2` **AND** ');
-        text = text.replace(/\s?IN(\w+),(\w+),(\w+),(\w+)\^EQ/g, ' is one of `$1`, `$2`, `$3`, `$4`');
-        text = text.replace(/\s?IN(\w+),(\w+),(\w+)\^EQ/g, ' is one of `$1`, `$2`, `$3`');
-        text = text.replace(/\s?IN(\w+),(\w+)\^EQ/g, ' is one of `$1`, `$2`');
-        text = text.replace(/\s?IN(\w+),(\w+),(\w+),(\w+)\^\s?/g, ' is one of `$1`, `$2`, `$3`, `$4` **AND** ');
-        text = text.replace(/\s?IN(\w+),(\w+),(\w+)\^\s?/g, ' is one of `$1`, `$2`, `$3` **AND** ');
-        text = text.replace(/\s?IN(\w+),(\w+)\^\s?/g, ' is one of `$1`, `$2` **AND** ');
-        text = text.replace(/\s?!=(\w+)\^EQ/g, ' is not `$1`');
-        text = text.replace(/\s?!=(\w+)\^\s?/g, ' is not `$1` **AND** ');
-        text = text.replace(/\s?=(\w+)\^EQ/g, ' is `$1`');
-        text = text.replace(/\s?=(\w+)\^\s?/g, ' is `$1` **AND** ');
-
-        text = text.replace(/\s?!=\^EQ/g, ' is not empty');
-        text = text.replace(/\s?!=\^\s?/g, ' is not empty **AND** ');
-        text = text.replace(/\s?=\^EQ/g, ' is empty');
-        text = text.replace(/\s?=\^\s?/g, ' is empty **AND** ');
-        return iml ? text : ' ' + text;
-    }
-
     var emptyFuncRe = /^[\r\n\s]*function\s+onCondition\s*\(\s*\)[\r\n\s]*\{[\r\n\s]*\}[\r\n\s]*$/g;
-    var idRe = /IO:([a-f\d]{32})/g;
 
     /**
      * @param {string} filterField
@@ -355,35 +74,8 @@
             var multiLineStack = [];
             /** @type {(QuestionItem | undefined)} */
             var item = undefined;
-            if (!gs.nil(policyGr.catalog_conditions)) {
-                var catalog_conditions = policyGr.getValue('catalog_conditions');
-                var match = idRe.exec(catalog_conditions);
-                var decoded = '';
-                var startIndex = 0;
-                var parent_sys_id = varMap.getParentSysID();
-                var current_folder = context.getCurrentFolder();
-                while (match !== null) {
-                    if (match.index > startIndex)
-                        decoded += catalog_conditions.substring(startIndex, match.index);
-                    item = varMap.getVariableBySysId(match[1]);
-                    if (item) {
-                        question_text = item.question_text ? item.question_text : item.name;
-                        if (item.parent_sys_id == parent_sys_id)
-                            decoded += '[' + MarkdownGenerationContext.escapeForMarkdown(question_text) + (item.set_map ? '](#variable-set-' : '](#variable-') + MarkdownGenerationContext.convertToHeadingFragment(question_text) + ')';
-                        else {
-                            var link = (item.parent_type == "variable_set") ? context.mapper.getVarSetUrl(item.parent_sys_id, current_folder) : context.mapper.getCatItemUrl(item.parent_sys_id, current_folder);
-                            decoded += '[' + MarkdownGenerationContext.escapeForMarkdown(question_text) + (item.set_map ? '](' + link + '#variable-set-' : '](' + link + '#variable-') + MarkdownGenerationContext.convertToHeadingFragment(question_text) + ')';
-                        }
-                    }
-                    else
-                        decoded += match[0];
-                    startIndex = idRe.lastIndex;
-                    match = idRe.exec(catalog_conditions);
-                }
-                if (startIndex < catalog_conditions.length)
-                    decoded += catalog_conditions.substring(startIndex);
-                markdownLines.push("- **Catalog conditions:**" + decodeCatalogConditions(decoded.trim()));
-            }
+            if (!gs.nil(policyGr.catalog_conditions))
+                markdownLines.push("- **Catalog conditions:**" + varMap.decodeConditionString(policyGr.getValue('catalog_conditions'), context));
             context.pushListItemIfTrue(policyGr.applies_catalog, markdownLines);
             context.pushListItemIfTrue(policyGr.applies_sc_task, markdownLines);
             context.pushListItemIfTrue(policyGr.applies_req_item, markdownLines);
@@ -405,6 +97,10 @@
                 do {
                     var vn = actionGr.getValue('variable');
                     item = varMap.getVariableByName(vn);
+                    if (!item) {
+                        markdownLines.push('| ' + vn + ' *\\(not found\\)* | Mandatory | Visible | Read only | Order | Value action |');
+                        continue;
+                    }
                     question_text = item.question_text ? item.question_text : item.name;
                     var lineText = "| [" + MarkdownGenerationContext.escapeForTableCellMarkdown(question_text) + ((typeof item !== 'undefined' && item.set_map) ? "](#variable-set-" : "](#variable-") + MarkdownGenerationContext.convertToHeadingFragment(question_text) + ") | ";
                     switch (actionGr.getValue('mandatory')) {
@@ -544,10 +240,9 @@
         var multiLineStack = [];
         context.pushTableReferenceListItem(catItemGr.table_name, markdownLines);
         context.pushDisplayValueListItem(catItemGr.short_description, markdownLines, multiLineStack);
-        context.pushCodeListItem(catItemGr.description, 'html', markdownLines, multiLineStack);
+        context.pushCodeBlockListItem(catItemGr.description, 'html', multiLineStack);
         context.pushDisplayValueListItem(catItemGr.meta, markdownLines, multiLineStack);
         context.pushDisplayValueListItem(catItemGr.redirect_url, markdownLines, multiLineStack);
-        context.pushCodeListItem(catItemGr.script, 'javascript', markdownLines, multiLineStack);
         context.pushImageListItem(catItemGr.icon, markdownLines);
         context.pushImageListItem(catItemGr.picture, markdownLines);
         context.pushDisplayValueListItem(catItemGr.sc_catalogs, markdownLines, multiLineStack);
@@ -568,6 +263,8 @@
         /** @type {VariableMap} */
         var varMap = new VariableMap(catItemGr);
         varMap.pushVariablesSectionMarkdown(context, markdownLines);
+
+        context.pushClodeBlock(catItemGr.script, 'javascript', markdownLines, 2);
 
         pushAvailabilitySection(catItemGr, markdownLines, context);
         pushCatalogUiPoliciesSection('catalog_item', catItemGr.getUniqueValue(), varMap, markdownLines, context);
@@ -595,7 +292,7 @@
         /** @type {tyLabeledMultilineStackItem[]} */
         var multiLineStack = [];
         context.pushDisplayValueListItem(catItemGr.short_description, markdownLines, multiLineStack);
-        context.pushCodeListItem(catItemGr.description, 'html', markdownLines, multiLineStack);
+        context.pushCodeBlockListItem(catItemGr.description, 'html', multiLineStack);
         context.pushDisplayValueListItem(catItemGr.sc_catalogs, markdownLines, multiLineStack);
         context.pushDisplayValueListItem(catItemGr.category, markdownLines, multiLineStack);
         context.pushValueListItem(catItemGr.roles, markdownLines, multiLineStack);
@@ -728,13 +425,13 @@
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-06-04 22:14:00</sys_created_on>
         <sys_id>a5d11d9d1b19cf50c798a97ae54bcb5d</sys_id>
-        <sys_mod_count>69</sys_mod_count>
+        <sys_mod_count>74</sys_mod_count>
         <sys_name>ServiceCatalogMarkdownGenerator</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_a5d11d9d1b19cf50c798a97ae54bcb5d</sys_update_name>
         <sys_updated_by>lerwine</sys_updated_by>
-        <sys_updated_on>2026-09-10 04:13:32</sys_updated_on>
+        <sys_updated_on>2026-09-12 03:21:24</sys_updated_on>
     </sys_script_include>
 </record_update>

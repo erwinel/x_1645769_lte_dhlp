@@ -11,14 +11,14 @@
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-06-26 22:24:40</sys_created_on>
         <sys_id>743acf1487314b104d9a0f28cebb35ef</sys_id>
-        <sys_mod_count>5</sys_mod_count>
+        <sys_mod_count>6</sys_mod_count>
         <sys_name>x_1645769_lte_dhlp.cat_item_md_mappings</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy/>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_properties_743acf1487314b104d9a0f28cebb35ef</sys_update_name>
         <sys_updated_by>lerwine</sys_updated_by>
-        <sys_updated_on>2026-09-11 22:46:01</sys_updated_on>
+        <sys_updated_on>2026-09-12 03:04:24</sys_updated_on>
         <type>string</type>
         <value>[&#13;
     {&#13;
@@ -440,6 +440,12 @@
         "sys_id": "0e04b7fb872883d04d9a0f28cebb3586",&#13;
         "folder": "service-catalog",&#13;
         "file_link": "ServiceNow-Feature-Enhancement-Catalog-Item.md"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Can't Find What You're Looking For?",&#13;
+        "sys_id": "fddd25181b6e5810edce10ad9c4bcb40",&#13;
+        "folder": "service-catalog",&#13;
+        "file_link": "Cant-Find-What-Youre-Looking-For-Catalog-Item.md"&#13;
     }&#13;
 ]</value>
         <write_roles>x_1645769_lte_dhlp.admin</write_roles>

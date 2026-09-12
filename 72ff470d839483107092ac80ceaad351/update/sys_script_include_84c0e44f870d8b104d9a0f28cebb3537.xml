@@ -43,42 +43,6 @@ var MarkdownGenerationContext = (function () {
     MarkdownGenerationContextConstructor.getInstanceUrl = getInstanceUrl;
     
     /**
-     * @param {string} pathFrom
-     * @param {string} pathTo
-     * @returns {string}
-     */
-    function convertToRelativePath(pathFrom, pathTo) {
-        var fromElements = pathFrom.split('/').filter(function (e) {
-            return e.length > 0;
-        });
-        var toElements = pathTo.split('/').filter(function (e) {
-            return e.length > 0;
-        });
-        if (fromElements.length == 0) return toElements.join('/');
-        if (toElements.length == 0) {
-            fromElements.forEach(function (elt, idx, arr) {
-                arr[idx] = '..';
-            });
-            return fromElements.join('/');
-        }
-        while (fromElements[0] == toElements[0]) {
-            fromElements.shift();
-            toElements.shift();
-            if (fromElements.length == 0) return toElements.join('/');
-            if (toElements.length == 0) {
-                fromElements.forEach(function (elt, idx, arr) {
-                    arr[idx] = '..';
-                });
-                return fromElements.join('/');
-            }
-        }
-        fromElements.forEach(function (elt, idx, arr) {
-            arr[idx] = '..';
-        });
-        return fromElements.concat(toElements).join('/');
-    }
-
-    /**
      * @param {string} text
      * @returns {string}
      */
@@ -312,6 +276,7 @@ var MarkdownGenerationContext = (function () {
             tableElement,
             fieldElement,
             markdownLines,
+            current_table,
             showEmpty
         ) {
             if (gs.nil(fieldElement)) {
@@ -321,7 +286,17 @@ var MarkdownGenerationContext = (function () {
                             escapeForMarkdown(fieldElement.getLabel()) +
                             ':** *Empty*'
                     );
-            } else
+            } else if (('' + tableElement) == current_table)
+                markdownLines.push(
+                    '- **' +
+                        escapeForMarkdown(fieldElement.getLabel()) +
+                        ':** ' +
+                        this.mapper.getColumnFragment(
+                            tableElement,
+                            fieldElement
+                        )
+                );
+            else
                 markdownLines.push(
                     '- **' +
                         escapeForMarkdown(fieldElement.getLabel()) +
@@ -468,6 +443,41 @@ var MarkdownGenerationContext = (function () {
             }
         },
 
+        pushClodeBlock: function(glideElement, language, markdownLines, headingLevel) {
+            if (gs.nil(glideElement))
+                return;
+            if (headingLevel && headingLevel > 0) {
+                var h = '#';
+                for (var i = 1; i < headingLevel; i++)
+                    h += '#';
+                markdownLines.push(
+                    '',
+                    h + ' ' + escapeForMarkdown(glideElement.getLabel()),
+                    '',
+                    '```' + language,
+                    glideElement.getValue(),
+                    '```'
+                );
+            } else
+                markdownLines.push(
+                    '',
+                    '**' + escapeForMarkdown(glideElement.getLabel())  + ':**',
+                    '',
+                    '```' + language,
+                    glideElement.getValue(),
+                    '```'
+                );
+        },
+
+        pushCodeBlockListItem: function(glideElement, language, multiLineStack) {
+            if (!gs.nil(glideElement))
+                multiLineStack.push({
+                    label: glideElement.getLabel(),
+                    language: language,
+                    value: glideElement.getValue(),
+                });
+        },
+
         pushCodeListItem: function (
             glideElement,
             language,
@@ -571,10 +581,8 @@ var MarkdownGenerationContext = (function () {
             } else {
                 var attachmentGr = new GlideRecord('sys_attachment');
                 if (attachmentGr.get(glideElement.getValue())) {
-                    var remoteFileName = gs.nil(attachmentGr.file_name)
-                        ? glideElement.getDisplayValue()
-                        : attachmentGr.getValue('file_name');
-                    var fileName = remoteFileName;
+                    var remoteFileName = glideElement.getDisplayValue();
+                    var fileName = gs.nil(attachmentGr.file_name) ? remoteFileName : attachmentGr.getValue('file_name');
                     var content_type = attachmentGr.getValue('content_type');
                     var m, e;
                     switch (content_type) {
@@ -629,7 +637,7 @@ var MarkdownGenerationContext = (function () {
                 var mi = multiLineStack[i];
                 markdownLines.push(
                     '',
-                    '**' + mi.label + ':**',
+                    '**' + escapeForMarkdown(mi.label) + ':**',
                     '',
                     '```' + mi.language,
                     mi.value,
@@ -648,13 +656,13 @@ var MarkdownGenerationContext = (function () {
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-05-28 16:21:34</sys_created_on>
         <sys_id>84c0e44f870d8b104d9a0f28cebb3537</sys_id>
-        <sys_mod_count>19</sys_mod_count>
+        <sys_mod_count>27</sys_mod_count>
         <sys_name>MarkdownGenerationContext</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_84c0e44f870d8b104d9a0f28cebb3537</sys_update_name>
         <sys_updated_by>lerwine</sys_updated_by>
-        <sys_updated_on>2026-09-11 22:49:06</sys_updated_on>
+        <sys_updated_on>2026-09-12 04:24:26</sys_updated_on>
     </sys_script_include>
 </record_update>
