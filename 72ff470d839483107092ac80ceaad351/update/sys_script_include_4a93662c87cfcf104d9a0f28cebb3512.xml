@@ -14,7 +14,7 @@
 
     var idRe = /IO:([a-f\d]{32})/g;
     var encodedRe = /^([^^]+(?:\^(?!NQ)[^^]+)*)\^NQ ?/g;
-    
+
     VariableMapConstructor.prototype = {
         _parent_sys_id: '',
 
@@ -129,9 +129,11 @@
 
         /**
          * @param {MarkdownGenerationContext} context
+         * @param {UIPolicyInfo[]} uiPolicies
+         * @param {ClientScriptInfo[]} clientScripts
          * @param {string[]} markdownLines
          */
-        pushVariablesSectionMarkdown: function(context, markdownLines) {
+        pushVariablesSectionMarkdown: function(context, uiPolicies, clientScripts, markdownLines) {
             if (this._allVariables.length < 1)
                 return;
 
@@ -144,48 +146,62 @@
                     '',
                     '## Variables',
                     '',
-                    '| Type | Question | Field | Order |',
-                    '| ---- | -------- | ----- | ----- |'
+                    '| Type | Question | Name | Field | Order |',
+                    '| ---- | -------- | ---- | ----- | ----- |'
                 );
                 for (i = 0; i < this._allVariables.length; i++) {
                     item = this._allVariables[i];
                     type = item.type_label;
                     question_text = item.question_text ? item.question_text : item.name;
-                    linkTxt = '[' + MarkdownGenerationContext.escapeForTableCellMarkdown(question_text) + (item.set_map ? '](#variable-set-' : '](#variable-') + MarkdownGenerationContext.convertToHeadingFragment(question_text) + ')';
-                    if (!item.set_map)
+                    if (item.set_map)
+                        linkTxt = '[' + question_text + '](#variable-set-' + MarkdownGenerationContext.convertToHeadingFragment(question_text) + ')';
+                    else
                         switch (item.type_value) {
                             case 19: // Container Start
-                            case 24: // Container Split
-                            case 20: // Container End
-                                linkTxt = '*' + linkTxt + '*';
+                                linkTxt = '*[' + question_text + '](#variable-' + MarkdownGenerationContext.convertToHeadingFragment(question_text) + ')*';
                                 type = '*\\(' + type + '\\)*';
                                 break;
+                            case 24: // Container Split
+                            case 20: // Container End
+                                linkTxt = '*[' + question_text + '](#variable-' + MarkdownGenerationContext.convertToHeadingFragment(item.name) + ')*';
+                                type = '*\\(' + type + '\\)*';
+                                break;
+                            default:
+                                linkTxt = '[' + question_text + '](#variable-' + MarkdownGenerationContext.convertToHeadingFragment(question_text) + ')';
+                                break;
                         }
-                    markdownLines.push('| ' + type + ' | ' + linkTxt + ' | ' + (item.field ? item.field.display_value + ' | ' : '| ') + item.order.display_value + ' |');
+                    markdownLines.push('| ' + type + ' | ' + linkTxt + ' | `' + item.name + '` | ' + (item.field ? item.field.display_value + ' | ' : '| ') + item.order.display_value + ' |');
                 }
             } else {
                 markdownLines.push(
                     '',
                     '## Variables',
                     '',
-                    '| Type | Question | Order |',
-                    '| ---- | -------- | ----- |'
+                    '| Type | Question | Name | Order |',
+                    '| ---- | -------- | ---- | ----- |'
                 );
                 for (i = 0; i < this._allVariables.length; i++) {
                     item = this._allVariables[i];
                     type = item.type_label;
                     question_text = item.question_text ? item.question_text : item.name;
-                    linkTxt = '[' + MarkdownGenerationContext.escapeForTableCellMarkdown(question_text) + (item.set_map ? '](#variable-set-' : '](#variable-') + MarkdownGenerationContext.convertToHeadingFragment(question_text) + ')';
-                    if (!item.set_map)
+                    if (item.set_map)
+                        linkTxt = '[' + question_text + '](#variable-set-' + MarkdownGenerationContext.convertToHeadingFragment(question_text) + ')';
+                    else
                         switch (item.type_value) {
                             case 19: // Container Start
-                            case 24: // Container Split
-                            case 20: // Container End
-                            linkTxt = '*' + linkTxt + '*';
+                                linkTxt = '*[' + question_text + '](#variable-' + MarkdownGenerationContext.convertToHeadingFragment(question_text) + ')*';
                                 type = '*\\(' + type + '\\)*';
                                 break;
+                            case 24: // Container Split
+                            case 20: // Container End
+                                linkTxt = '*[' + question_text + '](#variable-' + MarkdownGenerationContext.convertToHeadingFragment(item.name) + ')*';
+                                type = '*\\(' + type + '\\)*';
+                                break;
+                            default:
+                                linkTxt = '[' + question_text + '](#variable-' + MarkdownGenerationContext.convertToHeadingFragment(question_text) + ')';
+                                break;
                         }
-                    markdownLines.push('| ' + type + ' | ' + linkTxt + ' | ' + item.order.display_value + ' |');
+                    markdownLines.push('| ' + type + ' | ' + linkTxt + ' | `' + item.name + '` | ' + item.order.display_value + ' |');
                 }
             }
             for (i = 0; i < this._allVariables.length; i++) {
@@ -210,7 +226,7 @@
                     variableGr.get(item.sys_id);
                     question_text = variableGr.getValue(gs.nil(variableGr.question_text) ? 'name' : 'question_text');
                     markdownLines.push('');
-                    markdownLines.push("### Variable: " + MarkdownGenerationContext.escapeForMarkdown(question_text));
+                    markdownLines.push("### Variable: " + MarkdownGenerationContext.minimalEscapeForMarkdown(question_text));
                     markdownLines.push('');
 
                     if (variableGr.getDisplayValue('map_to_field') == 'true') {
@@ -420,6 +436,95 @@
                             } while (choiceGr.next());
                         }
                     }
+
+                    var n;
+                    /** @type {({ action: UIPolicyActionInfo; policy: UIPolicyInfo; }[])} */
+                    var policiesForThisVar = [];
+                    for (n = 0; n < uiPolicies.length; n++) {
+                        var policy = uiPolicies[n];
+                        for (var p = 0; p < policy.actions.length; p++) {
+                            var a = policy.actions[p];
+                            if (a.variable == item.name)
+                                policiesForThisVar.push({
+                                    action: a,
+                                    policy: policy
+                                });
+                        }
+                    }
+                    if (policiesForThisVar.length > 0) {
+                        markdownLines.push(
+                            '',
+                            '**UI Policies:**',
+                            '',
+                            '| Applies on catalog items | Applies to catalog tasks | Applies to requested items | Mandatory | Visible | Hidden | Value action | Policy |',
+                            '| ------------------------ | ------------------------ | -------------------------- | --------- | ------- | ------ | ------------ | ------ |'
+                        );
+                        if (policiesForThisVar.length > 1)
+                            policiesForThisVar.sort(function(a, b) {
+                                if (a.action.order) {
+                                    if (!b.action.order)
+                                        return 1;
+                                    return a.action.order.value - b.action.order;
+                                }
+                                return b.action.order ? -1 : 0;
+                            });
+                        for (n = 0; n < policiesForThisVar.length; n++) {
+                            var pa = policiesForThisVar[n];
+                            markdownLines.push('| ' + (pa.policy.applies_catalog ? 'True' : 'False') + ' | ' + (pa.policy.applies_sc_task ? 'True' : 'False') + ' | ' + (pa.policy.applies_req_item ? 'True' : 'False') +
+                                ' | ' + pa.action.mandatory + ' | ' + pa.action.visible + ' | ' + pa.action.disabled + ' | ' + pa.action.value_action +
+                                ' | [' + pa.policy.short_description + '](#' + pa.policy.fragment + ') |');
+                        }
+                    }
+                    var scriptsForThisVar = clientScripts.filter(
+                        /**
+                         * @param {ClientScriptInfo} cs 
+                         * @this {QuestionItem}
+                         */
+                        function(cs, index) {
+                            return typeof cs.calls !== 'undefined' && typeof cs.calls[this.name] !== 'undefined';
+                        }, item
+                    );
+                    /** @type {ClientScriptInfo} */
+                    var scr;
+                    if (scriptsForThisVar.length > 0) {
+                        markdownLines.push(
+                            '',
+                            '**Affected by:**',
+                            '',
+                            '| Catalog Client Script | setValue | clearValue | setDisplay | setMandatory | setReadOnly |',
+                            '| --------------------- | -------- | ---------- | ---------- | ------------ | ----------- |'
+                        );
+                        for (n = 0; n < scriptsForThisVar.length; n++) {
+                            scr = scriptsForThisVar[n];
+                            /** @type {string[]} */
+                            arr = scr.calls[item.name];
+                            markdownLines.push('| [' + scr.name + '](#' + scr.fragment + ') | ' + ((arr.indexOf('setValue') < 0) ? 'False' : 'True') + ' | ' + ((arr.indexOf('clearValue') < 0) ? 'False' : 'True') + ' | ' +
+                                ((arr.indexOf('setDisplay') < 0) ? 'False' : 'True') + ' | ' + ((arr.indexOf('setMandatory') < 0) ? 'False' : 'True') + ' | ' + ((arr.indexOf('setReadOnly') < 0) ? 'False' : 'True') + ' |');
+                        }
+                    }
+                    scriptsForThisVar = clientScripts.filter(
+                        /**
+                         * @param {ClientScriptInfo} cs 
+                         * @this {QuestionItem}
+                         */
+                        function(cs) {
+                            return cs.variable == this.name;
+                        }, item
+                    );
+                    if (scriptsForThisVar.length > 0) {
+                        markdownLines.push(
+                            '',
+                            '**Catalog Client Scripts:**',
+                            '',
+                            '| Catalog Client Script | Applies on catalog items | Applies to catalog tasks | Applies to requested items |',
+                            '| --------------------- | ------------------------ | ------------------------ | -------------------------- |'
+                        );
+                        for (n = 0; n < scriptsForThisVar.length; n++) {
+                            scr = scriptsForThisVar[n];
+                            markdownLines.push('| [' + scr.name + '](#' + scr.fragment + ') | ' + (scr.applies_catalog ? 'True' : 'False') + ' | ' + (scr.applies_sc_task ? 'True' : 'False') + ' | ' + (scr.applies_req_item ? 'True' : 'False') +
+                                ' |');
+                        }
+                    }
                 }
             }
         },
@@ -434,7 +539,7 @@
                 conditionString = '' + conditionString;
             if (conditionString == '')
                 return '';
-            
+
             var current_folder = context.getCurrentFolder();
             var match = idRe.exec(conditionString);
             var decoded = '';
@@ -451,8 +556,7 @@
                         var link = (item.parent_type == "variable_set") ? context.mapper.getVarSetUrl(item.parent_sys_id, current_folder) : context.mapper.getCatItemUrl(item.parent_sys_id, current_folder);
                         decoded += '[' + MarkdownGenerationContext.escapeForMarkdown(question_text) + (item.set_map ? '](' + link + '#variable-set-' : '](' + link + '#variable-') + MarkdownGenerationContext.convertToHeadingFragment(question_text) + ')';
                     }
-                }
-                else
+                } else
                     decoded += match[0];
                 startIndex = idRe.lastIndex;
                 match = idRe.exec(conditionString);
@@ -460,7 +564,7 @@
             if (startIndex < conditionString.length)
                 decoded += conditionString.substring(startIndex);
             decoded = decoded.trim();
-            
+
             var iml = encodedRe.test(decoded);
             if (iml) {
                 decoded = decoded.replace(encodedRe, "\n  - $1^EQ\n  - *OR:* ");
@@ -636,21 +740,21 @@
             var container_name = '';
             for (var i = 0; i < this._allVariables.length; i++) {
                 item = this._allVariables[i];
-                    switch (item.type_value) {
-                        case 19: // Container Start
-                            container_name = item.question_text;
-                            break;
-                        case 24: // Container Split
-                            if (container_name)
-                                item.question_text = container_name;
-                            break;
-                        case 20: // Container End
-                            if (container_name) {
-                                item.question_text = container_name;
-                                container_name = '';
-                            }
-                            break;
-                    }
+                switch (item.type_value) {
+                    case 19: // Container Start
+                        container_name = item.question_text;
+                        break;
+                    case 24: // Container Split
+                        if (container_name)
+                            item.question_text = container_name;
+                        break;
+                    case 20: // Container End
+                        if (container_name) {
+                            item.question_text = container_name;
+                            container_name = '';
+                        }
+                        break;
+                }
             }
         },
 
@@ -658,18 +762,19 @@
     };
 
     return VariableMapConstructor;
-})();]]></script>
+})();
+]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>lerwine</sys_created_by>
         <sys_created_on>2026-08-28 19:53:39</sys_created_on>
         <sys_id>4a93662c87cfcf104d9a0f28cebb3512</sys_id>
-        <sys_mod_count>29</sys_mod_count>
+        <sys_mod_count>45</sys_mod_count>
         <sys_name>VariableMap</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_4a93662c87cfcf104d9a0f28cebb3512</sys_update_name>
         <sys_updated_by>lerwine</sys_updated_by>
-        <sys_updated_on>2026-09-12 04:20:28</sys_updated_on>
+        <sys_updated_on>2026-09-22 03:56:38</sys_updated_on>
     </sys_script_include>
 </record_update>

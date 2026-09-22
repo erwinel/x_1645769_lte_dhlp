@@ -106,7 +106,6 @@ var MarkdownGenerationContext = (function () {
 
     /**
      * @param {string} text
-     * @param {boolean} [isTableCellContent]
      * @returns {string}
      */
     function minimalEscapeForTableCellMarkdown(text) {
@@ -122,7 +121,6 @@ var MarkdownGenerationContext = (function () {
 
     /**
      * @param {string} text
-     * @param {boolean} [isTableCellContent]
      * @returns {string}
      */
     function escapeForMarkdownStartOfLine(text) {
@@ -158,7 +156,6 @@ var MarkdownGenerationContext = (function () {
 
     /**
      * @param {string} text
-     * @param {boolean} [isTableCellContent]
      * @returns {string}
      */
     function convertToHeadingFragment(text) {
@@ -542,32 +539,27 @@ var MarkdownGenerationContext = (function () {
         },
 
         pushListItemIfTrue: function (glideElement, markdownLines) {
-            if (
-                !gs.nil(glideElement) &&
-                glideElement.getDisplayValue() == 'true'
-            )
+            if (!gs.nil(glideElement)) {
+                if (glideElement.getDisplayValue() != 'true')
+                    return false;
                 markdownLines.push(
                     '- **' +
                         escapeForMarkdown(glideElement.getLabel()) +
                         ':** True'
                 );
+                return true;
+            }
         },
 
-        pushListItemIfFalse: function (
-            glideElement,
-            markdownLines,
-            nilIsFalse
-        ) {
-            if (
-                gs.nil(glideElement)
-                    ? nilIsFalse
-                    : glideElement.getDisplayValue() == 'false'
-            )
-                markdownLines.push(
-                    '- **' +
-                        escapeForMarkdown(glideElement.getLabel()) +
-                        ':** False'
-                );
+        pushListItemIfFalse: function (glideElement, markdownLines, nilIsFalse) {
+            if (!gs.nil(glideElement)) {
+                if (glideElement.getDisplayValue() == 'true')
+                    return true;
+                markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** False');
+                return false;
+            }
+            if (nilIsFalse)
+                markdownLines.push('- **' + escapeForMarkdown(glideElement.getLabel()) + ':** False');
         },
 
         pushImageListItem: function (glideElement, markdownLines, showEmpty) {
@@ -650,19 +642,18 @@ var MarkdownGenerationContext = (function () {
     };
 
     return MarkdownGenerationContextConstructor;
-})();
-]]></script>
+})();]]></script>
         <sys_class_name>sys_script_include</sys_class_name>
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-05-28 16:21:34</sys_created_on>
         <sys_id>84c0e44f870d8b104d9a0f28cebb3537</sys_id>
-        <sys_mod_count>27</sys_mod_count>
+        <sys_mod_count>30</sys_mod_count>
         <sys_name>MarkdownGenerationContext</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_84c0e44f870d8b104d9a0f28cebb3537</sys_update_name>
         <sys_updated_by>lerwine</sys_updated_by>
-        <sys_updated_on>2026-09-12 04:24:26</sys_updated_on>
+        <sys_updated_on>2026-09-16 01:59:14</sys_updated_on>
     </sys_script_include>
 </record_update>

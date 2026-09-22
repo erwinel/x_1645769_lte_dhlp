@@ -11,14 +11,14 @@
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-06-26 22:25:52</sys_created_on>
         <sys_id>ad8a4b5487314b104d9a0f28cebb354e</sys_id>
-        <sys_mod_count>6</sys_mod_count>
+        <sys_mod_count>8</sys_mod_count>
         <sys_name>x_1645769_lte_dhlp.table_md_mappings</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy/>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_properties_ad8a4b5487314b104d9a0f28cebb354e</sys_update_name>
         <sys_updated_by>lerwine</sys_updated_by>
-        <sys_updated_on>2026-09-12 01:47:37</sys_updated_on>
+        <sys_updated_on>2026-09-14 19:31:08</sys_updated_on>
         <type>string</type>
         <value>[&#13;
     {&#13;
@@ -83,13 +83,6 @@
         "sys_id": "7c616ef81b4afe50c798a97ae54bcbb0",&#13;
         "folder": "custom-applications/access_mgt",&#13;
         "file_link": "Privileged-Access-Type-Table.md"&#13;
-    },&#13;
-    {&#13;
-        "name": "x_g_doj_access_mgt_account_access_change",&#13;
-        "display_name": "Account Access Change",&#13;
-        "sys_id": "c030a77987c30f104d9a0f28cebb3584",&#13;
-        "folder": "custom-applications/access_mgt",&#13;
-        "file_link": "Account-Access-Change-Table.md"&#13;
     },&#13;
     {&#13;
         "name": "x_g_doj_access_mgt_scheduled_access_change",&#13;
@@ -181,76 +174,6 @@
         "sys_id": "69acb584db300010df0bf81d0f9619d0",&#13;
         "folder": "custom-applications/servicenow_tables",&#13;
         "file_link": "Task-Table.md"&#13;
-    },&#13;
-    {&#13;
-        "display_name": "Test Account Privileged Access",&#13;
-        "name": "x_g_doj_access_mgt_m2m_test_account_privileged_access",&#13;
-        "sys_id": "48272ff41b97c350d7faeca8624bcb9c",&#13;
-        "folder": "custom-applications/access_mgt",&#13;
-        "file_link": "Test-Account-Privileged-Access-Table.md"&#13;
-    },&#13;
-    {&#13;
-        "display_name": "Change Request",&#13;
-        "name": "change_request",&#13;
-        "sys_id": "c0044a04dbf00010df0bf81d0f96196b",&#13;
-        "folder": "custom-applications/servicenow_tables",&#13;
-        "file_link": "Change-Request-Table.md"&#13;
-    },&#13;
-    {&#13;
-        "display_name": "Catalog Task",&#13;
-        "name": "sc_task",&#13;
-        "sys_id": "c1060e88dbf00010df0bf81d0f961980",&#13;
-        "folder": "custom-applications/servicenow_tables",&#13;
-        "file_link": "Catalog-Task-Table.md"&#13;
-    },&#13;
-    {&#13;
-        "display_name": "Knowledge",&#13;
-        "name": "kb_knowledge",&#13;
-        "sys_id": "a0a54e48dbf00010df0bf81d0f96194d",&#13;
-        "folder": "custom-applications/servicenow_tables",&#13;
-        "file_link": "Knowledge-Table.md"&#13;
-    },&#13;
-    {&#13;
-        "display_name": "Knowledge Base",&#13;
-        "name": "kb_knowledge_base",&#13;
-        "sys_id": "95a54e48dbf00010df0bf81d0f9619c1",&#13;
-        "folder": "custom-applications/servicenow_tables",&#13;
-        "file_link": "Knowledge-Base-Table.md"&#13;
-    },&#13;
-    {&#13;
-        "display_name": "Order Guide",&#13;
-        "name": "sc_cat_item_guide",&#13;
-        "sys_id": "96064e88dbf00010df0bf81d0f96197e",&#13;
-        "folder": "custom-applications/servicenow_tables",&#13;
-        "file_link": "Order-Guide-Table.md"&#13;
-    },&#13;
-    {&#13;
-        "display_name": "Record Producer",&#13;
-        "name": "sc_cat_item_producer",&#13;
-        "sys_id": "61f54a88dbf00010df0bf81d0f961972",&#13;
-        "folder": "custom-applications/servicenow_tables",&#13;
-        "file_link": "Record-Producer-Table.md"&#13;
-    },&#13;
-    {&#13;
-        "display_name": "Content Item",&#13;
-        "name": "sc_cat_item_content",&#13;
-        "sys_id": "37068e88dbf00010df0bf81d0f96198a",&#13;
-        "folder": "custom-applications/servicenow_tables",&#13;
-        "file_link": "Content-Item-Table.md"&#13;
-    },&#13;
-    {&#13;
-        "display_name": "User Criteria",&#13;
-        "name": "user_criteria",&#13;
-        "sys_id": "6e95ca48dbf00010df0bf81d0f9619d1",&#13;
-        "folder": "custom-applications/servicenow_tables",&#13;
-        "file_link": "User-Criteria-Table.md"&#13;
-    },&#13;
-    {&#13;
-        "display_name": "Incident",&#13;
-        "name": "incident",&#13;
-        "sys_id": "71f3c604dbf00010df0bf81d0f9619f3",&#13;
-        "folder": "custom-applications/servicenow_tables",&#13;
-        "file_link": "Incident-Table.md"&#13;
     }&#13;
 ]</value>
         <write_roles>x_1645769_lte_dhlp.admin</write_roles>
