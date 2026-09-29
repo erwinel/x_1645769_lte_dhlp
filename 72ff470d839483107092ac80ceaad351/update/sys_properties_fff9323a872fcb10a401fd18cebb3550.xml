@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_properties">
+    <sys_properties action="INSERT_OR_UPDATE">
+        <choices/>
+        <description/>
+        <ignore_cache>true</ignore_cache>
+        <is_private>false</is_private>
+        <name>x_1645769_lte_dhlp.other_md_mappings</name>
+        <read_roles/>
+        <suffix>other_md_mappings</suffix>
+        <sys_class_name>sys_properties</sys_class_name>
+        <sys_created_by>lerwine</sys_created_by>
+        <sys_created_on>2026-09-29 15:48:33</sys_created_on>
+        <sys_id>fff9323a872fcb10a401fd18cebb3550</sys_id>
+        <sys_mod_count>1</sys_mod_count>
+        <sys_name>x_1645769_lte_dhlp.other_md_mappings</sys_name>
+        <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
+        <sys_policy/>
+        <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
+        <sys_update_name>sys_properties_fff9323a872fcb10a401fd18cebb3550</sys_update_name>
+        <sys_updated_by>lerwine</sys_updated_by>
+        <sys_updated_on>2026-09-29 16:14:08</sys_updated_on>
+        <type>string</type>
+        <value>[&#13;
+    {&#13;
+        "display_name": "POMS Access Management Requestors",&#13;
+        "class_name": "user_criteria",&#13;
+        "sys_id": "54a8850e8767ba104d9a0f28cebb3591",&#13;
+        "folder": "custom-applications/access_mgt",&#13;
+        "file_link": "README.md#user-criteria-poms-access-management-requestors"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "POMS Access Management Fulfillers",&#13;
+        "class_name": "user_criteria",&#13;
+        "sys_id": "54a8850e8767ba104d9a0f28cebb3591",&#13;
+        "folder": "custom-applications/access_mgt",&#13;
+        "file_link": "README.md#user-criteria-poms-access-management-fulfillers"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "POMS Access Managers",&#13;
+        "class_name": "user_criteria",&#13;
+        "sys_id": "54a8850e8767ba104d9a0f28cebb3591",&#13;
+        "folder": "custom-applications/access_mgt",&#13;
+        "file_link": "README.md#user-criteria-poms-access-managers"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Any User",&#13;
+        "class_name": "user_criteria",&#13;
+        "sys_id": "fb1166d64fff0200086eeed18110c7ab",&#13;
+        "folder": "servicenow-platform-reference",&#13;
+        "file_link": "User-Criteria.md#any-user"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Any user for KB",&#13;
+        "class_name": "user_criteria",&#13;
+        "sys_id": "0f8d9007b58b8110f8779c9460b51456",&#13;
+        "folder": "servicenow-platform-reference",&#13;
+        "file_link": "User-Criteria.md#any-user-for-kb"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Incident Fulfillers",&#13;
+        "class_name": "user_criteria",&#13;
+        "sys_id": "36ceb72bebb23010e0ef83c45e5228e9",&#13;
+        "folder": "servicenow-platform-reference",&#13;
+        "file_link": "User-Criteria.md#incident-fulfillers"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "ITIL non-admin",&#13;
+        "class_name": "user_criteria",&#13;
+        "sys_id": "685feaf1edc01110f877faea558f6907",&#13;
+        "folder": "servicenow-platform-reference",&#13;
+        "file_link": "User-Criteria.md#itil-non-admin"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "SNC External",&#13;
+        "class_name": "user_criteria",&#13;
+        "sys_id": "66c1b50e730333009508738234f6a7c9",&#13;
+        "folder": "servicenow-platform-reference",&#13;
+        "file_link": "User-Criteria.md#snc-external"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Users with 'Admin' Role",&#13;
+        "class_name": "user_criteria",&#13;
+        "sys_id": "cb8e06e9d7103100f2d224837e610339",&#13;
+        "folder": "servicenow-platform-reference",&#13;
+        "file_link": "User-Criteria.md#users-with-admin-role"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Users with 'itil' role",&#13;
+        "class_name": "user_criteria",&#13;
+        "sys_id": "2f137fb2eb303010e0ef83c45e52287c",&#13;
+        "folder": "servicenow-platform-reference",&#13;
+        "file_link": "User-Criteria.md#users-with-itil-role"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Users with 'knowledge' role",&#13;
+        "class_name": "user_criteria",&#13;
+        "sys_id": "ebb789d3ff4131003f07ffffffffff3f",&#13;
+        "folder": "servicenow-platform-reference",&#13;
+        "file_link": "User-Criteria.md#users-with-knowledge-role"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Users with 'knowledge' role for KB",&#13;
+        "class_name": "user_criteria",&#13;
+        "sys_id": "fd8f94c3b58b8110f8779c9460b514ce",&#13;
+        "folder": "servicenow-platform-reference",&#13;
+        "file_link": "User-Criteria.md#users-with-knowledge-role-for-kb"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Users with 'cmdb_read' Role",&#13;
+        "class_name": "user_criteria",&#13;
+        "sys_id": "e9a3e55c7361230039517a5454f6a7c7",&#13;
+        "folder": "servicenow-platform-reference",&#13;
+        "file_link": "User-Criteria.md#users-with-cmdb_read-role"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Available for user with 'itil' role",&#13;
+        "class_name": "user_criteria",&#13;
+        "sys_id": "d09365571b5a14109a872f41f54bcb8a",&#13;
+        "folder": "",&#13;
+        "file_link": "Customizations.md#user-criteria-available-for-user-with-itil-role"&#13;
+    },&#13;
+    {&#13;
+        "display_name": "Non-UAR Users",&#13;
+        "class_name": "user_criteria",&#13;
+        "sys_id": "f0b283771be003d0c798a97ae54bcb3e",&#13;
+        "folder": "",&#13;
+        "file_link": "Customizations.md#user-criteria-non-uar-users"&#13;
+    }&#13;
+]</value>
+        <write_roles/>
+    </sys_properties>
+    <sys_translated_text action="delete_multiple" query="documentkey=fff9323a872fcb10a401fd18cebb3550"/>
+</record_update>
