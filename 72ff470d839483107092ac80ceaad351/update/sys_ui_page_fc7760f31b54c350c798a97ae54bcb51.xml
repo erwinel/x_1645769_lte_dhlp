@@ -10,25 +10,18 @@
 		try {
 			var result = JSON.parse(answer);
 			if (result.success) {
-				$('markdown_text').textContent = "Success: Downloading " + result.file_name;
+				$('response_message').textContent = "Success: Downloading " + result.file_name;
 				var downloadUrl = '/sys_attachment.do?sys_id=' + result.sys_id;
 				if (typeof g_navigation !== 'undefined')
 					g_navigation.open(downloadUrl, '_blank');
 				else
 					window.open(downloadUrl, '_blank');
 			} else
-				$('markdown_text').textContent = result.message;
+				$('response_message').textContent = result.message;
 		} catch (e) {
-			$('markdown_text').textContent = 'Failed to parse response: ' + e + '\n\nActual resonpse:\n' + JSON.stringify(answer);
+			$('response_message').textContent = 'Failed to parse response: ' + e + '\n\nActual resonpse:\n' + JSON.stringify(answer);
 		}
     });
-    // var ga = new GlideAjax('x_1645769_lte_dhlp.ServiceCatalogMarkdownGenerator');
-    // ga.addParam('sysparm_name', 'getCatalogItemMarkdown');
-    // ga.addParam('sysparm_sys_id', $('sc_cat_item').value);
-    // ga.addParam('sysparm_folder', $('folder').value);
-    // ga.getXMLAnswer(function(answer) {
-    //     $('markdown_text').textContent = answer;
-    // });
 }]]></client_script>
         <description>Generate boilerplate documentation Markdown from a Catalog Item record</description>
         <direct>false</direct>
@@ -62,8 +55,8 @@
 				</tr>
 			</tfoot>
 		</table>
-		<h2>Result</h2>
-		<textarea name="markdown_text" id="markdown_text" readonly="true" style="width:100%; height: 250px"></textarea>
+		<h2>Response</h2>
+		<textarea name="response_message" id="response_message" readonly="true" style="width:100%; height: 250px"></textarea>
 	</body>
 </j:jelly>]]></html>
         <name>get_cat_item_md</name>
@@ -72,13 +65,13 @@
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-04-23 20:10:21</sys_created_on>
         <sys_id>fc7760f31b54c350c798a97ae54bcb51</sys_id>
-        <sys_mod_count>17</sys_mod_count>
+        <sys_mod_count>18</sys_mod_count>
         <sys_name>get_cat_item_md</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy/>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_ui_page_fc7760f31b54c350c798a97ae54bcb51</sys_update_name>
         <sys_updated_by>lerwine</sys_updated_by>
-        <sys_updated_on>2026-09-23 19:07:17</sys_updated_on>
+        <sys_updated_on>2026-10-02 21:36:27</sys_updated_on>
     </sys_ui_page>
 </record_update>

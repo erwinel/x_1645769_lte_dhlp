@@ -307,49 +307,49 @@
     }
 
     /**
-     * @param {(GlideRecord | GlideRecordSecure)} catItemGr - sc_cat_item_producer
+     * @param {(GlideRecord | GlideRecordSecure)} recordProducerGr - sc_cat_item_producer
      * @param {MarkdownGenerationContext} context
      * @return {string}
      */
-    function getRecordProducerMarkdown(catItemGr, context) {
+    function getRecordProducerMarkdown(recordProducerGr, context) {
         /** @type {string[]} */
-        var markdownLines = ['# "' + MarkdownGenerationContext.escapeForMarkdown(catItemGr.getValue('name')) + '" Record Producer', ''];
+        var markdownLines = ['# "' + MarkdownGenerationContext.escapeForMarkdown(recordProducerGr.getValue('name')) + '" Record Producer', ''];
         /** @type {tyLabeledMultilineStackItem[]} */
         var multiLineStack = [];
-        context.pushTableReferenceListItem(catItemGr.table_name, markdownLines);
-        context.pushDisplayValueListItem(catItemGr.short_description, markdownLines, multiLineStack);
-        context.pushCodeBlockListItem(catItemGr.description, 'html', multiLineStack);
-        context.pushDisplayValueListItem(catItemGr.meta, markdownLines, multiLineStack);
-        context.pushDisplayValueListItem(catItemGr.redirect_url, markdownLines, multiLineStack);
-        context.pushImageListItem(catItemGr.icon, markdownLines);
-        context.pushImageListItem(catItemGr.picture, markdownLines);
-        context.pushDisplayValueListItem(catItemGr.sc_catalogs, markdownLines, multiLineStack);
-        context.pushDisplayValueListItem(catItemGr.category, markdownLines, multiLineStack);
-        context.pushDisplayValueListItem(catItemGr.view, markdownLines, multiLineStack);
-        context.pushDisplayValueListItem(catItemGr.roles, markdownLines, multiLineStack);
-        context.pushListItemIfTrue(catItemGr.can_cancel, markdownLines);
-        context.pushDisplayValueListItem(catItemGr.template, markdownLines, multiLineStack);
-        context.pushListItemIfTrue(catItemGr.no_attachment_v2, markdownLines);
-        context.pushListItemIfTrue(catItemGr.mandatory_attachment, markdownLines);
-        context.pushListItemIfTrue(catItemGr.no_save_as_draft, markdownLines);
-        var cat_item_sys_id = catItemGr.getValue('sys_id');
+        context.pushTableReferenceListItem(recordProducerGr.table_name, markdownLines);
+        context.pushDisplayValueListItem(recordProducerGr.short_description, markdownLines, multiLineStack);
+        context.pushCodeBlockListItem(recordProducerGr.description, 'html', multiLineStack);
+        context.pushDisplayValueListItem(recordProducerGr.meta, markdownLines, multiLineStack);
+        context.pushDisplayValueListItem(recordProducerGr.redirect_url, markdownLines, multiLineStack);
+        context.pushImageListItem(recordProducerGr.icon, markdownLines);
+        context.pushImageListItem(recordProducerGr.picture, markdownLines);
+        context.pushDisplayValueListItem(recordProducerGr.sc_catalogs, markdownLines, multiLineStack);
+        context.pushDisplayValueListItem(recordProducerGr.category, markdownLines, multiLineStack);
+        context.pushDisplayValueListItem(recordProducerGr.view, markdownLines, multiLineStack);
+        context.pushDisplayValueListItem(recordProducerGr.roles, markdownLines, multiLineStack);
+        context.pushListItemIfTrue(recordProducerGr.can_cancel, markdownLines);
+        context.pushDisplayValueListItem(recordProducerGr.template, markdownLines, multiLineStack);
+        context.pushListItemIfTrue(recordProducerGr.no_attachment_v2, markdownLines);
+        context.pushListItemIfTrue(recordProducerGr.mandatory_attachment, markdownLines);
+        context.pushListItemIfTrue(recordProducerGr.no_save_as_draft, markdownLines);
+        var cat_item_sys_id = recordProducerGr.getValue('sys_id');
         markdownLines.push('- **Links:** [Dev](' + MarkdownGenerationContext.getInstanceUrl('nav_to.do?uri=sc_cat_item_producer.do?sys_id=' + cat_item_sys_id) + ')');
         context.pushMultiLineItems(multiLineStack, markdownLines);
 
         markdownLines.push('', '_______________________________________________');
 
         /** @type {VariableMap} */
-        var varMap = new VariableMap(catItemGr);
+        var varMap = new VariableMap(recordProducerGr);
         var catalogUiPoliciesSection = [];
-        var uiPolicies = pushCatalogUiPoliciesSection('catalog_item', catItemGr.getUniqueValue(), varMap, catalogUiPoliciesSection, context);
+        var uiPolicies = pushCatalogUiPoliciesSection('catalog_item', recordProducerGr.getUniqueValue(), varMap, catalogUiPoliciesSection, context);
         var catalogClientScriptsSection = [];
-        var clientScripts = pushCatalogClientScriptsSection('cat_item', catItemGr.getUniqueValue(), varMap, catalogClientScriptsSection, context);
+        var clientScripts = pushCatalogClientScriptsSection('cat_item', recordProducerGr.getUniqueValue(), varMap, catalogClientScriptsSection, context);
 
         varMap.pushVariablesSectionMarkdown(context, uiPolicies, clientScripts, markdownLines);
 
-        context.pushClodeBlock(catItemGr.script, 'javascript', markdownLines, 2);
+        context.pushClodeBlock(recordProducerGr.script, 'javascript', markdownLines, 2);
 
-        pushAvailabilitySection(catItemGr, markdownLines, context);
+        pushAvailabilitySection(recordProducerGr, markdownLines, context);
         if (catalogUiPoliciesSection.length > 0)
             markdownLines = markdownLines.concat(catalogUiPoliciesSection);
         if (catalogClientScriptsSection.length > 0)
@@ -468,17 +468,17 @@
     ServiceCatalogMarkdownGeneratorConstructor.getVariableSetMarkdown = getVariableSetMarkdown;
 
     /**
-     * Attaches a markdown document file to the current user's record so it can be downloaded.
+     * Generatese a markdown documentation file for a Catalog Item and attaches it to the current user's record so it can be downloaded.
      * 
-     * @param {GlideRecord} catItemGr - The Catalog Item [sc_cat_item] record to create the markdown for.
+     * @param {GlideRecord} sourceGlideRecord - The source GlideRecord whose table is Catalog Item [sc_cat_item] or a derived table.
      * @param {string} [current_folder] - The optional current folder for relative links.
      * @returns {GenerateAttachmentResult}
      */
-    function attachCatalogItemMarkdown(catItemGr, current_folder) {
+    function attachCatalogItemMarkdown(sourceGlideRecord, current_folder) {
         var markdownContent, fileName;
         try {
             var context = new MarkdownGenerationContext();
-            var mapping = context.mapper.getCatItemMapping(catItemGr);
+            var mapping = context.mapper.getCatItemMapping(sourceGlideRecord);
             if (mapping) {
                 if (!ReferenceLinkMapper.isWebLink(mapping.file_link))
                     fileName = mapping.file_link;
@@ -488,7 +488,7 @@
                     context.setCurrentFolder(mapping.folder);
             } else if (typeof current_folder === 'string')
                 context.setCurrentFolder(current_folder);
-            markdownContent = (sys_class_name == 'sc_cat_item_producer') ? getRecordProducerMarkdown(catItemGr, context) : getCatalogItemMarkdown(catItemGr, context);
+            markdownContent = (sys_class_name == 'sc_cat_item_producer') ? getRecordProducerMarkdown(sourceGlideRecord, context) : getCatalogItemMarkdown(sourceGlideRecord, context);
         } catch (e) {
             return {
                 success: false,
@@ -503,7 +503,7 @@
                 if (nameAndExtension.extension !== '.md')
                     fileName = nameAndExtension.base_name + '.md';
             } else
-                fileName = MarkdownGenerationContext.convertToFileName(catItemGr.getDisplayValue()) + '-Catalog-Item.md';
+                fileName = MarkdownGenerationContext.convertToFileName(sourceGlideRecord.getDisplayValue()) + '-Catalog-Item.md';
                 
             var userSysId = gs.getUserID();
             var attachment = new GlideSysAttachment();        
@@ -615,9 +615,14 @@
     ServiceCatalogMarkdownGeneratorConstructor.attachVariableSetMarkdown = attachVariableSetMarkdown;
 
     ServiceCatalogMarkdownGeneratorConstructor.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
+        /**
+         * @this {ServiceCatalogMarkdownGenerator}
+         * @returns {string}
+         */
         attachCatalogItemMarkdown: function() {
-            var sys_id = this.getParameter('sysparm_sys_id');
-            if (!sys_id)
+            
+            var sys_id = '' + this.getParameter('sysparm_sys_id');
+            if (sys_id == '')
                 return JSON.stringify({
                     success: false,
                     message: "Value for sys_id parameter not provided."
@@ -639,7 +644,7 @@
                             message: "Record Producer with sys_id " + JSON.stringify(sys_id) + " not found."
                         });
                 }
-                folder = this.getParameter('sysparm_folder');
+                folder = '' + this.getParameter('sysparm_folder');
             } catch (e) {
                 return JSON.stringify({
                     success: false,
@@ -647,12 +652,16 @@
                 });
             }
  
-            return JSON.stringify((folder && folder != '') ? attachCatalogItemMarkdown(catItemGr, folder) : attachCatalogItemMarkdown(catItemGr));
+            return JSON.stringify((folder != '') ? attachCatalogItemMarkdown(catItemGr, folder) : attachCatalogItemMarkdown(catItemGr));
         },
 
+        /**
+         * @this {ServiceCatalogMarkdownGenerator}
+         * @returns {string}
+         */
         attachVariableSetMarkdown: function() {
-            var sys_id = this.getParameter('sysparm_sys_id');
-            if (!sys_id)
+            var sys_id = '' + this.getParameter('sysparm_sys_id');
+            if (sys_id == '')
                 return JSON.stringify({
                     success: false,
                     message: "Value for sys_id parameter not provided."
@@ -665,7 +674,7 @@
                         success: false,
                         message: "Variable Set with sys_id " + JSON.stringify(sys_id) + " not found."
                     });
-                folder = this.getParameter('sysparm_folder');
+                folder = '' + this.getParameter('sysparm_folder');
             } catch (e) {
                 return JSON.stringify({
                     success: false,
@@ -673,13 +682,17 @@
                 });
             }
  
-            return JSON.stringify((folder && folder != '') ? attachVariableSetMarkdown(varSetGr, folder) : attachVariableSetMarkdown(varSetGr));
+            return JSON.stringify((folder != '') ? attachVariableSetMarkdown(varSetGr, folder) : attachVariableSetMarkdown(varSetGr));
         },
 
+        /**
+         * @this {ServiceCatalogMarkdownGenerator}
+         * @returns {string}
+         */
         getCatalogItemMarkdown: function() {
             try {
-                var sys_id = this.getParameter('sysparm_sys_id');
-                if (!sys_id)
+                var sys_id = '' + this.getParameter('sysparm_sys_id');
+                if (sys_id == '')
                     return "Value for sys_id parameter not provided.";
                 var catItemGr;
                 try {
@@ -696,17 +709,21 @@
                     return "Error loading catalog item with sys_id " + JSON.stringify(sys_id) + ": " + e;
                 }
                 var context = new MarkdownGenerationContext();
-                context.setCurrentFolder(this.getParameter('sysparm_folder'));
+                context.setCurrentFolder('' + this.getParameter('sysparm_folder'));
                 return (sys_class_name == 'sc_cat_item_producer') ? getRecordProducerMarkdown(catItemGr, context) : getCatalogItemMarkdown(catItemGr, context);
             } catch (e) {
                 return "Unexpected error: " + (e.stack ? e + "\nStack: " + e.stack : e);
             }
         },
 
+        /**
+         * @this {ServiceCatalogMarkdownGenerator}
+         * @returns {string}
+         */
         getVariableSetMarkdown: function() {
             try {
-                var sys_id = this.getParameter('sysparm_sys_id');
-                if (!sys_id)
+                var sys_id = '' + this.getParameter('sysparm_sys_id');
+                if (sys_id == '')
                     return "Value for sys_id parameter not provided.";
                 var varSetGr;
                 try {
@@ -717,7 +734,7 @@
                     return "Error loading variable set with sys_id " + JSON.stringify(sys_id) + ": " + e;
                 }
                 var context = new MarkdownGenerationContext();
-                context.setCurrentFolder(this.getParameter('sysparm_folder'));
+                context.setCurrentFolder('' + this.getParameter('sysparm_folder'));
                 return getVariableSetMarkdown(varSetGr, context);
             } catch (e) {
                 return "Unexpected error: " + (e.stack ? e + "\nStack: " + e.stack : e);
@@ -732,13 +749,13 @@
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-06-04 22:14:00</sys_created_on>
         <sys_id>a5d11d9d1b19cf50c798a97ae54bcb5d</sys_id>
-        <sys_mod_count>107</sys_mod_count>
+        <sys_mod_count>108</sys_mod_count>
         <sys_name>ServiceCatalogMarkdownGenerator</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_a5d11d9d1b19cf50c798a97ae54bcb5d</sys_update_name>
         <sys_updated_by>lerwine</sys_updated_by>
-        <sys_updated_on>2026-09-23 19:18:51</sys_updated_on>
+        <sys_updated_on>2026-10-02 20:49:23</sys_updated_on>
     </sys_script_include>
 </record_update>

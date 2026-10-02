@@ -1372,9 +1372,13 @@ var LTEDevHelper = (function() {
     /** @type {LTEDevHelperConstructor} */
     var LTEDevHelperConstructor = Class.create();
     LTEDevHelperConstructor.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
+        /**
+         * @this {LTEDevHelper}
+         * @returns {string}
+         */
         getCatalogItemMarkdown: function() {
-            var target = this.getParameter('sysparm_sys_id');
-            if (!target)
+            var target = '' + this.getParameter('sysparm_sys_id');
+            if (target == '')
                 return "Value for sys_id parameter not provided.";
             var gr;
             try {
@@ -1384,9 +1388,9 @@ var LTEDevHelper = (function() {
             } catch (e) {
                 return "Error loading catalog item with sys_id " + JSON.stringify(target) + ": " + (e.stack ? e + "\nStack:\n" + e.stack : e);
             }
-            var ref_map = this.getParameter('sysparm_ref_map');
+            var ref_map = '' + this.getParameter('sysparm_ref_map');
             var referenceMap;
-            if (ref_map) {
+            if (ref_map != '') {
                 try {
                     referenceMap = JSON.parse(ref_map);
                 } catch (e) {
@@ -1401,9 +1405,13 @@ var LTEDevHelper = (function() {
             }
         },
 
+        /**
+         * @this {LTEDevHelper}
+         * @returns {string}
+         */
         getVariableSetMarkdown: function() {
-            var target = this.getParameter('sysparm_sys_id');
-            if (!target)
+            var target = '' + this.getParameter('sysparm_sys_id');
+            if (target == '')
                 return "Value for sys_id parameter not provided.";
             var gr;
             try {
@@ -1413,9 +1421,9 @@ var LTEDevHelper = (function() {
             } catch (e) {
                 return "Error loading variable set with sys_id " + JSON.stringify(target) + ": " + e;
             }
-            var ref_map = this.getParameter('sysparm_ref_map');
+            var ref_map = '' + this.getParameter('sysparm_ref_map');
             var referenceMap;
-            if (ref_map) {
+            if (ref_map != '') {
                 try {
                     referenceMap = JSON.parse(ref_map);
                 } catch (e) {
@@ -1467,13 +1475,13 @@ var LTEDevHelper = (function() {
         <sys_created_by>admin</sys_created_by>
         <sys_created_on>2026-04-15 17:39:37</sys_created_on>
         <sys_id>4b109b0d839483107092ac80ceaad3e3</sys_id>
-        <sys_mod_count>28</sys_mod_count>
+        <sys_mod_count>29</sys_mod_count>
         <sys_name>LTEDevHelper</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_4b109b0d839483107092ac80ceaad3e3</sys_update_name>
         <sys_updated_by>lerwine</sys_updated_by>
-        <sys_updated_on>2026-08-28 20:57:02</sys_updated_on>
+        <sys_updated_on>2026-10-02 20:49:23</sys_updated_on>
     </sys_script_include>
 </record_update>

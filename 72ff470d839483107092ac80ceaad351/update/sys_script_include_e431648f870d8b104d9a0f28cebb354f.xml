@@ -124,27 +124,6 @@ var TableMarkdownGenerator = (function() {
                     if (labelGr.next())
                         newFields.push(newFieldItem);
                 }
-                // var dictionaryOverrideGr = new GlideRecord('sys_dictionary_override');
-                // dictionaryOverrideGr.addQuery('element', element);
-                // dictionaryOverrideGr.addQuery('base_table', table_name);
-                // dictionaryOverrideGr.query();
-                // if (ignoreElements.indexOf(element) < 0) {
-                //     if (dictionaryOverrideGr.next()) {
-                //         if (dictionaryOverrideGr.display_override == true)
-                //             newFieldItem.display = dictionaryOverrideGr.getDisplayValue('display_override');
-                //         newFieldItem.dictionaryOverride = dictionaryOverrideGr.getUniqueValue();
-                //         newFields.push(newFieldItem);
-                //     }
-                // } else {
-                //     dictionaryOverrideGr.addQuery('base_table', table_name);
-                //     dictionaryOverrideGr.query();
-                //     if (dictionaryOverrideGr.next()) {
-                //         if (dictionaryOverrideGr.display_override == true)
-                //             newFieldItem.display = dictionaryOverrideGr.getDisplayValue('display_override');
-                //         newFieldItem.dictionaryOverride = dictionaryOverrideGr.getUniqueValue();
-                //     }
-                //     newFields.push(newFieldItem);
-                // }
             }
         }
         if (newFields.length > 0) {
@@ -353,11 +332,87 @@ var TableMarkdownGenerator = (function() {
 
     TableMarkdownGeneratorConstructor.getTableMarkdown = getTableMarkdown;
 
+    /**
+     * @param {(GlideRecord | GlideRecordSecure)} sourceGlideRecord 
+     * @param {string} [current_folder] 
+     * @returns {GenerateAttachmentResult}
+     */
+    function attachMarkdown(sourceGlideRecord, current_folder) {
+        var markdownContent, fileName;
+        try {
+            var context = new MarkdownGenerationContext();
+            var mapping = context.mapper.getFlowMapping(sourceGlideRecord);
+            if (mapping) {
+                if (!ReferenceLinkMapper.isWebLink(mapping.file_link))
+                    fileName = mapping.file_link;
+                if (typeof current_folder === 'string')
+                    context.setCurrentFolder(current_folder);
+                else if (typeof mapping.folder === 'string')
+                    context.setCurrentFolder(mapping.folder);
+            } else if (typeof current_folder === 'string')
+                context.setCurrentFolder(current_folder);
+            markdownContent = getTableMarkdown(sourceGlideRecord, context);
+        } catch (e) {
+            return {
+                success: false,
+                message: 'An unexpected exception has occurred while generating markdown: ' + (e.stack ? e + "\n\nStack:\n" + e.stack : e)
+            };
+        }
+
+        try {
+            if (fileName) {
+                fileName = ReferenceLinkMapper.getPathLeaf(fileName);
+                var nameAndExtension = ReferenceLinkMapper.splitFileNameAndExtension(fileName);
+                if (nameAndExtension.extension !== '.md')
+                    fileName = nameAndExtension.base_name + '.md';
+            } else
+                fileName = MarkdownGenerationContext.convertToFileName(sourceGlideRecord.getDisplayValue()) + '-Table.md';
+
+            var userSysId = gs.getUserID();
+            var attachment = new GlideSysAttachment();
+            var attachmentGR = attachment.getAttachments('sys_user', userSysId);
+            if (attachmentGR.next()) {
+                var fnLower = fileName.toLowerCase();
+                do {
+                    if (attachmentGR.getValue('file_name').toLowerCase() == fnLower) {
+                        attachment.deleteAttachment(attachmentGR.getUniqueValue());
+                        break;
+                    }
+                } while (attachmentGR.next());
+            }
+
+            var userGr = new GlideRecord('sys_user');
+            userGr.get(userSysId);
+            var sys_id = attachment.write(userGr, fileName, 'text/x-web-markdown', markdownContent);
+            if (sys_id)
+                return {
+                    success: true,
+                    file_name: fileName,
+                    sys_id: sys_id
+                };
+        } catch (e) {
+            return {
+                success: false,
+                message: 'An unexpected exception has occurred while generating the attachment: ' + (e.stack ? e + "\n\nStack:\n" + e.stack : e)
+            };
+        }
+        return {
+            success: false,
+            message: 'GlideSysAttachment.write returned nil'
+        };
+    }
+
+    TableMarkdownGeneratorConstructor.attachMarkdown = attachMarkdown;
+
     TableMarkdownGeneratorConstructor.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
+        /**
+         * @this {TableMarkdownGenerator}
+         * @returns {string}
+         */
         getTableMarkdown: function() {
             try {
-                var sys_id = this.getParameter('sysparm_sys_id');
-                if (!sys_id)
+                var sys_id = '' + this.getParameter('sysparm_sys_id');
+                if (sys_id == '')
                     return "Value for sys_id parameter not provided.";
                 var tableGlideRecord;
                 try {
@@ -365,14 +420,44 @@ var TableMarkdownGenerator = (function() {
                     if (!tableGlideRecord.get(sys_id))
                         return "Table with sys_id " + JSON.stringify(sys_id) + " not found.";
                 } catch (e) {
-                    return "Error loading table with sys_id " + JSON.stringify(sys_id) + ": " + e;
+                    return "Error loading table with sys_id " + JSON.stringify(sys_id) + ": " + (e.stack ? e + "\n\nStack:\n" + e.stack : e);
                 }
                 var context = new MarkdownGenerationContext();
-                context.setCurrentFolder(this.getParameter('sysparm_folder'));
+                context.setCurrentFolder('' + this.getParameter('sysparm_folder'));
                 return getTableMarkdown(tableGlideRecord, context);
             } catch (e) {
                 return "Unexpected error: " + (e.stack ? e + "\nStack: " + e.stack : e);
             }
+        },
+
+        /**
+         * @this {TableMarkdownGenerator}
+         * @returns {string}
+         */
+        attachMarkdown: function() {
+            var sys_id = '' + this.getParameter('sysparm_sys_id');
+            if (sys_id == '')
+                return JSON.stringify({
+                    success: false,
+                    message: "Value for sys_id parameter not provided."
+                });
+            var sourceGlideRecord, folder;
+            try {
+                sourceGlideRecord = new GlideRecord('sys_db_object');
+                if (!sourceGlideRecord.get(sys_id))
+                    return JSON.stringify({
+                        success: false,
+                        message: "Table with sys_id " + JSON.stringify(sys_id) + " not found."
+                    });
+                folder = '' + this.getParameter('sysparm_folder');
+            } catch (e) {
+                return JSON.stringify({
+                    success: false,
+                    message: "Error loading table with sys_id " + JSON.stringify(sys_id) + ": " + (e.stack ? e + "\n\nStack:\n" + e.stack : e)
+                });
+            }
+
+            return JSON.stringify((folder != '') ? attachMarkdown(sourceGlideRecord, folder) : attachMarkdown(sourceGlideRecord));
         },
 
         type: 'TableMarkdownGenerator'
@@ -385,13 +470,13 @@ var TableMarkdownGenerator = (function() {
         <sys_created_by>lerwinesa</sys_created_by>
         <sys_created_on>2026-05-28 16:22:21</sys_created_on>
         <sys_id>e431648f870d8b104d9a0f28cebb354f</sys_id>
-        <sys_mod_count>59</sys_mod_count>
+        <sys_mod_count>62</sys_mod_count>
         <sys_name>TableMarkdownGenerator</sys_name>
         <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
         <sys_policy>read</sys_policy>
         <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
         <sys_update_name>sys_script_include_e431648f870d8b104d9a0f28cebb354f</sys_update_name>
         <sys_updated_by>lerwine</sys_updated_by>
-        <sys_updated_on>2026-10-01 23:13:51</sys_updated_on>
+        <sys_updated_on>2026-10-02 21:29:16</sys_updated_on>
     </sys_script_include>
 </record_update>

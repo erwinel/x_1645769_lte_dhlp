@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8"?><record_update table="sys_script_include">
+    <sys_script_include action="INSERT_OR_UPDATE">
+        <access>package_private</access>
+        <active>true</active>
+        <api_name>x_1645769_lte_dhlp.FlowMarkdownGenerator</api_name>
+        <caller_access/>
+        <client_callable>true</client_callable>
+        <description/>
+        <mobile_callable>false</mobile_callable>
+        <name>FlowMarkdownGenerator</name>
+        <sandbox_callable>false</sandbox_callable>
+        <script><![CDATA[/** @type {FlowMarkdownGeneratorConstructor} */
+var FlowMarkdownGenerator = (function() {
+    /** @type {FlowMarkdownGeneratorConstructor} */
+    var FlowMarkdownGeneratorConstructor = Class.create();
+
+    /**
+     * @param {GlideRecordSecure} sourceGlideRecord
+     * @param {MarkdownGenerationContext} context
+     * @returns {string}
+     */
+    function generateMarkdown(sourceGlideRecord, context) {
+        var flowSysId = sourceGlideRecord.getUniqueValue();
+        /** @type {tyLabeledMultilineStackItem[]} */
+        var multiLineStack;
+        /** @type {string[]} */
+        var markdownLines;
+        /**
+         * @typedef NodeInfo
+         * @property {ValueAndDisplay<string>} order;
+         * @property {string} heading;
+         * @property {string} type;
+         * @property {string} comment;
+         * @property {string[]} lines;
+         */
+        /** @type {NodeInfo[]} */
+        var nodes = [];
+        // https://usmskdev2.servicenowservices.com/now/nav/ui/classic/params/target/sys_db_object.do%3Fsys_id%3Dsys_hub_action_instance%26sysparm_refkey%3Dname
+        // https://usmskdev2.servicenowservices.com/now/nav/ui/classic/params/target/sys_db_object.do%3Fsys_id%3Dsys_hub_action_instance_v2%26sysparm_refkey%3Dname
+        ['sys_hub_action_instance', 'sys_hub_action_instance_v2'].forEach(function(tableName) {
+            var gr = new GlideRecord(tableName);
+            gr.addQuery('flow', flowSysId);
+            gr.orderBy('order');
+            gr.query();
+            while (gr.next()) {
+                /** @type {NodeInfo} */
+                var item = {
+                    order: {
+                        value: parseInt(gr.getValue('order')),
+                        display_value: gr.getDisplayValue('order')
+                    },
+                    type: gr.getDisplayValue('action_type'),
+                    comment: gr.getDisplayValue('comment'),
+                    heading: gs.nil(gr.display_text) ? gr.getDisplayValue('action_type') : gr.getDisplayValue('display_text'),
+                };
+                markdownLines = [];
+                multiLineStack = [];
+                context.pushDisplayValueListItem(gr.action_type, markdownLines, multiLineStack);
+                context.pushDisplayValueListItem(gr.comment, markdownLines, multiLineStack);
+                context.pushMultiLineItems(multiLineStack, markdownLines);
+                if (markdownLines.length > 0)
+                    markdownLines.unshift('### Action: ' + item.order.display_value + '. ' + MarkdownGenerationContext.minimalEscapeForMarkdown(item.heading), '');
+                else
+                    markdownLines = ['### Action: ' + item.order.display_value + '. ' + MarkdownGenerationContext.minimalEscapeForMarkdown(item.heading)];
+                item.lines = markdownLines;
+                nodes.push(item);
+            }
+        });
+        // https://usmskdev2.servicenowservices.com/now/nav/ui/classic/params/target/sys_db_object.do%3Fsys_id%3Dsys_hub_flow_logic%26sysparm_refkey%3Dname
+        // https://usmskdev2.servicenowservices.com/now/nav/ui/classic/params/target/sys_db_object.do%3Fsys_id%3Dsys_hub_flow_logic_instance_v2%26sysparm_refkey%3Dname
+        ['sys_hub_flow_logic', 'sys_hub_flow_logic_instance_v2'].forEach(function(tableName) {
+            var gr = new GlideRecord(tableName);
+            gr.addQuery('flow', flowSysId);
+            gr.orderBy('order');
+            gr.query();
+            while (gr.next()) {
+                /** @type {NodeInfo} */
+                var item = {
+                    order: {
+                        value: parseInt(gr.getValue('order')),
+                        display_value: gr.getDisplayValue('order')
+                    },
+                    type: gr.getDisplayValue('logic_definition'),
+                    comment: gr.getDisplayValue('comment'),
+                    heading: gs.nil(gr.display_text) ? gr.getDisplayValue('logic_definition') : gr.getDisplayValue('display_text')
+                };
+                markdownLines = [];
+                switch (item.type) {
+                    case 'If':
+                    case 'Else':
+                    case 'If Else':
+                    case 'End':
+                        break;
+                    default:
+                        multiLineStack = [];
+                        context.pushDisplayValueListItem(gr.logic_definition, markdownLines, multiLineStack);
+                        context.pushDisplayValueListItem(gr.comment, markdownLines, multiLineStack);
+                        context.pushMultiLineItems(multiLineStack, markdownLines);
+                        if (markdownLines.length > 0)
+                            markdownLines.unshift('### Logic: ' + item.order.display_value + '. ' + MarkdownGenerationContext.minimalEscapeForMarkdown(item.heading), '');
+                        else
+                            markdownLines = ['### Logic: ' + item.order.display_value + '. ' + MarkdownGenerationContext.minimalEscapeForMarkdown(item.heading)];
+                        break;
+                }
+                item.lines = markdownLines;
+                nodes.push(item);
+            }
+        });
+        // https://usmskdev2.servicenowservices.com/now/nav/ui/classic/params/target/sys_db_object.do%3Fsys_id%3Dsys_hub_sub_flow_instance%26sysparm_refkey%3Dname
+        // https://usmskdev2.servicenowservices.com/now/nav/ui/classic/params/target/sys_db_object.do%3Fsys_id%3Dsys_hub_sub_flow_instance_v2%26sysparm_refkey%3Dname
+        ['sys_hub_sub_flow_instance', 'sys_hub_sub_flow_instance_v2'].forEach(function(tableName) {
+            var gr = new GlideRecord(tableName);
+            gr.addQuery('flow', flowSysId);
+            gr.orderBy('order');
+            gr.query();
+            while (gr.next()) {
+                /** @type {NodeInfo} */
+                var item = {
+                    order: {
+                        value: parseInt(gr.getValue('order')),
+                        display_value: gr.getDisplayValue('order')
+                    },
+                    type: 'Subflow',
+                    comment: gr.getDisplayValue('comment'),
+                    heading: gs.nil(gr.display_text) ? gr.getDisplayValue('subflow') : gr.getDisplayValue('display_text'),
+                };
+                markdownLines = [];
+                multiLineStack = [];
+                context.pushFlowReferenceListItem(gr.subflow, markdownLines, multiLineStack);
+                context.pushDisplayValueListItem(gr.comment, markdownLines, multiLineStack);
+                context.pushMultiLineItems(multiLineStack, markdownLines);
+                if (markdownLines.length > 0)
+                    markdownLines.unshift('### Subflow: ' + item.order.display_value + '. ' + MarkdownGenerationContext.minimalEscapeForMarkdown(item.heading), '');
+                else
+                    markdownLines = ['### Subflow: ' + item.order.display_value + '. ' + MarkdownGenerationContext.minimalEscapeForMarkdown(item.heading)];
+                item.lines = markdownLines;
+                nodes.push(item);
+            }
+        });
+        nodes.sort(function(a, b) {
+            return a.order.value - b.order.value;
+        });
+        markdownLines = ['# "' + sourceGlideRecord.getDisplayValue('name') + '" ' + sourceGlideRecord.getDisplayValue('type'), ''];
+        multiLineStack = [];
+        context.pushDisplayValueListItem(sourceGlideRecord.name, markdownLines, multiLineStack);
+        context.pushDisplayValueListItem(sourceGlideRecord.type, markdownLines, multiLineStack);
+        context.pushDisplayValueListItem(sourceGlideRecord.access, markdownLines, multiLineStack);
+        context.pushValueListItem(sourceGlideRecord.internal_name, markdownLines, multiLineStack);
+        context.pushDisplayValueListItem(sourceGlideRecord.run_as, markdownLines, multiLineStack);
+        markdownLines.push("- **Link:** [Dev](https://usmskdev2.servicenowservices.com/sys_hub_flow?sys_id=" + flowSysId + ")");
+        context.pushCodeBlockListItem(sourceGlideRecord.description, 'html', multiLineStack);
+        context.pushMultiLineItems(multiLineStack, markdownLines);
+        markdownLines.push('', '```mermaid', 'flowchart TD');
+        var prevName = "START(((Start)))";
+        for (var i = 0; i < nodes.length; i++) {
+            item = nodes[i];
+            var nextName = 'N' + (i + 1);
+            switch (item.type) {
+                case 'If':
+                    markdownLines.push('    ' + prevName + ' ==> ' + nextName + '{"' + item.order.display_value + '. ' + item.heading + ((item.comment == '') ? '"}' : ':\\n' + item.comment + '"}'));
+                    prevName = nextName;
+                    break;
+                case 'Create Record':
+                case 'Update Record':
+                case 'Update Requested Item String Variable':
+                case 'Update Privileged Access RoB':
+                    markdownLines.push('    ' + prevName + ' ==> ' + nextName + '[("' + item.order.display_value + '. ' + item.heading + ((item.comment == '') ? '")]' : ':\\n' + item.comment + '")]'));
+                    prevName = nextName;
+                    break;
+                case 'Set Flow Variables':
+                    markdownLines.push('    ' + prevName + ' ==> ' + nextName + '[/"' + item.order.display_value + '. ' + item.heading + ((item.comment == '') ? '"\\]' : ':\\n' + item.comment + '"\\]'));
+                    prevName = nextName;
+                    break;
+                case 'Subflow':
+                    markdownLines.push('    ' + prevName + ' ==> ' + nextName + '[["' + item.order.display_value + ((item.comment == '') ? '. Execute Sub-flow:\\n' + item.heading : '. ' + item.heading + ':\\n' + item.comment) + '"\\]');
+                    prevName = nextName;
+                    break;
+                case 'Wait For Condition':
+                    markdownLines.push('    ' + prevName + ' ==> ' + nextName + '(("' + item.order.display_value + '. ' + item.heading + ((item.comment == '') ? '"))' : ':\\n' + item.comment + '"))'));
+                    markdown += prevName + '(("' + item.heading + '"))';
+                    break;
+                case 'End':
+                    markdownLines.push('    ' + prevName + ' ==> ' + nextName + '((("' + item.order.display_value + '. ' + item.heading + ((item.comment == '') ? '")))' : ':\\n' + item.comment + '")))'));
+                    break;
+                case 'Else':
+                    break;
+                default:
+                    markdownLines.push('    ' + prevName + ' ==> ' + nextName + '{{"' + item.order.display_value + '. ' + item.heading + ((item.comment == '') ? '"}}' : ':\\n' + item.comment + '"}}'));
+                    prevName = nextName;
+                    break;
+            }
+        }
+
+        markdownLines.push('    ' + prevName + ' ==> END(((End)))', '```');
+
+        var stageGr = new GlideRecord('sys_hub_flow_stage');
+        stageGr.addQuery('flow', flowSysId);
+        stageGr.orderBy('order');
+        stageGr.addActiveQuery();
+        stageGr.query();
+        if (stageGr.next()) {
+            markdownLines.push('', '## Flow Stages', '', '| Label | Value | Always show | Order |', '| ----- | ----- | ----------- | ----- |');
+            do {
+                markdownLines.push('| ' + MarkdownGenerationContext.minimalEscapeForTableCellMarkdown(stageGr.getValue('label')) + ' | ' + MarkdownGenerationContext.minimalEscapeForTableCellMarkdown(stageGr.getDisplayValue('value')) + ' | ' + stageGr.getDisplayValue('always_show') +
+                    ' | ' + stageGr.getDisplayValue('order') + ' |');
+            } while (stageGr.next());
+        }
+        var varGr = new GlideRecord('sys_hub_flow_variable');
+        varGr.addQuery('model_id', flowSysId);
+        varGr.orderBy('order');
+        varGr.query();
+        if (varGr.next()) {
+            markdownLines.push('', '## Flow Variables', '', '| Label | Column name | Type | Order |', '| ----- | ----------- | ---- | ----- |');
+            do {
+                markdownLines.push('| ' + MarkdownGenerationContext.minimalEscapeForTableCellMarkdown(varGr.getValue('label')) + ' | ' + MarkdownGenerationContext.minimalEscapeForTableCellMarkdown(varGr.getValue('element')) + ' | ' +
+                    MarkdownGenerationContext.minimalEscapeForTableCellMarkdown(varGr.getDisplayValue('internal_type')) + ' | ' + varGr.getDisplayValue('order') + ' |');
+            } while (varGr.next());
+        }
+        markdownLines.push('', '## Significant Actions');
+        nodes.forEach(function(item) {
+            if (item.lines.length > 0) {
+                markdownLines.push('');
+                markdownLines = markdownLines.concat(item.lines);
+            }
+        });
+        markdownLines.push('');
+        return markdownLines.join("\n");
+    }
+
+    FlowMarkdownGeneratorConstructor.generateMarkdown = generateMarkdown;
+
+    /**
+     * @param {(GlideRecord | GlideRecordSecure)} sourceGlideRecord 
+     * @param {string} [current_folder] 
+     * @returns {GenerateAttachmentResult}
+     */
+    function attachMarkdown(sourceGlideRecord, current_folder) {
+        var markdownContent, fileName;
+        try {
+            var context = new MarkdownGenerationContext();
+            var mapping = context.mapper.getFlowMapping(sourceGlideRecord);
+            if (mapping) {
+                if (!ReferenceLinkMapper.isWebLink(mapping.file_link))
+                    fileName = mapping.file_link;
+                if (typeof current_folder === 'string')
+                    context.setCurrentFolder(current_folder);
+                else if (typeof mapping.folder === 'string')
+                    context.setCurrentFolder(mapping.folder);
+            } else if (typeof current_folder === 'string')
+                context.setCurrentFolder(current_folder);
+            markdownContent = generateMarkdown(sourceGlideRecord, context);
+        } catch (e) {
+            return {
+                success: false,
+                message: 'An unexpected exception has occurred while generating markdown: ' + (e.stack ? e + "\n\nStack:\n" + e.stack : e)
+            };
+        }
+
+        try {
+            if (fileName) {
+                fileName = ReferenceLinkMapper.getPathLeaf(fileName);
+                var nameAndExtension = ReferenceLinkMapper.splitFileNameAndExtension(fileName);
+                if (nameAndExtension.extension !== '.md')
+                    fileName = nameAndExtension.base_name + '.md';
+            } else
+                fileName = MarkdownGenerationContext.convertToFileName(sourceGlideRecord.getDisplayValue()) + '-Flow.md';
+
+            var userSysId = gs.getUserID();
+            var attachment = new GlideSysAttachment();
+            var attachmentGR = attachment.getAttachments('sys_user', userSysId);
+            if (attachmentGR.next()) {
+                var fnLower = fileName.toLowerCase();
+                do {
+                    if (attachmentGR.getValue('file_name').toLowerCase() == fnLower) {
+                        attachment.deleteAttachment(attachmentGR.getUniqueValue());
+                        break;
+                    }
+                } while (attachmentGR.next());
+            }
+
+            var userGr = new GlideRecord('sys_user');
+            userGr.get(userSysId);
+            var sys_id = attachment.write(userGr, fileName, 'text/x-web-markdown', markdownContent);
+            if (sys_id)
+                return {
+                    success: true,
+                    file_name: fileName,
+                    sys_id: sys_id
+                };
+        } catch (e) {
+            return {
+                success: false,
+                message: 'An unexpected exception has occurred while generating the attachment: ' + (e.stack ? e + "\n\nStack:\n" + e.stack : e)
+            };
+        }
+        return {
+            success: false,
+            message: 'GlideSysAttachment.write returned nil'
+        };
+    }
+
+    FlowMarkdownGeneratorConstructor.attachMarkdown = attachMarkdown;
+
+    FlowMarkdownGeneratorConstructor.prototype = Object.extendsObject(global.AbstractAjaxProcessor, {
+        /**
+         * @this {FlowMarkdownGenerator}
+         * @returns {string}
+         */
+        attachMarkdown: function() {
+            var sys_id = '' + this.getParameter('sysparm_sys_id');
+            if (sys_id == '')
+                return JSON.stringify({
+                    success: false,
+                    message: "Value for sys_id parameter not provided."
+                });
+            var sourceGlideRecord, folder;
+            try {
+                sourceGlideRecord = new GlideRecord('sys_hub_flow');
+                if (!sourceGlideRecord.get(sys_id))
+                    return JSON.stringify({
+                        success: false,
+                        message: "Flow with sys_id " + JSON.stringify(sys_id) + " not found."
+                    });
+                folder = '' + this.getParameter('sysparm_folder');
+            } catch (e) {
+                return JSON.stringify({
+                    success: false,
+                    message: "Error loading flow with sys_id " + JSON.stringify(sys_id) + ": " + (e.stack ? e + "\n\nStack:\n" + e.stack : e)
+                });
+            }
+
+            return JSON.stringify((folder != '') ? attachMarkdown(sourceGlideRecord, folder) : attachMarkdown(sourceGlideRecord));
+        },
+
+        type: 'FlowMarkdownGenerator'
+    });
+
+    return FlowMarkdownGeneratorConstructor;
+})();]]></script>
+        <sys_class_name>sys_script_include</sys_class_name>
+        <sys_created_by>lerwine</sys_created_by>
+        <sys_created_on>2026-10-02 20:44:00</sys_created_on>
+        <sys_id>5eae97b71bef0b50d7faeca8624bcbf0</sys_id>
+        <sys_mod_count>6</sys_mod_count>
+        <sys_name>FlowMarkdownGenerator</sys_name>
+        <sys_package display_value="Lenny's SN Dev Helper" source="x_1645769_lte_dhlp">72ff470d839483107092ac80ceaad351</sys_package>
+        <sys_policy>read</sys_policy>
+        <sys_scope display_value="Lenny's SN Dev Helper">72ff470d839483107092ac80ceaad351</sys_scope>
+        <sys_update_name>sys_script_include_5eae97b71bef0b50d7faeca8624bcbf0</sys_update_name>
+        <sys_updated_by>lerwine</sys_updated_by>
+        <sys_updated_on>2026-10-02 21:06:23</sys_updated_on>
+    </sys_script_include>
+</record_update>
